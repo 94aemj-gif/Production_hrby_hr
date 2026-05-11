@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Configuration</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="admin">
+    <a class="back-link" href="index.html">&larr; Back to Production Screen</a>
+    <h1>Admin Configuration</h1>
+
+    <form id="admin-form" autocomplete="off">
+      <section class="admin-card">
+        <h2>Shift &amp; Line</h2>
+        <div class="admin-grid">
+          <label class="field">
+            <span class="field-label">Shift Label</span>
+            <input type="text" name="shiftLabel" />
+          </label>
+          <label class="field">
+            <span class="field-label">Shift ID</span>
+            <input type="text" name="shiftId" />
+          </label>
+          <label class="field">
+            <span class="field-label">Line ID</span>
+            <input type="text" name="lineId" />
+          </label>
+          <label class="field">
+            <span class="field-label">Default Operator ID</span>
+            <input type="text" name="operatorId" />
+          </label>
+        </div>
+      </section>
+
+      <section class="admin-card">
+        <h2>Alert Schedule</h2>
+        <label class="field">
+          <span class="field-label">Alert Times (comma-separated, HH:MM, 24h)</span>
+          <textarea name="alertTimes" placeholder="09:00, 12:00, 15:00, 18:00"></textarea>
+        </label>
+        <div class="admin-grid">
+          <label class="field">
+            <span class="field-label">Snooze Duration (minutes)</span>
+            <input type="number" name="snoozeMinutes" min="1" max="60" />
+          </label>
+          <label class="field">
+            <span class="field-label">Hourly Target</span>
+            <input type="number" name="hourlyTarget" min="0" />
+          </label>
+        </div>
+      </section>
+
+      <section class="admin-card">
+        <h2>Audio Alert</h2>
+        <div class="admin-grid">
+          <label class="field">
+            <span class="field-label">Enable Audio</span>
+            <select name="audioEnabled">
+              <option value="true">Enabled</option>
+              <option value="false">Disabled</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Volume (0.0 – 1.0)</span>
+            <input type="number" name="audioVolume" min="0" max="1" step="0.1" />
+          </label>
+        </div>
+      </section>
+
+      <div class="admin-actions">
+        <button type="submit" class="btn btn-success">Save Configuration</button>
+        <button type="button" id="btn-reset" class="btn btn-ghost">Reset to Defaults</button>
+        <button type="button" id="btn-clear-data" class="btn btn-ghost">Clear Today's Submissions</button>
+        <span id="saved-flash" class="saved-flash">Saved.</span>
+      </div>
+    </form>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>

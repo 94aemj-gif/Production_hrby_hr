@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Production Recording</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="screen">
+  <header class="topbar">
+    <div class="shift-info">
+      <span id="shift-label">Shift A &middot; Line 03</span>
+      <span id="shift-status" class="status-pill status-active">Active</span>
+    </div>
+    <div class="topbar-right">
+      <div class="next-alert">
+        <span class="muted">Next Alert</span>
+        <span id="next-alert-time">--:--</span>
+      </div>
+      <a class="admin-link" href="admin.html" title="Admin configuration">Admin</a>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="clock-row">
+      <div id="clock" class="clock">--:--</div>
+    </div>
+
+    <section class="counter-card">
+      <div class="card-label">Total Production (Each)</div>
+      <div id="counter" class="counter">0</div>
+      <div class="counter-actions">
+        <button id="btn-decrement" class="btn btn-ghost" aria-label="Decrement">&minus; 1</button>
+        <button id="btn-increment" class="btn btn-primary" aria-label="Increment">+ 1</button>
+        <button id="btn-increment-10" class="btn btn-ghost" aria-label="Increment by 10">+ 10</button>
+      </div>
+    </section>
+
+    <section class="metrics">
+      <div class="metric">
+        <div class="metric-label">Hour Target</div>
+        <div id="metric-target" class="metric-value metric-target">0</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">This Hour</div>
+        <div id="metric-hour" class="metric-value metric-hour">0</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Efficiency</div>
+        <div id="metric-efficiency" class="metric-value metric-efficiency">0%</div>
+      </div>
+    </section>
+
+    <section class="schedule">
+      <h2 class="section-title">Today's Alert Schedule</h2>
+      <ul id="schedule-list" class="schedule-list"></ul>
+    </section>
+  </main>
+
+  <!-- Alert popup -->
+  <div id="alert-overlay" class="overlay hidden" aria-hidden="true">
+    <div id="alert-popup" class="popup popup-alert" role="alertdialog" aria-labelledby="alert-title">
+      <div class="bell" aria-hidden="true">&#x1F514;</div>
+      <h2 id="alert-title" class="popup-title">Production Check-In</h2>
+      <div id="alert-time" class="popup-time">--:--</div>
+      <p class="popup-body">
+        Please register your production data before continuing.
+        This ensures accurate shift records.
+      </p>
+      <div class="popup-actions">
+        <button id="btn-register" class="btn btn-primary btn-block">Register Data</button>
+        <button id="btn-snooze" class="btn btn-ghost btn-block">Snooze <span id="snooze-label">5</span> min</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data entry popup -->
+  <div id="form-overlay" class="overlay hidden" aria-hidden="true">
+    <div class="popup popup-form" role="dialog" aria-labelledby="form-title">
+      <h2 id="form-title" class="popup-title-left"><span id="form-time">--:--</span> Production Record</h2>
+      <p class="popup-subtle">Complete this form to log your hourly production.</p>
+      <form id="entry-form" class="entry-form" autocomplete="off">
+        <label class="field">
+          <span class="field-label">Shift ID</span>
+          <input type="text" id="f-shift" name="shift" readonly />
+        </label>
+        <label class="field">
+          <span class="field-label">Production Count (Each)</span>
+          <input type="number" id="f-count" name="count" min="0" required />
+        </label>
+        <label class="field">
+          <span class="field-label">Operator ID</span>
+          <input type="text" id="f-operator" name="operator" required />
+        </label>
+        <label class="field">
+          <span class="field-label">Equipment Status</span>
+          <select id="f-status" name="status" required>
+            <option value="Running">Running</option>
+            <option value="Idle">Idle</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Breakdown">Breakdown</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Notes (Optional)</span>
+          <input type="text" id="f-notes" name="notes" placeholder="Optional text field for anomalies" />
+        </label>
+        <button type="submit" class="btn btn-success btn-block">Submit &amp; Continue</button>
+      </form>
+    </div>
+  </div>
+
+  <audio id="alert-sound" preload="auto"></audio>
+
+  <script src="app.js"></script>
+</body>
+</html>
