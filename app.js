@@ -61,6 +61,8 @@
   const alertTimeEl = $("alert-time");
   const snoozeLabelEl = $("snooze-label");
   const formOverlay = $("form-overlay");
+  const keypadOverlay = $("keypad-overlay");
+  const keypadDisplay = $("keypad-display");
   const fShift = $("f-shift");
   const fCount = $("f-count");
   const fOperator = $("f-operator");
@@ -255,23 +257,85 @@
     save(STORAGE.PENDING, []);
   }
 
+  // ---- Capture keypad ----
+  let keypadBuffer = "";
+  function renderKeypad() {
+    keypadDisplay.textContent = keypadBuffer === "" ? "0" : keypadBuffer;
+  }
+  function openKeypad() {
+    keypadBuffer = "";
+    renderKeypad();
+    keypadOverlay.classList.remove("hidden");
+    keypadOverlay.setAttribute("aria-hidden", "false");
+  }
+  function closeKeypad() {
+    keypadOverlay.classList.add("hidden");
+    keypadOverlay.setAttribute("aria-hidden", "true");
+  }
+  function keypadPress(key) {
+    if (key === "clear") {
+      keypadBuffer = "";
+    } else if (key === "back") {
+      keypadBuffer = keypadBuffer.slice(0, -1);
+    } else if (/^[0-9]$/.test(key)) {
+      if (keypadBuffer.length >= 7) return; // cap at 9,999,999
+      if (keypadBuffer === "0") keypadBuffer = key;
+      else keypadBuffer += key;
+    }
+    renderKeypad();
+  }
+  function keypadConfirm() {
+    const qty = parseInt(keypadBuffer, 10);
+    if (Number.isFinite(qty) && qty > 0) {
+      incrementBy(qty);
+    }
+    closeKeypad();
+  }
+
   // ---- Event wiring ----
   function wire() {
-    $("btn-increment").addEventListener("click", () => incrementBy(1));
-    $("btn-increment-10").addEventListener("click", () => incrementBy(10));
-    $("btn-decrement").addEventListener("click", () => incrementBy(-1));
+    $("btn-capture").addEventListener("click", openKeypad);
+    $("btn-keypad-cancel").addEventListener("click", closeKeypad);
+    $("btn-keypad-confirm").addEventListener("click", keypadConfirm);
+    document.querySelectorAll(".keypad-grid .key").forEach((btn) => {
+      btn.addEventListener("click", () => keypadPress(btn.dataset.key));
+    });
 
-    // Hardware button / keyboard: spacebar or Enter (when no modal/input focused) increments
+    // Hardware button / keyboard:
+    //   - When idle: Space/Enter opens the Capture keypad.
+    //   - When keypad open: digits append, Backspace deletes, Enter confirms, Esc cancels.
     document.addEventListener("keydown", (e) => {
       const formOpen = !formOverlay.classList.contains("hidden");
+      const alertOpen = !alertOverlay.classList.contains("hidden");
+      const keypadOpen = !keypadOverlay.classList.contains("hidden");
       const target = e.target;
       const inField = target && (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA");
-      if (formOpen || inField) return;
+      if (inField) return;
+
+      if (keypadOpen) {
+        if (/^[0-9]$/.test(e.key)) {
+          e.preventDefault();
+          keypadPress(e.key);
+        } else if (e.key === "Backspace") {
+          e.preventDefault();
+          keypadPress("back");
+        } else if (e.key === "Delete") {
+          e.preventDefault();
+          keypadPress("clear");
+        } else if (e.key === "Enter" || e.code === "NumpadEnter") {
+          e.preventDefault();
+          keypadConfirm();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          closeKeypad();
+        }
+        return;
+      }
+
+      if (formOpen || alertOpen) return;
       if (e.code === "Space" || e.code === "Enter" || e.code === "NumpadEnter") {
         e.preventDefault();
-        incrementBy(1);
-      } else if (e.key === "-") {
-        incrementBy(-1);
+        openKeypad();
       }
     });
 

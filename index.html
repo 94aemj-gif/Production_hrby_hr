@@ -30,9 +30,7 @@
       <div class="card-label">Total Production (Each)</div>
       <div id="counter" class="counter">0</div>
       <div class="counter-actions">
-        <button id="btn-decrement" class="btn btn-ghost" aria-label="Decrement">&minus; 1</button>
-        <button id="btn-increment" class="btn btn-primary" aria-label="Increment">+ 1</button>
-        <button id="btn-increment-10" class="btn btn-ghost" aria-label="Increment by 10">+ 10</button>
+        <button id="btn-capture" class="btn btn-success btn-capture" aria-label="Capture quantity">Capture</button>
       </div>
     </section>
 
@@ -107,6 +105,33 @@
         </label>
         <button type="submit" class="btn btn-success btn-block">Submit &amp; Continue</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Capture keypad popup -->
+  <div id="keypad-overlay" class="overlay hidden" aria-hidden="true">
+    <div class="popup popup-keypad" role="dialog" aria-labelledby="keypad-title">
+      <h2 id="keypad-title" class="popup-title-left">Capture Quantity</h2>
+      <p class="popup-subtle">Enter the number of pieces produced in this batch.</p>
+      <div id="keypad-display" class="keypad-display" aria-live="polite">0</div>
+      <div class="keypad-grid">
+        <button type="button" class="key" data-key="7">7</button>
+        <button type="button" class="key" data-key="8">8</button>
+        <button type="button" class="key" data-key="9">9</button>
+        <button type="button" class="key" data-key="4">4</button>
+        <button type="button" class="key" data-key="5">5</button>
+        <button type="button" class="key" data-key="6">6</button>
+        <button type="button" class="key" data-key="1">1</button>
+        <button type="button" class="key" data-key="2">2</button>
+        <button type="button" class="key" data-key="3">3</button>
+        <button type="button" class="key key-secondary" data-key="clear">C</button>
+        <button type="button" class="key" data-key="0">0</button>
+        <button type="button" class="key key-secondary" data-key="back" aria-label="Backspace">&#x232B;</button>
+      </div>
+      <div class="popup-actions popup-actions-row">
+        <button id="btn-keypad-cancel" type="button" class="btn btn-ghost btn-block">Cancel</button>
+        <button id="btn-keypad-confirm" type="button" class="btn btn-success btn-block">Add to Total</button>
+      </div>
     </div>
   </div>
 
