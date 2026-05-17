@@ -1257,3 +1257,140 @@ button { font-family: inherit; cursor: pointer; }
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* ============ Modernization layer (v=32) ============
+ * Softer shadows, larger radii, more airy padding. Overrides earlier
+ * card/button rules without restructuring layout. Palette unchanged.
+ */
+:root {
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 18px 38px rgba(15, 23, 42, 0.08), 0 4px 10px rgba(15, 23, 42, 0.04);
+  --shadow-press: 0 1px 2px rgba(15, 23, 42, 0.06) inset;
+  --border-soft: rgba(15, 23, 42, 0.06);
+  --radius-card: 18px;
+  --radius-btn: 12px;
+}
+
+/* --- Cards: shadow-elevated, bigger radius, more padding --- */
+.counter-card,
+.chart-card,
+.log,
+.schedule,
+.metric,
+.kpi-tile,
+.admin-card,
+.weekstrip {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  background: var(--panel);
+}
+.counter-card { padding: 40px 36px; gap: 22px; }
+.chart-card   { padding: 22px 24px; }
+.log          { padding: 22px 24px; }
+.schedule     { padding: 22px 24px; }
+.metric       { padding: 24px 26px; }
+.kpi-tile     { padding: 22px; }
+.admin-card   { padding: 28px 30px; margin-bottom: 22px; }
+.weekstrip    { padding: 16px 18px 18px; }
+
+/* Hover lift on interactive cards */
+.kpi-tile { transition: box-shadow 0.18s ease, transform 0.12s ease; }
+.kpi-tile:hover { box-shadow: var(--shadow-lg); transform: translateY(-1px); }
+
+/* --- Section titles: lighter, less shouty --- */
+.section-title,
+.admin-card h2 {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.card-label { letter-spacing: 0.14em; font-size: 12px; }
+.kpi-label, .metric-label { letter-spacing: 0.12em; font-size: 11px; }
+
+/* --- Typography: refined number weight --- */
+.counter, .kpi-value, .metric-value, .eos-val {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* --- Buttons: softer shadows, hover lift, rounder --- */
+.btn {
+  border-radius: var(--radius-btn);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: transform 0.08s ease, box-shadow 0.18s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.btn:hover  { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); box-shadow: var(--shadow-press); }
+.btn-primary,
+.btn-success { box-shadow: 0 6px 16px rgba(31, 126, 224, 0.18), var(--shadow-sm); }
+.btn-success { box-shadow: 0 6px 16px rgba(26, 160, 90, 0.22), var(--shadow-sm); }
+.btn-primary:hover { box-shadow: 0 10px 24px rgba(31, 126, 224, 0.28), var(--shadow-md); }
+.btn-success:hover { box-shadow: 0 10px 24px rgba(26, 160, 90, 0.30), var(--shadow-md); }
+.btn-ghost {
+  background: transparent;
+  border-color: var(--border);
+  box-shadow: none;
+  color: var(--text);
+}
+.btn-ghost:hover { background: var(--panel-2); border-color: var(--muted); box-shadow: var(--shadow-sm); }
+.btn-capture {
+  font-size: 20px;
+  padding: 20px 64px;
+  border-radius: 999px;
+  min-width: 280px;
+  letter-spacing: 0.08em;
+}
+
+/* --- Topbar: soft underline, no hard border --- */
+.topbar {
+  border-bottom-color: var(--border-soft);
+  box-shadow: 0 1px 0 rgba(15,23,42,0.02);
+}
+
+/* --- Sidebar: softer dividers --- */
+.sidebar { border-right-color: var(--border-soft); }
+
+/* --- Metrics row: subtle accent strip on the value color --- */
+.metric .metric-value { font-size: 44px; }
+
+/* --- Status pills: a touch more breathing room --- */
+.status-pill { padding: 5px 14px; font-size: 11px; }
+
+/* --- KPI tile values: cleaner number --- */
+.kpi-value { font-size: 40px; }
+
+/* --- Log items: airy --- */
+.log-list .log-item {
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.log-list .log-item:last-child { border-bottom: none; }
+
+/* --- Inputs / fields --- */
+.numpad-input, input[type="date"], select {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-press);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.numpad-input:focus, input[type="date"]:focus, select:focus {
+  border-color: var(--blue);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31,126,224,0.15);
+}
+
+/* --- Popups (modals): more elevation --- */
+.popup {
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* --- Heatmap cells: softer corners --- */
+.heatmap-cell { border-radius: 4px; border-color: transparent; }

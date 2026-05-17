@@ -978,6 +978,37 @@
     return { ctx, w: rect.width, h: rect.height };
   }
 
+  // Rounded-top rectangle (bar with rounded top corners, flat bottom).
+  function barRoundedTop(ctx, x, y, w, h, r) {
+    if (h <= 0 || w <= 0) return;
+    const rr = Math.min(r, w / 2, h);
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function softGridline(ctx, x1, y, x2) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(15,23,42,0.06)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+    ctx.restore();
+  }
+  function hexWithAlpha(hex, a) {
+    if (!hex || hex[0] !== "#") return hex;
+    const h = hex.slice(1);
+    const n = h.length === 3
+      ? [h[0]+h[0], h[1]+h[1], h[2]+h[2]]
+      : [h.slice(0,2), h.slice(2,4), h.slice(4,6)];
+    return "rgba(" + parseInt(n[0],16) + "," + parseInt(n[1],16) + "," + parseInt(n[2],16) + "," + a + ")";
+  }
+
   function drawCumulativeChart(cv, s) {
     if (!cv || !s) return;
     const { ctx, w, h } = fitCanvas(cv);
@@ -1006,15 +1037,34 @@
     const cw = w - padL - padR, ch = h - padT - padB;
     const maxY = Math.max(...points.map(p => Math.max(p.val, p.target)), 1);
     const maxX = totalHrs;
-    ctx.strokeStyle = getCss("--border"); ctx.lineWidth = 1; ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
+    // soft dashed gridlines
+    ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
     [0, 0.5, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+      softGridline(ctx, padL, y, padL + cw);
       ctx.fillText(Math.round(maxY * p).toLocaleString(), 4, y + 3);
     });
+    const blue = getCss("--blue") || "#1f7ee0";
+    // area fill under actual line (gradient)
+    const grad = ctx.createLinearGradient(0, padT, 0, padT + ch);
+    grad.addColorStop(0, hexWithAlpha(blue, 0.28));
+    grad.addColorStop(1, hexWithAlpha(blue, 0.0));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const x = padL + (p.x / maxX) * cw;
+      const y = padT + ch * (1 - p.val / maxY);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    const lastX = padL + (points[points.length - 1].x / maxX) * cw;
+    ctx.lineTo(lastX, padT + ch);
+    ctx.lineTo(padL + (points[0].x / maxX) * cw, padT + ch);
+    ctx.closePath();
+    ctx.fill();
     // target line
     ctx.strokeStyle = getCss("--accent");
     ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 2;
     ctx.beginPath();
     points.forEach((p, i) => {
       const x = padL + (p.x / maxX) * cw;
@@ -1024,7 +1074,9 @@
     ctx.stroke();
     ctx.setLineDash([]);
     // actual line
-    ctx.strokeStyle = getCss("--blue"); ctx.lineWidth = 3;
+    ctx.strokeStyle = blue;
+    ctx.lineWidth = 3;
+    ctx.lineJoin = "round";
     ctx.beginPath();
     points.forEach((p, i) => {
       const x = padL + (p.x / maxX) * cw;
@@ -1032,12 +1084,16 @@
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.stroke();
-    // last point dot
+    // last point dot with halo
     const last = points[points.length - 1];
     const lx = padL + (last.x / maxX) * cw;
     const ly = padT + ch * (1 - last.val / maxY);
-    ctx.fillStyle = getCss("--blue");
+    ctx.fillStyle = hexWithAlpha(blue, 0.2);
+    ctx.beginPath(); ctx.arc(lx, ly, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = blue;
     ctx.beginPath(); ctx.arc(lx, ly, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(lx, ly, 2, 0, Math.PI * 2); ctx.fill();
     // legend
     ctx.fillStyle = getCss("--muted"); ctx.fillText(tt("charts.legend"), padL, h - 4);
   }
@@ -1064,17 +1120,18 @@
     const padL = 30, padR = 14, padT = 12, padB = 22;
     const cw = w - padL - padR, ch = h - padT - padB;
     const max = Math.max(1, ...bars.map(b => b.value));
-    ctx.strokeStyle = getCss("--border"); ctx.lineWidth = 1; ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
+    ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
     [0, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+      softGridline(ctx, padL, y, padL + cw);
       ctx.fillText(Math.round(max * p), 4, y + 3);
     });
     const bw = cw / Math.max(1, bars.length);
     ctx.fillStyle = getCss("--red");
     bars.forEach((b, i) => {
       const bh = (b.value / max) * ch;
-      ctx.fillRect(padL + i * bw + 2, padT + ch - bh, Math.max(2, bw - 4), bh);
+      const bwInner = Math.max(2, bw - 6);
+      barRoundedTop(ctx, padL + i * bw + 3, padT + ch - bh, bwInner, bh, 4);
     });
     ctx.fillStyle = getCss("--muted");
     const step = Math.max(1, Math.ceil(bars.length / 10));
@@ -1237,13 +1294,12 @@
     const ch = h - padT - padB;
     const bw = cw / buckets.length;
 
-    // grid
+    // grid (soft dashed)
     const text = getCss("--muted") || "#5c6678";
-    const border = getCss("--border") || "#d8dee9";
-    ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = text;
+    ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = text;
     [0, 0.5, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+      softGridline(ctx, padL, y, padL + cw);
       ctx.fillText(Math.round(max * p), 4, y + 3);
     });
 
@@ -1251,6 +1307,7 @@
     const targetY = padT + ch * (1 - target / max);
     ctx.strokeStyle = getCss("--accent") || "#e07a2b";
     ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(padL, targetY); ctx.lineTo(padL + cw, targetY); ctx.stroke();
     ctx.setLineDash([]);
 
@@ -1266,17 +1323,17 @@
       return b.isCurrent ? cAccent : cRed;
     }
     buckets.forEach((b, i) => {
-      const x = padL + i * bw + 2;
-      const bwInner = Math.max(2, bw - 4);
+      const x = padL + i * bw + 3;
+      const bwInner = Math.max(2, bw - 6);
       // shade break hours
       if (b.hasBreak) {
-        ctx.fillStyle = "rgba(150,150,150,0.12)";
+        ctx.fillStyle = "rgba(150,150,150,0.10)";
         ctx.fillRect(x, padT, bwInner, ch);
       }
       const bh = (b.value / max) * ch;
       const y = padT + ch - bh;
       ctx.fillStyle = barColorFor(b);
-      ctx.fillRect(x, y, bwInner, bh);
+      barRoundedTop(ctx, x, y, bwInner, bh, 4);
     });
 
     // x labels (skip if cramped)
