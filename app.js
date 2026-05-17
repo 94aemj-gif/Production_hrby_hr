@@ -78,7 +78,20 @@
     } catch (_) { return fallback; }
   };
   const save = (key, value) => {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch (e) {
+      if (e && (e.name === "QuotaExceededError" || /quota/i.test(String(e.message)))) {
+        // Surface to the sync indicator via lastError, since it polls/displays it.
+        try {
+          localStorage.setItem("prod.sync.lastError.v1", JSON.stringify({
+            ts: new Date().toISOString(),
+            message: "Storage full — could not save " + key,
+          }));
+          window.dispatchEvent(new Event("syncstatuschange"));
+        } catch (_) {}
+      }
+      return false;
+    }
   };
 
   // ---- State ----
@@ -1848,6 +1861,9 @@
     for (const r of payload.captures || []) {
       if (!r.device_id || r.device_id === ownDeviceId) continue;
       if (!recent(r.ts)) continue;
+      // Skip captures that already arrived as undone — the matching undo event
+      // will be logged separately and a phantom "+N" entry would be confusing.
+      if (r.undone) continue;
       const key = "c:" + r.id;
       if (seen.has(key)) continue;
       const isScrap = r.kind === "scrap";
@@ -1896,10 +1912,24 @@
     return false;
   }
 
+  // Pending tombstones bridge the race where an undo/delete event arrives
+  // before the matching capture row (e.g. admin deletes on Device B before
+  // Device A finishes flushing its queued capture). Keyed by capture_id.
+  const TOMBSTONES_KEY = "prod.sync.pendingTombstones.v1";
+  function loadPendingTombstones() {
+    try { return JSON.parse(localStorage.getItem(TOMBSTONES_KEY) || "{}"); }
+    catch (_) { return {}; }
+  }
+  function savePendingTombstones(t) {
+    try { localStorage.setItem(TOMBSTONES_KEY, JSON.stringify(t)); } catch (_) {}
+  }
+
   function applyRemote(payload) {
     if (!payload) return;
     const all = loadSessions();
+    const tombstones = loadPendingTombstones();
     let changed = false;
+    let tombstonesChanged = false;
 
     function findOrCreate(date, lineId, shiftId, operatorId) {
       if (!date || !lineId || !shiftId || !operatorId) return null;
@@ -1917,19 +1947,28 @@
       const sess = findOrCreate(r.session_date, r.line_id, r.shift_id, r.operator_id);
       if (!sess) continue;
       if (!sess.captures) sess.captures = [];
-      if (!sess.captures.find((c) => c.id === r.id)) {
-        sess.captures.push({
-          id: r.id,
-          ts: r.ts,
-          qty: r.qty,
-          kind: r.kind,
-          employeeId: r.employee_id || undefined,
-          notes: r.notes || undefined,
-          forHour: r.for_hour || undefined,
-          undone: !!r.undone,
-        });
-        changed = true;
+      const existing = sess.captures.find((c) => c.id === r.id);
+      if (existing) {
+        // Server-wins: if the server marked it undone, propagate.
+        if (r.undone && !existing.undone) { existing.undone = true; changed = true; }
+        continue;
       }
+      const hasPendingTombstone = !!tombstones[r.id];
+      sess.captures.push({
+        id: r.id,
+        ts: r.ts,
+        qty: r.qty,
+        kind: r.kind,
+        employeeId: r.employee_id || undefined,
+        notes: r.notes || undefined,
+        forHour: r.for_hour || undefined,
+        undone: !!r.undone || hasPendingTombstone,
+      });
+      if (hasPendingTombstone) {
+        delete tombstones[r.id];
+        tombstonesChanged = true;
+      }
+      changed = true;
     }
 
     for (const r of payload.downtime || []) {
@@ -1952,13 +1991,25 @@
       if (r.type !== "capture_undone" && r.type !== "capture_deleted") continue;
       const capId = r.capture_id;
       if (!capId) continue;
+      let found = false;
       for (const sess of all) {
         const cap = (sess.captures || []).find((c) => c.id === capId);
-        if (cap && !cap.undone) { cap.undone = true; changed = true; break; }
+        if (cap) {
+          found = true;
+          if (!cap.undone) { cap.undone = true; changed = true; }
+          break;
+        }
+      }
+      if (!found) {
+        // Capture row hasn't arrived yet — remember the tombstone so we can
+        // apply it when it does. TTL cleanup happens in sync.js pull().
+        tombstones[capId] = { ts: r.ts || new Date().toISOString(), type: r.type };
+        tombstonesChanged = true;
       }
     }
 
     if (changed) saveSessions(all);
+    if (tombstonesChanged) savePendingTombstones(tombstones);
     const logChanged = mergeRemoteIntoLog(payload, payload.ownDeviceId);
     if (changed || logChanged) refreshAfterRemote();
   }
@@ -1977,6 +2028,21 @@
   }
 
   window.app = Object.assign(window.app || {}, { applyRemote });
+
+  // Drop sessions older than N days so localStorage doesn't fill up over time.
+  // Safari iOS caps localStorage at ~5MB; without pruning a high-volume line
+  // hits the wall around the 3-month mark.
+  const SESSION_RETENTION_DAYS = 30;
+  function pruneOldSessions() {
+    try {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - SESSION_RETENTION_DAYS);
+      const cutoffStr = cutoff.toISOString().slice(0, 10);
+      const all = loadSessions();
+      const kept = all.filter((s) => s && s.date && s.date >= cutoffStr);
+      if (kept.length < all.length) saveSessions(kept);
+    } catch (_) {}
+  }
 
   // ---- Boot ----
   function renderSyncStatus(detail) {
@@ -2008,6 +2074,7 @@
   }
 
   function boot() {
+    pruneOldSessions();
     if ($("counter")) {
       wire();
       wireNumpad();
