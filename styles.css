@@ -1743,14 +1743,7 @@ button { font-family: inherit; cursor: pointer; }
   box-shadow: 0 0 0 3px rgba(31,126,224,0.15);
 }
 
-/* Datos section: action buttons stretch evenly */
-.admin .admin-card:last-of-type .admin-actions { gap: 12px; }
-.admin .admin-card:last-of-type .admin-actions .btn {
-  flex: 1 1 220px;
-}
-
-/* History filter actions row: equal width buttons */
-.history-filter-actions .btn { min-width: 140px; }
+/* (Superseded by v=37 button standardization further down.) */
 
 /* History item: chart sits more comfortably */
 .hist-chart {
@@ -1837,3 +1830,45 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Lock screen popup tighter */
 .popup-login { padding: 24px; }
+
+/* ============ Admin polish v=37: standardize buttons + collapsible cards ============ */
+
+/* Buttons: all admin buttons same shape, natural width. No stretching. */
+.admin .admin-actions .btn,
+.admin .entity-add .btn,
+.admin .history-filter-actions .btn {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 9px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  min-height: 0;
+}
+.admin .history-filter-actions { gap: 10px; }
+
+/* Collapsible admin cards */
+.admin .admin-card h2 {
+  cursor: pointer;
+  user-select: none;
+  justify-content: flex-start;
+}
+.admin .admin-card h2 .admin-card-chevron {
+  margin-left: auto;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform 0.18s ease;
+}
+.admin .admin-card[data-collapsed="true"] .admin-card-chevron {
+  transform: rotate(-90deg);
+}
+.admin .admin-card[data-collapsed="true"] > *:not(h2) {
+  display: none;
+}
+.admin .admin-card[data-collapsed="true"] h2 {
+  margin-bottom: 0;
+}
+.admin .admin-card[data-collapsed="true"] {
+  padding-bottom: 22px;
+}
