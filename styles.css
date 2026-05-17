@@ -161,6 +161,21 @@ button { font-family: inherit; cursor: pointer; }
 }
 .admin-link:hover { color: var(--text); border-color: var(--muted); background: var(--panel); }
 
+.lang-toggle {
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  background: var(--panel-2);
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  min-width: 44px;
+}
+.lang-toggle:hover { color: var(--text); border-color: var(--muted); background: var(--panel); }
+
 /* Main */
 .main {
   flex: 1;

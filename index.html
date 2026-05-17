@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registro de Producción</title>
+  <title data-i18n="page.title.capture">Registro de Producción</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f5f7fb" />
-  <link rel="stylesheet" href="styles.css?v=21" />
+  <link rel="stylesheet" href="styles.css?v=22" />
 </head>
 <body class="screen with-sidebar">
   <aside class="sidebar">
     <button type="button" class="nav-item active" data-view="capture">
       <span class="nav-icon" aria-hidden="true">⊕</span>
-      <span class="nav-label">Captura</span>
+      <span class="nav-label" data-i18n="nav.capture">Captura</span>
     </button>
     <button type="button" class="nav-item" data-view="charts">
       <span class="nav-icon" aria-hidden="true">📊</span>
-      <span class="nav-label">Gráficas</span>
+      <span class="nav-label" data-i18n="nav.charts">Gráficas</span>
     </button>
   </aside>
 
@@ -29,20 +29,21 @@
     </div>
     <div class="topbar-right">
       <div class="status-select">
-        <span class="muted">Estado</span>
+        <span class="muted" data-i18n="top.status">Estado</span>
         <select id="equip-status">
-          <option value="Running">En operación</option>
-          <option value="Idle">Inactivo</option>
-          <option value="Maintenance">Mantenimiento</option>
-          <option value="Breakdown">Avería</option>
+          <option value="Running" data-i18n="top.statusOpt.running">En operación</option>
+          <option value="Idle" data-i18n="top.statusOpt.idle">Inactivo</option>
+          <option value="Maintenance" data-i18n="top.statusOpt.maintenance">Mantenimiento</option>
+          <option value="Breakdown" data-i18n="top.statusOpt.breakdown">Avería</option>
         </select>
       </div>
       <div class="next-alert">
-        <span class="muted">Próxima alerta</span>
+        <span class="muted" data-i18n="top.nextAlert">Próxima alerta</span>
         <span id="next-alert-time">--:--</span>
         <span id="next-alert-countdown" class="next-alert-sub muted">—</span>
       </div>
-      <a class="admin-link" id="admin-link" href="admin.html" title="Configuración admin">Admin</a>
+      <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
+      <a class="admin-link" id="admin-link" href="admin.html" data-i18n-title="top.admin" data-i18n="top.admin" title="Configuración admin">Admin</a>
     </div>
   </header>
 
@@ -56,22 +57,22 @@
 
     <section class="chart-card collapsible" id="chart-section" data-collapsed="false">
       <button type="button" class="collapse-toggle" id="chart-toggle" aria-expanded="true" aria-controls="hour-chart">
-        <span class="section-title">Tendencia por Hora</span>
+        <span class="section-title" data-i18n="chart.hourlyTrend">Tendencia por Hora</span>
         <span class="collapse-icon" aria-hidden="true">▾</span>
       </button>
       <canvas id="hour-chart" width="600" height="160"></canvas>
     </section>
 
     <section class="counter-card" id="counter-card">
-      <div class="card-label">Producción del Turno (Piezas)</div>
+      <div class="card-label" data-i18n="counter.cardLabel">Producción del Turno (Piezas)</div>
       <div id="counter" class="counter">0</div>
-      <div id="counter-empty" class="counter-empty hidden">Toque CAPTURAR para iniciar</div>
+      <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque CAPTURAR para iniciar</div>
       <div id="last-capture" class="last-capture hidden">
-        <span class="muted">Última:</span> <span id="last-capture-text">—</span>
+        <span class="muted" data-i18n="counter.lastShort">Última:</span> <span id="last-capture-text">—</span>
       </div>
       <div id="hour-progress" class="hour-progress">
         <div class="hour-progress-head">
-          <span id="hour-progress-label" class="muted">Hora actual</span>
+          <span id="hour-progress-label" class="muted" data-i18n="counter.currentHourLabel">Hora actual</span>
           <span id="hour-progress-countdown" class="hour-progress-cd">—</span>
         </div>
         <div class="hour-progress-bar">
@@ -79,30 +80,30 @@
         </div>
       </div>
       <div class="counter-actions">
-        <button id="btn-capture" class="btn btn-success btn-capture" aria-label="Capturar producción">Capturar</button>
-        <button id="btn-undo" class="btn btn-ghost hidden" aria-label="Deshacer última captura">Deshacer</button>
+        <button id="btn-capture" class="btn btn-success btn-capture" data-i18n="btn.capture" data-i18n-aria-label="btn.captureAria" aria-label="Capturar producción">Capturar</button>
+        <button id="btn-undo" class="btn btn-ghost hidden" data-i18n="btn.undo" data-i18n-aria-label="btn.undoAria" aria-label="Deshacer última captura">Deshacer</button>
       </div>
     </section>
 
     <section class="metrics">
       <div class="metric">
-        <div class="metric-label">Última Hora</div>
+        <div class="metric-label" data-i18n="metric.lastHour">Última Hora</div>
         <div id="metric-hour" class="metric-value metric-hour">0</div>
         <div id="metric-hour-range" class="metric-sub muted">—</div>
       </div>
       <div class="metric">
-        <div class="metric-label">Meta por Hora</div>
+        <div class="metric-label" data-i18n="metric.targetHour">Meta por Hora</div>
         <div id="metric-target" class="metric-value metric-target">0</div>
       </div>
       <div class="metric">
-        <div class="metric-label">Rechazos del Turno</div>
+        <div class="metric-label" data-i18n="metric.shiftScrap">Rechazos del Turno</div>
         <div id="scrap-count" class="metric-value metric-target">0</div>
       </div>
     </section>
 
     <section class="log collapsible" id="log-section" data-collapsed="true">
       <button type="button" class="collapse-toggle" id="log-toggle" aria-expanded="false" aria-controls="log-list">
-        <span class="section-title">Bitácora de Capturas</span>
+        <span class="section-title" data-i18n="log.title">Bitácora de Capturas</span>
         <span class="collapse-icon" aria-hidden="true">▾</span>
       </button>
       <ul id="log-list" class="log-list"></ul>
@@ -113,41 +114,41 @@
     <div class="clock-row">
       <div class="clock-stack">
         <div id="date-label-2" class="date-label">—</div>
-        <div class="section-title" style="margin:0">Gráficas en Vivo</div>
+        <div class="section-title" style="margin:0" data-i18n="charts.title">Gráficas en Vivo</div>
       </div>
     </div>
 
     <section class="kpi-grid">
       <div class="kpi-tile">
-        <div class="kpi-label">OEE</div>
+        <div class="kpi-label" data-i18n="kpi.oee">OEE</div>
         <div id="kpi-oee" class="kpi-value">—</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-label">Disponibilidad</div>
+        <div class="kpi-label" data-i18n="kpi.availability">Disponibilidad</div>
         <div id="kpi-avail" class="kpi-value">—</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-label">Rendimiento</div>
+        <div class="kpi-label" data-i18n="kpi.performance">Rendimiento</div>
         <div id="kpi-perf" class="kpi-value">—</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-label">Calidad</div>
+        <div class="kpi-label" data-i18n="kpi.quality">Calidad</div>
         <div id="kpi-qual" class="kpi-value">—</div>
       </div>
     </section>
 
     <section class="chart-card">
-      <div class="section-title" style="margin-bottom:12px">Producción por Hora vs Meta</div>
+      <div class="section-title" style="margin-bottom:12px" data-i18n="charts.hourlyVsTarget">Producción por Hora vs Meta</div>
       <canvas id="chart-hourly" width="600" height="170"></canvas>
     </section>
 
     <section class="chart-card">
-      <div class="section-title" style="margin-bottom:12px">Acumulado del Turno vs Meta Acumulada</div>
+      <div class="section-title" style="margin-bottom:12px" data-i18n="charts.cumulativeVsTarget">Acumulado del Turno vs Meta Acumulada</div>
       <canvas id="chart-cumulative" width="600" height="170"></canvas>
     </section>
 
     <section class="chart-card">
-      <div class="section-title" style="margin-bottom:12px">Rechazos por Hora</div>
+      <div class="section-title" style="margin-bottom:12px" data-i18n="charts.scrapByHour">Rechazos por Hora</div>
       <canvas id="chart-scrap" width="600" height="140"></canvas>
     </section>
 
@@ -158,14 +159,14 @@
   <div id="alert-overlay" class="overlay hidden" aria-hidden="true">
     <div id="alert-popup" class="popup popup-alert" role="alertdialog" aria-labelledby="alert-title">
       <div class="bell" aria-hidden="true">&#x1F514;</div>
-      <h2 id="alert-title" class="popup-title">Registro de Producción</h2>
+      <h2 id="alert-title" class="popup-title" data-i18n="alert.title">Registro de Producción</h2>
       <div id="alert-time" class="popup-time">--:--</div>
-      <p class="popup-body">
+      <p class="popup-body" data-i18n="alert.body">
         Por favor registre sus datos de producción antes de continuar.
         Esto asegura registros precisos del turno.
       </p>
       <div class="popup-actions">
-        <button id="btn-register" class="btn btn-primary btn-block">Registrar Datos</button>
+        <button id="btn-register" class="btn btn-primary btn-block" data-i18n="btn.register">Registrar Datos</button>
         <button id="btn-snooze" class="btn btn-ghost btn-block">Posponer <span id="snooze-label">5</span> min</button>
       </div>
     </div>
@@ -174,32 +175,32 @@
   <!-- Capture form -->
   <div id="form-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-form" role="dialog" aria-labelledby="form-title">
-      <h2 id="form-title" class="popup-title-left"><span id="form-time">--:--</span> Capturar Producción</h2>
-      <p class="popup-subtle">Escanee su número de empleado y registre la cantidad.</p>
+      <h2 id="form-title" class="popup-title-left"><span id="form-time">--:--</span> <span id="form-title-text" data-i18n="form.title">Capturar Producción</span></h2>
+      <p class="popup-subtle" data-i18n="form.subtle">Escanee su número de empleado y registre la cantidad.</p>
       <form id="entry-form" class="entry-form" autocomplete="off">
         <label class="field">
-          <span class="field-label"># de Empleado</span>
+          <span class="field-label" data-i18n="form.empNum"># de Empleado</span>
           <input type="text" id="f-operator" name="operator" class="numpad-input" autocomplete="off" readonly required />
         </label>
         <label class="field">
-          <span class="field-label">Hora Capturada</span>
+          <span class="field-label" data-i18n="form.capturedHour">Hora Capturada</span>
           <select id="f-forhour" class="hora-select"></select>
         </label>
         <label class="field">
-          <span class="field-label">Cantidad Producida (Piezas) *</span>
+          <span class="field-label" data-i18n="form.qty">Cantidad Producida (Piezas) *</span>
           <input type="text" id="f-count" name="count" class="numpad-input" autocomplete="off" readonly required />
         </label>
         <label class="field">
-          <span class="field-label">Rechazos (opcional)</span>
+          <span class="field-label" data-i18n="form.scrap">Rechazos (opcional)</span>
           <input type="text" id="f-scrap" name="scrap" class="numpad-input" autocomplete="off" readonly />
         </label>
         <div class="field">
-          <span class="field-label">Notas</span>
+          <span class="field-label" data-i18n="form.notes">Notas</span>
           <div id="f-notes" class="note-chips"></div>
         </div>
         <div class="form-actions-row">
-          <button type="button" id="btn-form-cancel" class="btn btn-ghost btn-block">Cancelar</button>
-          <button type="submit" class="btn btn-success btn-block">Capturar</button>
+          <button type="button" id="btn-form-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
+          <button type="submit" class="btn btn-success btn-block" data-i18n="btn.capture">Capturar</button>
         </div>
       </form>
     </div>
@@ -229,11 +230,11 @@
         <button type="button" class="numkey" data-key="9">9</button>
         <button type="button" class="numkey numkey-secondary" data-key="clear">C</button>
         <button type="button" class="numkey" data-key="0">0</button>
-        <button type="button" class="numkey numkey-secondary" data-key="back" aria-label="Retroceso">⌫</button>
+        <button type="button" class="numkey numkey-secondary" data-key="back" data-i18n-aria-label="numpad.backAria" aria-label="Retroceso">⌫</button>
       </div>
       <div class="form-actions-row">
-        <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block">Cancelar</button>
-        <button type="button" id="btn-numpad-ok" class="btn btn-success btn-block">Listo</button>
+        <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
+        <button type="button" id="btn-numpad-ok" class="btn btn-success btn-block" data-i18n="btn.done">Listo</button>
       </div>
     </div>
   </div>
@@ -241,17 +242,17 @@
   <!-- Admin password prompt -->
   <div id="admin-gate-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-login">
-      <h2 class="popup-title-left">Acceso Admin</h2>
-      <p class="popup-subtle">Ingrese contraseña para continuar.</p>
+      <h2 class="popup-title-left" data-i18n="gate.title">Acceso Admin</h2>
+      <p class="popup-subtle" data-i18n="gate.subtle">Ingrese contraseña para continuar.</p>
       <form id="admin-gate-form" class="entry-form" autocomplete="off">
         <label class="field">
-          <span class="field-label">Contraseña</span>
+          <span class="field-label" data-i18n="gate.password">Contraseña</span>
           <input type="password" id="admin-gate-pwd" class="numpad-input" autocomplete="off" readonly required />
         </label>
-        <div id="admin-gate-error" class="form-error hidden">Contraseña incorrecta.</div>
+        <div id="admin-gate-error" class="form-error hidden" data-i18n="gate.wrong">Contraseña incorrecta.</div>
         <div class="form-actions-row">
-          <button type="button" id="btn-admin-gate-cancel" class="btn btn-ghost btn-block">Cancelar</button>
-          <button type="submit" class="btn btn-success btn-block">Entrar</button>
+          <button type="button" id="btn-admin-gate-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
+          <button type="submit" class="btn btn-success btn-block" data-i18n="btn.enter">Entrar</button>
         </div>
       </form>
     </div>
@@ -260,17 +261,17 @@
   <!-- End-of-shift summary -->
   <div id="eos-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-form">
-      <h2 class="popup-title-left">Resumen de Turno</h2>
+      <h2 class="popup-title-left" data-i18n="eos.title">Resumen de Turno</h2>
       <p class="popup-subtle" id="eos-shift">—</p>
       <div class="eos-stats">
-        <div class="eos-stat"><div class="eos-label">Producción</div><div id="eos-good" class="eos-val">0</div></div>
-        <div class="eos-stat"><div class="eos-label">Rechazos</div><div id="eos-scrap" class="eos-val">0</div></div>
-        <div class="eos-stat"><div class="eos-label">OEE</div><div id="eos-oee" class="eos-val">0%</div></div>
-        <div class="eos-stat"><div class="eos-label">Paro Total</div><div id="eos-down" class="eos-val">0 min</div></div>
+        <div class="eos-stat"><div class="eos-label" data-i18n="eos.production">Producción</div><div id="eos-good" class="eos-val">0</div></div>
+        <div class="eos-stat"><div class="eos-label" data-i18n="eos.scrap">Rechazos</div><div id="eos-scrap" class="eos-val">0</div></div>
+        <div class="eos-stat"><div class="eos-label" data-i18n="eos.oee">OEE</div><div id="eos-oee" class="eos-val">0%</div></div>
+        <div class="eos-stat"><div class="eos-label" data-i18n="eos.totalDown">Paro Total</div><div id="eos-down" class="eos-val">0 min</div></div>
       </div>
       <div class="form-actions-row" style="margin-top:14px">
-        <button type="button" id="btn-eos-export" class="btn btn-primary btn-block">Exportar CSV</button>
-        <button type="button" id="btn-eos-close" class="btn btn-success btn-block">Cerrar Turno</button>
+        <button type="button" id="btn-eos-export" class="btn btn-primary btn-block" data-i18n="eos.exportCsv">Exportar CSV</button>
+        <button type="button" id="btn-eos-close" class="btn btn-success btn-block" data-i18n="eos.closeShift">Cerrar Turno</button>
       </div>
     </div>
   </div>
@@ -279,6 +280,7 @@
 
   <audio id="alert-sound" preload="auto"></audio>
 
-  <script src="app.js?v=21"></script>
+  <script src="i18n.js?v=22"></script>
+  <script src="app.js?v=22"></script>
 </body>
 </html>
