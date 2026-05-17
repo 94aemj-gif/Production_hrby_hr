@@ -6,7 +6,7 @@
   <title data-i18n="page.title.capture">Registro de Producción</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f5f7fb" />
-  <link rel="stylesheet" href="styles.css?v=28" />
+  <link rel="stylesheet" href="styles.css?v=29" />
 </head>
 <body class="screen with-sidebar">
   <aside class="sidebar">
@@ -73,21 +73,19 @@
 
     <section class="counter-card" id="counter-card">
       <div class="card-label" data-i18n="counter.cardLabel">Producción del Turno (Piezas)</div>
-      <div class="counter-ring-wrap">
-        <svg class="counter-ring" viewBox="0 0 400 400" aria-hidden="true">
-          <circle class="ring-bg"       cx="200" cy="200" r="184"></circle>
-          <circle id="ring-breaks"  class="ring-breaks"  cx="200" cy="200" r="184"></circle>
-          <circle id="ring-progress" class="ring-progress" cx="200" cy="200" r="184"></circle>
-        </svg>
-        <div class="counter-ring-center">
-          <div id="counter" class="counter">0</div>
-          <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque CAPTURAR para iniciar</div>
-          <div id="hour-progress-label" class="ring-hour-label muted" data-i18n="counter.currentHourLabel">Hora actual</div>
-          <div id="hour-progress-countdown" class="ring-hour-cd">—</div>
-        </div>
-      </div>
+      <div id="counter" class="counter">0</div>
+      <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque CAPTURAR para iniciar</div>
       <div id="last-capture" class="last-capture hidden">
         <span class="muted" data-i18n="counter.lastShort">Última:</span> <span id="last-capture-text">—</span>
+      </div>
+      <div id="hour-progress" class="hour-progress">
+        <div class="hour-progress-head">
+          <span id="hour-progress-label" class="muted" data-i18n="counter.currentHourLabel">Hora actual</span>
+          <span id="hour-progress-countdown" class="hour-progress-cd">—</span>
+        </div>
+        <div class="hour-progress-bar">
+          <div id="hour-progress-fill" class="hour-progress-fill"></div>
+        </div>
       </div>
       <div class="counter-actions">
         <button id="btn-capture" class="btn btn-success btn-capture" data-i18n="btn.capture" data-i18n-aria-label="btn.captureAria" aria-label="Capturar producción">Capturar</button>
@@ -306,9 +304,9 @@
 
   <audio id="alert-sound" preload="auto"></audio>
 
-  <script src="i18n.js?v=28"></script>
-  <script src="supabase-config.js?v=28"></script>
-  <script src="sync.js?v=28"></script>
-  <script src="app.js?v=28"></script>
+  <script src="i18n.js?v=29"></script>
+  <script src="supabase-config.js?v=29"></script>
+  <script src="sync.js?v=29"></script>
+  <script src="app.js?v=29"></script>
 </body>
 </html>

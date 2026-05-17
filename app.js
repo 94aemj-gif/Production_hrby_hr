@@ -621,63 +621,24 @@
     }
   }
 
-  // ---- Radial hour-progress ring (replaces horizontal bar) ----
-  const RING_RADIUS = 184;
-  const RING_CIRC = 2 * Math.PI * RING_RADIUS;
-  function setRingArc(circleEl, fractionStart, fractionLen) {
-    if (!circleEl) return;
-    const len = Math.max(0, Math.min(1, fractionLen)) * RING_CIRC;
-    const offset = -Math.max(0, Math.min(1, fractionStart)) * RING_CIRC;
-    circleEl.style.strokeDasharray = len + " " + Math.max(0.001, RING_CIRC - len);
-    circleEl.style.strokeDashoffset = String(offset);
-  }
+  // ---- Hour progress (horizontal bar under the counter) ----
   function updateHourRing(s) {
-    const ring = document.querySelector(".counter-ring");
-    const progressEl = $("ring-progress");
-    const breaksEl = $("ring-breaks");
-    const labelEl = $("hour-progress-label");
-    const cdEl = $("hour-progress-countdown");
-    if (!ring || !progressEl || !breaksEl) return;
-    ring.classList.remove("is-on-pace", "is-near-end", "is-off-shift");
-    setRingArc(breaksEl, 0, 0);
-    if (!s) {
-      setRingArc(progressEl, 0, 0);
-      if (labelEl) labelEl.textContent = "—";
-      if (cdEl) cdEl.textContent = "—";
-      return;
-    }
+    const fill  = $("hour-progress-fill");
+    const cd    = $("hour-progress-countdown");
+    const label = $("hour-progress-label");
+    if (!fill || !cd || !label) return;
+    if (!s) { fill.style.width = "0%"; cd.textContent = "—"; label.textContent = "—"; return; }
     const now = new Date();
     const { start: shStart, end: shEnd } = getShiftWindow(s);
     if (now < shStart || now >= shEnd) {
-      setRingArc(progressEl, 0, 0);
-      ring.classList.add("is-off-shift");
-      if (labelEl) labelEl.textContent = tt("counter.outOfShift");
-      if (cdEl) cdEl.textContent = "—";
+      label.textContent = tt("counter.outOfShift");
+      cd.textContent = "—";
+      fill.style.width = "0%";
       return;
     }
     const hourStart = new Date(now); hourStart.setMinutes(0, 0, 0);
-    const hourEnd = new Date(hourStart.getTime() + 3600000);
     const elapsedMs = now - hourStart;
-    const frac = Math.min(1, elapsedMs / 3600000);
-    setRingArc(progressEl, 0, frac);
-    if (frac >= 0.85) ring.classList.add("is-near-end");
-
-    // Union of break minutes within the current hour, rendered as one arc.
-    let bFracStart = -1, bFracEnd = -1;
-    for (const b of getShiftBreaks(s)) {
-      const ovStart = b.start > hourStart ? b.start : hourStart;
-      const ovEnd   = b.end   < hourEnd   ? b.end   : hourEnd;
-      if (ovEnd > ovStart) {
-        const fs = (ovStart - hourStart) / 3600000;
-        const fe = (ovEnd   - hourStart) / 3600000;
-        if (bFracStart < 0 || fs < bFracStart) bFracStart = fs;
-        if (fe > bFracEnd) bFracEnd = fe;
-      }
-    }
-    if (bFracStart >= 0 && bFracEnd > bFracStart) {
-      setRingArc(breaksEl, bFracStart, bFracEnd - bFracStart);
-    }
-
+    const pct = Math.min(100, Math.round((elapsedMs / 3600000) * 100));
     const minsLeft = Math.max(0, 60 - Math.floor(elapsedMs / 60000));
     let lh = hourStart.getHours();
     const ap = lh >= 12 ? "PM" : "AM";
@@ -685,8 +646,10 @@
     let lh2 = (hourStart.getHours() + 1) % 24;
     const ap2 = lh2 >= 12 ? "PM" : "AM";
     lh2 = lh2 % 12 || 12;
-    if (labelEl) labelEl.textContent = tt("counter.hourRange", { h1: lh, ap1: ap, h2: lh2, ap2: ap2 });
-    if (cdEl)    cdEl.textContent    = tt("counter.minToCapture", { n: minsLeft });
+    label.textContent = tt("counter.hourRange", { h1: lh, ap1: ap, h2: lh2, ap2: ap2 });
+    cd.textContent    = tt("counter.minToCapture", { n: minsLeft });
+    fill.style.width  = pct + "%";
+    fill.style.background = pct >= 85 ? "var(--accent)" : "var(--blue)";
   }
 
   // ---- OEE donut (topbar) ----
