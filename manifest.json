@@ -1,0 +1,25 @@
+{
+  "name": "Registro de Producción",
+  "short_name": "Producción",
+  "description": "Pantalla de registro de producción por turno y línea.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#f5f7fb",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='32' fill='%231f7ee0'/><text x='96' y='124' font-family='system-ui' font-size='110' font-weight='700' text-anchor='middle' fill='white'>P</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='%231f7ee0'/><text x='256' y='340' font-family='system-ui' font-size='300' font-weight='700' text-anchor='middle' fill='white'>P</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
