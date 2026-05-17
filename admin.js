@@ -537,7 +537,9 @@
         state[key] = !!collapsed;
         try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {}
       }
-      set(!!state[key]);
+      // Default to collapsed for first-time visitors. Per-card persistence
+      // overrides whenever the user has explicitly toggled the section.
+      set(state.hasOwnProperty(key) ? !!state[key] : true);
       function toggle() { set(card.dataset.collapsed !== "true"); }
       h2.addEventListener("click", toggle);
       h2.addEventListener("keydown", (e) => {
