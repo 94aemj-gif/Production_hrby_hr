@@ -48,7 +48,9 @@
     LAST_ERR:  "prod.sync.lastError.v1",
     PULL_WM:   "prod.sync.pullWatermark.v1",
     LAST_PULL: "prod.sync.lastPull.v1",
+    MIGRATION: "prod.sync.migration.v1",
   };
+  const MIGRATION_VERSION = 1;
 
   const FLUSH_INTERVAL_MS = 30 * 1000;
   const PULL_INTERVAL_MS  = 30 * 1000;
@@ -68,6 +70,17 @@
   let lastError = load(STORAGE.LAST_ERR, null);
   let pullWm   = load(STORAGE.PULL_WM, { captures: null, downtime: null, events: null });
   let lastPull = load(STORAGE.LAST_PULL, null);
+
+  // One-shot migration: earlier versions advanced the watermark before the
+  // log-merge code existed, so remote captures already pulled are not in the
+  // local bitácora. Reset the watermark so the next pull re-fetches recent
+  // rows. The merge step is idempotent (dedupe by id), so sessions won't
+  // double-up — only the log will gain entries it was previously missing.
+  if (load(STORAGE.MIGRATION, 0) < MIGRATION_VERSION) {
+    pullWm = { captures: null, downtime: null, events: null };
+    save(STORAGE.PULL_WM, pullWm);
+    save(STORAGE.MIGRATION, MIGRATION_VERSION);
+  }
   let flushTimer = null;
   let flushing = false;
   let pulling = false;
