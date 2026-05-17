@@ -451,6 +451,37 @@
   // DELETE RLS policies on captures/downtime/events for the anon role (see
   // README for the SQL). Also drops any pending pushes for that date so the
   // delete doesn't immediately get re-populated.
+  // Drop pending items for a date so the queue doesn't re-populate after a
+  // delete (used by deleteDate locally, and by applyRemote when a peer
+  // broadcasts a day_reset event).
+  function purgePendingForDate(iso) {
+    if (!iso) return;
+    const keptPending = [];
+    for (const p of pending) {
+      const row = p.row || {};
+      if ((p.table === "captures" || p.table === "downtime") && row.session_date === iso) continue;
+      // Drop today's pushed events EXCEPT day_reset broadcasts (those must survive
+      // so other devices see them — they carry the reset signal).
+      if (p.table === "events"
+          && typeof row.ts === "string" && row.ts.slice(0, 10) === iso
+          && row.type !== "day_reset") continue;
+      keptPending.push(p);
+    }
+    if (keptPending.length !== pending.length) {
+      pending = keptPending;
+      save(STORAGE.PENDING, pending);
+    }
+    const t = loadTombstones();
+    let tChanged = false;
+    for (const k of Object.keys(t)) {
+      if (t[k] && typeof t[k].ts === "string" && t[k].ts.slice(0, 10) === iso) {
+        delete t[k]; tChanged = true;
+      }
+    }
+    if (tChanged) saveTombstones(t);
+    emitStatus();
+  }
+
   async function deleteDate(iso) {
     if (!ENABLED) return { ok: false, errors: ["sync disabled"] };
     if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return { ok: false, errors: ["bad date"] };
@@ -461,28 +492,7 @@
     const dayEnd   = iso + "T23:59:59.999Z";
     const errors = [];
 
-    // Drop pending items for this date so flush doesn't undo our delete.
-    const keptPending = [];
-    for (const p of pending) {
-      const row = p.row || {};
-      if ((p.table === "captures" || p.table === "downtime") && row.session_date === iso) continue;
-      if (p.table === "events" && typeof row.ts === "string" && row.ts.slice(0, 10) === iso) continue;
-      keptPending.push(p);
-    }
-    if (keptPending.length !== pending.length) {
-      pending = keptPending;
-      save(STORAGE.PENDING, pending);
-    }
-
-    // Also clear pending tombstones whose ts is today (they'd reapply on next pull).
-    const t = loadTombstones();
-    let tChanged = false;
-    for (const k of Object.keys(t)) {
-      if (t[k] && typeof t[k].ts === "string" && t[k].ts.slice(0, 10) === iso) {
-        delete t[k]; tChanged = true;
-      }
-    }
-    if (tChanged) saveTombstones(t);
+    purgePendingForDate(iso);
 
     async function del(table, qs) {
       const res = await fetch(URL + "/rest/v1/" + table + "?" + qs, {
@@ -508,6 +518,24 @@
     try { await del("events", "ts=gte." + encodeURIComponent(dayStart) + "&ts=lte." + encodeURIComponent(dayEnd)); }
     catch (e) { errors.push("events: " + e.message); }
 
+    // Broadcast: insert a day_reset event so other devices pick it up on
+    // their next pull and apply the same wipe locally. Done AFTER the
+    // deletes so the broadcast row itself survives.
+    if (errors.length === 0 && deviceId) {
+      try {
+        await postRows("events", [{
+          id: newId(),
+          device_id: deviceId,
+          ts: new Date().toISOString(),
+          type: "day_reset",
+          message: iso,
+          capture_id: null,
+        }]);
+      } catch (e) {
+        errors.push("broadcast: " + e.message);
+      }
+    }
+
     emitStatus();
     return { ok: errors.length === 0, errors };
   }
@@ -526,7 +554,7 @@
     pushCaptureUndone, pushCaptureDeleted,
     getStatus, flush, pull,
     getDeadLetter, clearDeadLetter,
-    deleteDate,
+    deleteDate, purgePendingForDate,
   };
 
   // Announce initial state so the UI can render immediately.
