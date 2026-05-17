@@ -1872,3 +1872,51 @@ button { font-family: inherit; cursor: pointer; }
 .admin .admin-card[data-collapsed="true"] {
   padding-bottom: 22px;
 }
+
+/* ============ Admin desktop layout (v=40) ============
+ * On laptop (≥1024px) and wider, lay admin cards out in a multi-column
+ * grid so a manager doesn't scroll forever. Wide sections (Turnos /
+ * Historial / Bitácora) span all columns.
+ */
+.admin { max-width: 1600px; margin: 0 auto; }
+
+@media (min-width: 1024px) {
+  .admin {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
+    row-gap: 14px;
+    align-items: start;
+    padding: 22px 28px 32px;
+  }
+  .admin > div:first-child,
+  .admin > h1,
+  .admin > .admin-card[data-wide="1"] {
+    grid-column: 1 / -1;
+  }
+  /* form wraps two cards — let its children participate in the grid */
+  .admin > form { display: contents; }
+  .admin > h1 { margin: 0 0 4px; }
+  .admin .admin-card { margin-bottom: 0; }
+}
+
+@media (min-width: 1400px) {
+  .admin {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Table-heavy wide sections: let table cells wrap nicely and avoid
+ * horizontal overflow on narrow desktop windows. */
+.admin .admin-card[data-wide="1"] .entity-table { width: 100%; }
+.admin .admin-card[data-wide="1"] { overflow: hidden; } /* contain rounded corners */
+
+/* Header row inside .admin gets a tiny bottom padding so the cards
+ * below have a clear separation on desktop. */
+@media (min-width: 1024px) {
+  .admin > div:first-child {
+    padding-bottom: 0;
+    border-bottom: 1px solid var(--border-soft);
+    padding-bottom: 12px;
+  }
+}
