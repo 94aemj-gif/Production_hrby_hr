@@ -1,83 +1,239 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin Configuration</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Configuración Admin</title>
+  <link rel="stylesheet" href="styles.css?v=21" />
 </head>
 <body>
-  <main class="admin">
-    <a class="back-link" href="index.html">&larr; Back to Production Screen</a>
-    <h1>Admin Configuration</h1>
+  <!-- Lock screen -->
+  <div id="admin-lock" class="overlay hidden" aria-hidden="true">
+    <div class="popup popup-login">
+      <h2 class="popup-title-left">Acceso Admin</h2>
+      <p class="popup-subtle">Ingrese contraseña para acceder.</p>
+      <form id="lock-form" class="entry-form" autocomplete="off">
+        <label class="field">
+          <span class="field-label">Contraseña</span>
+          <input type="password" id="lock-pwd" class="numpad-input" autocomplete="off" readonly required />
+        </label>
+        <div id="lock-error" class="form-error hidden">Contraseña incorrecta.</div>
+        <div class="form-actions-row">
+          <a class="btn btn-ghost btn-block" href="index.html" style="text-decoration:none;text-align:center">Cancelar</a>
+          <button type="submit" class="btn btn-success btn-block">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <main class="admin" id="admin-main">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <a class="back-link" href="index.html">&larr; Volver a Pantalla de Producción</a>
+      <button type="button" id="btn-admin-lock" class="btn btn-ghost btn-small">Cerrar Admin</button>
+    </div>
+    <h1>Configuración Admin</h1>
+
+    <section class="admin-card">
+      <h2>Seguridad</h2>
+      <div class="admin-grid">
+        <label class="field">
+          <span class="field-label">Nueva Contraseña Admin</span>
+          <input type="password" id="new-admin-pwd" class="numpad-input" autocomplete="off" readonly />
+        </label>
+      </div>
+      <div class="admin-actions">
+        <button type="button" id="btn-change-pwd" class="btn btn-primary">Cambiar Contraseña</button>
+        <span id="pwd-flash" class="saved-flash">Cambiada.</span>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>Dispositivo</h2>
+      <p class="muted" style="font-size:13px;margin-top:0">Línea y operador asignados a este dispositivo. El turno se detecta automáticamente por la hora.</p>
+      <div class="admin-grid">
+        <label class="field">
+          <span class="field-label">Línea Predeterminada</span>
+          <select id="device-line"></select>
+        </label>
+        <label class="field">
+          <span class="field-label">Operador Predeterminado</span>
+          <select id="device-operator"></select>
+        </label>
+      </div>
+      <div class="admin-actions">
+        <button type="button" id="btn-device-save" class="btn btn-success">Guardar Dispositivo</button>
+        <span id="device-flash" class="saved-flash">Guardado.</span>
+      </div>
+    </section>
 
     <form id="admin-form" autocomplete="off">
       <section class="admin-card">
-        <h2>Shift &amp; Line</h2>
+        <h2>Parámetros de Producción</h2>
+        <p class="muted" style="font-size:13px;margin-top:0">Las alertas se disparan cada hora dentro del rango del turno automáticamente.</p>
         <div class="admin-grid">
           <label class="field">
-            <span class="field-label">Shift Label</span>
-            <input type="text" name="shiftLabel" />
+            <span class="field-label">Duración de Posponer (minutos)</span>
+            <input type="number" name="snoozeMinutes" min="1" max="60" inputmode="numeric" pattern="[0-9]*" />
           </label>
           <label class="field">
-            <span class="field-label">Shift ID</span>
-            <input type="text" name="shiftId" />
-          </label>
-          <label class="field">
-            <span class="field-label">Line ID</span>
-            <input type="text" name="lineId" />
-          </label>
-          <label class="field">
-            <span class="field-label">Default Operator ID</span>
-            <input type="text" name="operatorId" />
+            <span class="field-label">Meta por Hora (piezas)</span>
+            <input type="number" name="hourlyTarget" min="0" inputmode="numeric" pattern="[0-9]*" />
           </label>
         </div>
       </section>
 
       <section class="admin-card">
-        <h2>Alert Schedule</h2>
-        <label class="field">
-          <span class="field-label">Alert Times (comma-separated, HH:MM, 24h)</span>
-          <textarea name="alertTimes" placeholder="09:00, 12:00, 15:00, 18:00"></textarea>
-        </label>
+        <h2>Alerta de Audio</h2>
         <div class="admin-grid">
           <label class="field">
-            <span class="field-label">Snooze Duration (minutes)</span>
-            <input type="number" name="snoozeMinutes" min="1" max="60" />
-          </label>
-          <label class="field">
-            <span class="field-label">Hourly Target</span>
-            <input type="number" name="hourlyTarget" min="0" />
-          </label>
-        </div>
-      </section>
-
-      <section class="admin-card">
-        <h2>Audio Alert</h2>
-        <div class="admin-grid">
-          <label class="field">
-            <span class="field-label">Enable Audio</span>
+            <span class="field-label">Habilitar Audio</span>
             <select name="audioEnabled">
-              <option value="true">Enabled</option>
-              <option value="false">Disabled</option>
+              <option value="true">Habilitado</option>
+              <option value="false">Deshabilitado</option>
             </select>
           </label>
           <label class="field">
-            <span class="field-label">Volume (0.0 – 1.0)</span>
-            <input type="number" name="audioVolume" min="0" max="1" step="0.1" />
+            <span class="field-label">Volumen (0.0 – 1.0)</span>
+            <input type="number" name="audioVolume" min="0" max="1" step="0.1" inputmode="decimal" />
           </label>
         </div>
       </section>
 
       <div class="admin-actions">
-        <button type="submit" class="btn btn-success">Save Configuration</button>
-        <button type="button" id="btn-reset" class="btn btn-ghost">Reset to Defaults</button>
-        <button type="button" id="btn-clear-data" class="btn btn-ghost">Clear Today's Submissions</button>
-        <span id="saved-flash" class="saved-flash">Saved.</span>
+        <button type="submit" class="btn btn-success">Guardar Configuración</button>
+        <button type="button" id="btn-reset" class="btn btn-ghost">Restablecer Valores</button>
+        <span id="saved-flash" class="saved-flash">Guardado.</span>
       </div>
     </form>
+
+    <section class="admin-card">
+      <h2>Líneas de Producción</h2>
+      <table class="entity-table">
+        <thead><tr><th>ID</th><th>Etiqueta</th><th></th></tr></thead>
+        <tbody id="lines-tbody"></tbody>
+      </table>
+      <div class="entity-add">
+        <input type="text" id="new-line-id" placeholder="ID (ej. L-04)" />
+        <input type="text" id="new-line-label" placeholder="Etiqueta" />
+        <button type="button" id="btn-add-line" class="btn btn-primary">Agregar</button>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>Turnos</h2>
+      <p class="muted" style="font-size:13px;margin-top:0">El sistema genera alertas cada hora dentro del rango del turno. Hora fin menor que hora inicio = cruza medianoche.</p>
+      <table class="entity-table">
+        <thead><tr><th>ID</th><th>Etiqueta</th><th>Inicio</th><th>Fin</th><th>Días</th><th>Recesos</th><th></th></tr></thead>
+        <tbody id="shifts-tbody"></tbody>
+      </table>
+      <div class="entity-add entity-add-shift">
+        <input type="text" id="new-shift-id" placeholder="ID (ej. S3)" />
+        <input type="text" id="new-shift-label" placeholder="Etiqueta" />
+        <input type="time" id="new-shift-start" placeholder="06:00" />
+        <input type="time" id="new-shift-end" placeholder="18:00" />
+        <input type="text" id="new-shift-days" placeholder="Días (ej. 1,2,3,4)" />
+        <button type="button" id="btn-add-shift" class="btn btn-primary">Agregar</button>
+      </div>
+      <p class="muted" style="font-size:12px;margin:6px 0 0">Días: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb</p>
+    </section>
+
+    <section class="admin-card">
+      <h2>Operadores</h2>
+      <table class="entity-table">
+        <thead><tr><th>ID</th><th>Nombre</th><th></th></tr></thead>
+        <tbody id="operators-tbody"></tbody>
+      </table>
+      <div class="entity-add">
+        <input type="text" id="new-op-id" placeholder="ID (ej. OP-1001)" />
+        <input type="text" id="new-op-name" placeholder="Nombre" />
+        <button type="button" id="btn-add-op" class="btn btn-primary">Agregar</button>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>Historial de Sesiones</h2>
+      <div class="history-filter">
+        <label class="field">
+          <span class="field-label">Fecha</span>
+          <input type="date" id="history-date" />
+        </label>
+        <button id="btn-history-export" class="btn btn-primary" type="button">Exportar Día</button>
+        <button id="btn-history-export-all" class="btn btn-ghost" type="button">Exportar Todo</button>
+      </div>
+      <div id="history-list" class="history-list"></div>
+    </section>
+
+    <section class="admin-card">
+      <h2>Bitácora de Movimientos</h2>
+      <div class="log-filters">
+        <input id="log-search" type="search" placeholder="Buscar..." class="log-search" />
+        <div id="log-type-filters" class="log-type-filters">
+          <button type="button" class="log-chip active" data-type="all">Todos</button>
+          <button type="button" class="log-chip" data-type="capture">Captura</button>
+          <button type="button" class="log-chip" data-type="scrap">Rechazo</button>
+          <button type="button" class="log-chip" data-type="alert">Alerta</button>
+          <button type="button" class="log-chip" data-type="submit">Envío</button>
+          <button type="button" class="log-chip" data-type="downtime">Paro</button>
+          <button type="button" class="log-chip" data-type="status">Estado</button>
+          <button type="button" class="log-chip" data-type="session">Sesión</button>
+        </div>
+      </div>
+      <ul id="log-list" class="log-list"></ul>
+      <div class="admin-actions" style="margin-top:10px">
+        <button id="btn-log-clear" class="btn btn-ghost btn-small" type="button">Limpiar Bitácora</button>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>Datos</h2>
+      <div class="admin-actions">
+        <button type="button" id="btn-clear-data" class="btn btn-ghost">Limpiar Envíos y Alertas de Hoy</button>
+        <button type="button" id="btn-clear-sessions" class="btn btn-ghost">Borrar Todas las Sesiones</button>
+      </div>
+    </section>
   </main>
 
-  <script src="admin.js"></script>
+  <!-- Numeric keypad overlay (shared with app.js wireNumpad) -->
+  <div id="numpad-overlay" class="overlay hidden" aria-hidden="true">
+    <div class="popup popup-numpad" role="dialog" aria-labelledby="numpad-title">
+      <h2 id="numpad-title" class="popup-title-left">—</h2>
+      <div id="numpad-display" class="numpad-display" aria-live="polite">0</div>
+      <div class="numpad-grid">
+        <button type="button" class="numkey" data-key="1">1</button>
+        <button type="button" class="numkey" data-key="2">2</button>
+        <button type="button" class="numkey" data-key="3">3</button>
+        <button type="button" class="numkey" data-key="4">4</button>
+        <button type="button" class="numkey" data-key="5">5</button>
+        <button type="button" class="numkey" data-key="6">6</button>
+        <button type="button" class="numkey" data-key="7">7</button>
+        <button type="button" class="numkey" data-key="8">8</button>
+        <button type="button" class="numkey" data-key="9">9</button>
+        <button type="button" class="numkey numkey-secondary" data-key="clear">C</button>
+        <button type="button" class="numkey" data-key="0">0</button>
+        <button type="button" class="numkey numkey-secondary" data-key="back" aria-label="Retroceso">⌫</button>
+      </div>
+      <div class="form-actions-row">
+        <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block">Cancelar</button>
+        <button type="button" id="btn-numpad-ok" class="btn btn-success btn-block">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breaks editor modal -->
+  <div id="breaks-overlay" class="overlay hidden" aria-hidden="true">
+    <div class="popup popup-form">
+      <h2 class="popup-title-left">Recesos del Turno</h2>
+      <p class="popup-subtle" id="breaks-shift-label">—</p>
+      <div id="breaks-list" class="breaks-list"></div>
+      <button type="button" id="btn-break-add" class="btn btn-ghost btn-block" style="margin-top:10px">+ Agregar Receso</button>
+      <div class="form-actions-row" style="margin-top:14px">
+        <button type="button" id="btn-breaks-cancel" class="btn btn-ghost btn-block">Cancelar</button>
+        <button type="button" id="btn-breaks-save" class="btn btn-success btn-block">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=21"></script>
+  <script src="admin.js?v=21"></script>
 </body>
 </html>

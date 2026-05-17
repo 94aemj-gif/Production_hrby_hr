@@ -1,142 +1,284 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Production Recording</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Registro de Producción</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#f5f7fb" />
+  <link rel="stylesheet" href="styles.css?v=21" />
 </head>
-<body class="screen">
+<body class="screen with-sidebar">
+  <aside class="sidebar">
+    <button type="button" class="nav-item active" data-view="capture">
+      <span class="nav-icon" aria-hidden="true">⊕</span>
+      <span class="nav-label">Captura</span>
+    </button>
+    <button type="button" class="nav-item" data-view="charts">
+      <span class="nav-icon" aria-hidden="true">📊</span>
+      <span class="nav-label">Gráficas</span>
+    </button>
+  </aside>
+
+  <div class="app-area">
+
   <header class="topbar">
     <div class="shift-info">
-      <span id="shift-label">Shift A &middot; Line 03</span>
-      <span id="shift-status" class="status-pill status-active">Active</span>
+      <span id="shift-label">—</span>
+      <span id="shift-status" class="status-pill status-active">Activo</span>
     </div>
     <div class="topbar-right">
-      <div class="next-alert">
-        <span class="muted">Next Alert</span>
-        <span id="next-alert-time">--:--</span>
+      <div class="status-select">
+        <span class="muted">Estado</span>
+        <select id="equip-status">
+          <option value="Running">En operación</option>
+          <option value="Idle">Inactivo</option>
+          <option value="Maintenance">Mantenimiento</option>
+          <option value="Breakdown">Avería</option>
+        </select>
       </div>
-      <a class="admin-link" href="admin.html" title="Admin configuration">Admin</a>
+      <div class="next-alert">
+        <span class="muted">Próxima alerta</span>
+        <span id="next-alert-time">--:--</span>
+        <span id="next-alert-countdown" class="next-alert-sub muted">—</span>
+      </div>
+      <a class="admin-link" id="admin-link" href="admin.html" title="Configuración admin">Admin</a>
     </div>
   </header>
 
-  <main class="main">
+  <main class="main view active" id="view-capture">
     <div class="clock-row">
-      <div id="clock" class="clock">--:--</div>
+      <div class="clock-stack">
+        <div id="date-label" class="date-label">—</div>
+        <div id="clock" class="clock">--:--</div>
+      </div>
     </div>
 
-    <section class="counter-card">
-      <div class="card-label">Total Production (Each)</div>
+    <section class="chart-card collapsible" id="chart-section" data-collapsed="false">
+      <button type="button" class="collapse-toggle" id="chart-toggle" aria-expanded="true" aria-controls="hour-chart">
+        <span class="section-title">Tendencia por Hora</span>
+        <span class="collapse-icon" aria-hidden="true">▾</span>
+      </button>
+      <canvas id="hour-chart" width="600" height="160"></canvas>
+    </section>
+
+    <section class="counter-card" id="counter-card">
+      <div class="card-label">Producción del Turno (Piezas)</div>
       <div id="counter" class="counter">0</div>
+      <div id="counter-empty" class="counter-empty hidden">Toque CAPTURAR para iniciar</div>
+      <div id="last-capture" class="last-capture hidden">
+        <span class="muted">Última:</span> <span id="last-capture-text">—</span>
+      </div>
+      <div id="hour-progress" class="hour-progress">
+        <div class="hour-progress-head">
+          <span id="hour-progress-label" class="muted">Hora actual</span>
+          <span id="hour-progress-countdown" class="hour-progress-cd">—</span>
+        </div>
+        <div class="hour-progress-bar">
+          <div id="hour-progress-fill" class="hour-progress-fill"></div>
+        </div>
+      </div>
       <div class="counter-actions">
-        <button id="btn-capture" class="btn btn-success btn-capture" aria-label="Capture quantity">Capture</button>
+        <button id="btn-capture" class="btn btn-success btn-capture" aria-label="Capturar producción">Capturar</button>
+        <button id="btn-undo" class="btn btn-ghost hidden" aria-label="Deshacer última captura">Deshacer</button>
       </div>
     </section>
 
     <section class="metrics">
       <div class="metric">
-        <div class="metric-label">Hour Target</div>
+        <div class="metric-label">Última Hora</div>
+        <div id="metric-hour" class="metric-value metric-hour">0</div>
+        <div id="metric-hour-range" class="metric-sub muted">—</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Meta por Hora</div>
         <div id="metric-target" class="metric-value metric-target">0</div>
       </div>
       <div class="metric">
-        <div class="metric-label">This Hour</div>
-        <div id="metric-hour" class="metric-value metric-hour">0</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Efficiency</div>
-        <div id="metric-efficiency" class="metric-value metric-efficiency">0%</div>
+        <div class="metric-label">Rechazos del Turno</div>
+        <div id="scrap-count" class="metric-value metric-target">0</div>
       </div>
     </section>
 
-    <section class="schedule">
-      <h2 class="section-title">Today's Alert Schedule</h2>
-      <ul id="schedule-list" class="schedule-list"></ul>
+    <section class="log collapsible" id="log-section" data-collapsed="true">
+      <button type="button" class="collapse-toggle" id="log-toggle" aria-expanded="false" aria-controls="log-list">
+        <span class="section-title">Bitácora de Capturas</span>
+        <span class="collapse-icon" aria-hidden="true">▾</span>
+      </button>
+      <ul id="log-list" class="log-list"></ul>
     </section>
   </main>
+
+  <main class="main view" id="view-charts" hidden>
+    <div class="clock-row">
+      <div class="clock-stack">
+        <div id="date-label-2" class="date-label">—</div>
+        <div class="section-title" style="margin:0">Gráficas en Vivo</div>
+      </div>
+    </div>
+
+    <section class="kpi-grid">
+      <div class="kpi-tile">
+        <div class="kpi-label">OEE</div>
+        <div id="kpi-oee" class="kpi-value">—</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Disponibilidad</div>
+        <div id="kpi-avail" class="kpi-value">—</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Rendimiento</div>
+        <div id="kpi-perf" class="kpi-value">—</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Calidad</div>
+        <div id="kpi-qual" class="kpi-value">—</div>
+      </div>
+    </section>
+
+    <section class="chart-card">
+      <div class="section-title" style="margin-bottom:12px">Producción por Hora vs Meta</div>
+      <canvas id="chart-hourly" width="600" height="170"></canvas>
+    </section>
+
+    <section class="chart-card">
+      <div class="section-title" style="margin-bottom:12px">Acumulado del Turno vs Meta Acumulada</div>
+      <canvas id="chart-cumulative" width="600" height="170"></canvas>
+    </section>
+
+    <section class="chart-card">
+      <div class="section-title" style="margin-bottom:12px">Rechazos por Hora</div>
+      <canvas id="chart-scrap" width="600" height="140"></canvas>
+    </section>
+
+  </main>
+  </div>
 
   <!-- Alert popup -->
   <div id="alert-overlay" class="overlay hidden" aria-hidden="true">
     <div id="alert-popup" class="popup popup-alert" role="alertdialog" aria-labelledby="alert-title">
       <div class="bell" aria-hidden="true">&#x1F514;</div>
-      <h2 id="alert-title" class="popup-title">Production Check-In</h2>
+      <h2 id="alert-title" class="popup-title">Registro de Producción</h2>
       <div id="alert-time" class="popup-time">--:--</div>
       <p class="popup-body">
-        Please register your production data before continuing.
-        This ensures accurate shift records.
+        Por favor registre sus datos de producción antes de continuar.
+        Esto asegura registros precisos del turno.
       </p>
       <div class="popup-actions">
-        <button id="btn-register" class="btn btn-primary btn-block">Register Data</button>
-        <button id="btn-snooze" class="btn btn-ghost btn-block">Snooze <span id="snooze-label">5</span> min</button>
+        <button id="btn-register" class="btn btn-primary btn-block">Registrar Datos</button>
+        <button id="btn-snooze" class="btn btn-ghost btn-block">Posponer <span id="snooze-label">5</span> min</button>
       </div>
     </div>
   </div>
 
-  <!-- Data entry popup -->
+  <!-- Capture form -->
   <div id="form-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-form" role="dialog" aria-labelledby="form-title">
-      <h2 id="form-title" class="popup-title-left"><span id="form-time">--:--</span> Production Record</h2>
-      <p class="popup-subtle">Complete this form to log your hourly production.</p>
+      <h2 id="form-title" class="popup-title-left"><span id="form-time">--:--</span> Capturar Producción</h2>
+      <p class="popup-subtle">Escanee su número de empleado y registre la cantidad.</p>
       <form id="entry-form" class="entry-form" autocomplete="off">
         <label class="field">
-          <span class="field-label">Shift ID</span>
-          <input type="text" id="f-shift" name="shift" readonly />
+          <span class="field-label"># de Empleado</span>
+          <input type="text" id="f-operator" name="operator" class="numpad-input" autocomplete="off" readonly required />
         </label>
         <label class="field">
-          <span class="field-label">Production Count (Each)</span>
-          <input type="number" id="f-count" name="count" min="0" required />
+          <span class="field-label">Hora Capturada</span>
+          <select id="f-forhour" class="hora-select"></select>
         </label>
         <label class="field">
-          <span class="field-label">Operator ID</span>
-          <input type="text" id="f-operator" name="operator" required />
+          <span class="field-label">Cantidad Producida (Piezas) *</span>
+          <input type="text" id="f-count" name="count" class="numpad-input" autocomplete="off" readonly required />
         </label>
         <label class="field">
-          <span class="field-label">Equipment Status</span>
-          <select id="f-status" name="status" required>
-            <option value="Running">Running</option>
-            <option value="Idle">Idle</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Breakdown">Breakdown</option>
-          </select>
+          <span class="field-label">Rechazos (opcional)</span>
+          <input type="text" id="f-scrap" name="scrap" class="numpad-input" autocomplete="off" readonly />
         </label>
-        <label class="field">
-          <span class="field-label">Notes (Optional)</span>
-          <input type="text" id="f-notes" name="notes" placeholder="Optional text field for anomalies" />
-        </label>
-        <button type="submit" class="btn btn-success btn-block">Submit &amp; Continue</button>
+        <div class="field">
+          <span class="field-label">Notas</span>
+          <div id="f-notes" class="note-chips"></div>
+        </div>
+        <div class="form-actions-row">
+          <button type="button" id="btn-form-cancel" class="btn btn-ghost btn-block">Cancelar</button>
+          <button type="submit" class="btn btn-success btn-block">Capturar</button>
+        </div>
       </form>
     </div>
   </div>
 
-  <!-- Capture keypad popup -->
-  <div id="keypad-overlay" class="overlay hidden" aria-hidden="true">
-    <div class="popup popup-keypad" role="dialog" aria-labelledby="keypad-title">
-      <h2 id="keypad-title" class="popup-title-left">Capture Quantity</h2>
-      <p class="popup-subtle">Enter the number of pieces produced in this batch.</p>
-      <div id="keypad-display" class="keypad-display" aria-live="polite">0</div>
-      <div class="keypad-grid">
-        <button type="button" class="key" data-key="7">7</button>
-        <button type="button" class="key" data-key="8">8</button>
-        <button type="button" class="key" data-key="9">9</button>
-        <button type="button" class="key" data-key="4">4</button>
-        <button type="button" class="key" data-key="5">5</button>
-        <button type="button" class="key" data-key="6">6</button>
-        <button type="button" class="key" data-key="1">1</button>
-        <button type="button" class="key" data-key="2">2</button>
-        <button type="button" class="key" data-key="3">3</button>
-        <button type="button" class="key key-secondary" data-key="clear">C</button>
-        <button type="button" class="key" data-key="0">0</button>
-        <button type="button" class="key key-secondary" data-key="back" aria-label="Backspace">&#x232B;</button>
+  <!-- Numeric keypad overlay -->
+  <div id="numpad-overlay" class="overlay hidden" aria-hidden="true">
+    <div class="popup popup-numpad" role="dialog" aria-labelledby="numpad-title">
+      <h2 id="numpad-title" class="popup-title-left">—</h2>
+      <div id="numpad-display" class="numpad-display" aria-live="polite">0</div>
+      <div id="numpad-quick" class="numpad-quick hidden">
+        <button type="button" class="quickkey" data-add="5">+5</button>
+        <button type="button" class="quickkey" data-add="10">+10</button>
+        <button type="button" class="quickkey" data-add="50">+50</button>
+        <button type="button" class="quickkey" data-add="100">+100</button>
+        <button type="button" class="quickkey" data-add="200">+200</button>
       </div>
-      <div class="popup-actions popup-actions-row">
-        <button id="btn-keypad-cancel" type="button" class="btn btn-ghost btn-block">Cancel</button>
-        <button id="btn-keypad-confirm" type="button" class="btn btn-success btn-block">Add to Total</button>
+      <div class="numpad-grid">
+        <button type="button" class="numkey" data-key="1">1</button>
+        <button type="button" class="numkey" data-key="2">2</button>
+        <button type="button" class="numkey" data-key="3">3</button>
+        <button type="button" class="numkey" data-key="4">4</button>
+        <button type="button" class="numkey" data-key="5">5</button>
+        <button type="button" class="numkey" data-key="6">6</button>
+        <button type="button" class="numkey" data-key="7">7</button>
+        <button type="button" class="numkey" data-key="8">8</button>
+        <button type="button" class="numkey" data-key="9">9</button>
+        <button type="button" class="numkey numkey-secondary" data-key="clear">C</button>
+        <button type="button" class="numkey" data-key="0">0</button>
+        <button type="button" class="numkey numkey-secondary" data-key="back" aria-label="Retroceso">⌫</button>
+      </div>
+      <div class="form-actions-row">
+        <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block">Cancelar</button>
+        <button type="button" id="btn-numpad-ok" class="btn btn-success btn-block">Listo</button>
       </div>
     </div>
   </div>
 
+  <!-- Admin password prompt -->
+  <div id="admin-gate-overlay" class="overlay hidden" aria-hidden="true">
+    <div class="popup popup-login">
+      <h2 class="popup-title-left">Acceso Admin</h2>
+      <p class="popup-subtle">Ingrese contraseña para continuar.</p>
+      <form id="admin-gate-form" class="entry-form" autocomplete="off">
+        <label class="field">
+          <span class="field-label">Contraseña</span>
+          <input type="password" id="admin-gate-pwd" class="numpad-input" autocomplete="off" readonly required />
+        </label>
+        <div id="admin-gate-error" class="form-error hidden">Contraseña incorrecta.</div>
+        <div class="form-actions-row">
+          <button type="button" id="btn-admin-gate-cancel" class="btn btn-ghost btn-block">Cancelar</button>
+          <button type="submit" class="btn btn-success btn-block">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- End-of-shift summary -->
+  <div id="eos-overlay" class="overlay hidden" aria-hidden="true">
+    <div class="popup popup-form">
+      <h2 class="popup-title-left">Resumen de Turno</h2>
+      <p class="popup-subtle" id="eos-shift">—</p>
+      <div class="eos-stats">
+        <div class="eos-stat"><div class="eos-label">Producción</div><div id="eos-good" class="eos-val">0</div></div>
+        <div class="eos-stat"><div class="eos-label">Rechazos</div><div id="eos-scrap" class="eos-val">0</div></div>
+        <div class="eos-stat"><div class="eos-label">OEE</div><div id="eos-oee" class="eos-val">0%</div></div>
+        <div class="eos-stat"><div class="eos-label">Paro Total</div><div id="eos-down" class="eos-val">0 min</div></div>
+      </div>
+      <div class="form-actions-row" style="margin-top:14px">
+        <button type="button" id="btn-eos-export" class="btn btn-primary btn-block">Exportar CSV</button>
+        <button type="button" id="btn-eos-close" class="btn btn-success btn-block">Cerrar Turno</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" aria-live="polite"></div>
+
   <audio id="alert-sound" preload="auto"></audio>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=21"></script>
 </body>
 </html>
