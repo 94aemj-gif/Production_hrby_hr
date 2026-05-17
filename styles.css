@@ -1785,3 +1785,55 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Saved-flash inline next to action buttons */
 .admin-actions .saved-flash { margin-left: 4px; }
+
+/* ============ Admin polish v=36: button heights + density ============ */
+
+/* Shorter buttons across the admin page — the page was running too tall. */
+.admin .btn {
+  min-height: 0;
+  padding: 9px 18px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+.admin .btn-small {
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+/* Card density: tighter padding, tighter section gap */
+.admin .admin-card { padding: 22px 24px; margin-bottom: 14px; }
+.admin .admin-card h2 { margin: 0 0 14px; }
+.admin .admin-card .muted { margin-bottom: 10px; }
+
+/* Form fields take less vertical room */
+.admin .admin-grid { gap: 14px 18px; }
+.admin .field { gap: 4px; }
+.admin input[type="text"],
+.admin input[type="number"],
+.admin input[type="password"],
+.admin input[type="time"],
+.admin select { padding: 8px 12px; font-size: 13.5px; }
+
+/* admin-actions: compact, single row, top divider for visual anchor */
+.admin .admin-actions {
+  gap: 10px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+/* Entity table density */
+.admin .entity-table th { padding: 8px 10px; }
+.admin .entity-table td { padding: 9px 10px; }
+.admin .entity-add { padding-top: 12px; margin-top: 4px; }
+.admin .entity-add .btn { padding: 8px 16px; font-size: 13px; }
+.admin .entity-add input { padding: 8px 12px; font-size: 13.5px; }
+
+/* Header row */
+.admin > div:first-child { margin-bottom: 4px; }
+
+/* Page outer padding (the admin element) */
+.admin { padding: 24px 28px 32px; }
+
+/* Lock screen popup tighter */
+.popup-login { padding: 24px; }
