@@ -1118,9 +1118,45 @@
     });
   }
 
+  // Charts view can be scrubbed back in time via the weekstrip. When the
+  // selected date is today, use the live current session; otherwise pick the
+  // best matching session for that date (prefer same line+shift+operator as
+  // this device, fall back to the most recently updated).
+  let chartsViewDate = null; // ISO yyyy-mm-dd; null = today/live
+  function pickSessionForChartsDate(iso) {
+    if (!iso || iso === todayKey()) return getSession();
+    const matches = loadSessions().filter((s) => s.date === iso);
+    if (!matches.length) return null;
+    const preferred = matches.find((s) =>
+      s.lineId === device.lineId &&
+      s.shiftId === (current && current.shiftId) &&
+      s.operatorId === device.operatorId
+    );
+    if (preferred) return preferred;
+    const sorted = matches.slice().sort((a, b) =>
+      (b.updatedAt || b.startedAt || "").localeCompare(a.updatedAt || a.startedAt || "")
+    );
+    return sorted[0];
+  }
   function renderChartsView() {
-    const s = getSession();
-    if (!s) return;
+    const iso = chartsViewDate || todayKey();
+    const s = pickSessionForChartsDate(iso);
+    const empty = $("charts-empty");
+    if (!s) {
+      if (empty) empty.classList.remove("hidden");
+      setText("kpi-oee", "—"); setText("kpi-avail", "—");
+      setText("kpi-perf", "—"); setText("kpi-qual", "—");
+      const cvs = ["chart-hourly", "chart-cumulative", "chart-scrap"];
+      for (const id of cvs) {
+        const cv = $(id);
+        if (cv) { const c = cv.getContext("2d"); c && c.clearRect(0, 0, cv.width, cv.height); }
+      }
+      renderHeatmap();
+      const d2 = $("date-label-2");
+      if (d2) d2.textContent = fmtDate(new Date(iso + "T00:00:00"));
+      return;
+    }
+    if (empty) empty.classList.add("hidden");
     const oeeStats = computeOEEBreakdown(s);
     setText("kpi-oee", oeeStats.oee + "%");
     setText("kpi-avail", oeeStats.availability + "%");
@@ -1131,7 +1167,7 @@
     drawScrapChart($("chart-scrap"), s);
     renderHeatmap();
     const d = $("date-label-2");
-    if (d) d.textContent = fmtDate(new Date());
+    if (d) d.textContent = fmtDate(new Date(iso + "T00:00:00"));
   }
 
   function computeOEEBreakdown(s) {
@@ -1903,6 +1939,20 @@
       if (s) renderChart(s);
     });
 
+    // Charts-view weekstrip (lets the user scrub past dates). Initialized
+    // lazily on first switch to the charts view, since its container starts
+    // hidden and Intl rendering needs the DOM laid out.
+    let chartsWeekStripReady = false;
+    function ensureChartsWeekStrip() {
+      if (chartsWeekStripReady) return;
+      if (!$("charts-weekstrip")) return;
+      chartsWeekStripReady = true;
+      initWeekStrip("charts-weekstrip", chartsViewDate || todayKey(), (iso) => {
+        chartsViewDate = iso;
+        renderChartsView();
+      });
+    }
+
     // Sidebar nav
     function switchView(view) {
       document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
@@ -1911,7 +1961,7 @@
       if (cap) cap.hidden = view !== "capture";
       if (ch) ch.hidden = view !== "charts";
       save("prod.ui.view", view);
-      if (view === "charts") renderChartsView();
+      if (view === "charts") { ensureChartsWeekStrip(); renderChartsView(); }
       if (view === "capture") {
         renderAll();
       }
@@ -1970,15 +2020,20 @@
     return;
   }
 
-  // ---- Weekstrip date picker (admin history) ----
-  function initWeekStrip(initialIso, onSelect) {
-    const container = $("weekstrip");
-    const monthBtn = $("weekstrip-month");
-    const todayBtn = $("weekstrip-today");
-    const prevBtn  = $("weekstrip-prev");
-    const nextBtn  = $("weekstrip-next");
-    const dowsEl   = $("weekstrip-dows");
-    const daysEl   = $("weekstrip-days");
+  // ---- Weekstrip date picker (admin history + charts view) ----
+  function initWeekStrip(prefix, initialIso, onSelect) {
+    // Back-compat: old call signature was initWeekStrip(initialIso, onSelect).
+    if (typeof prefix === "string" && typeof initialIso === "function" && onSelect === undefined) {
+      onSelect = initialIso; initialIso = prefix; prefix = "weekstrip";
+    }
+    if (!prefix) prefix = "weekstrip";
+    const container = $(prefix);
+    const monthBtn = $(prefix + "-month");
+    const todayBtn = $(prefix + "-today");
+    const prevBtn  = $(prefix + "-prev");
+    const nextBtn  = $(prefix + "-next");
+    const dowsEl   = $(prefix + "-dows");
+    const daysEl   = $(prefix + "-days");
     if (!container || !monthBtn || !daysEl || !dowsEl) return null;
 
     let weekStart;
@@ -2092,7 +2147,7 @@
       // Weekstrip is the visible picker; #history-date is a hidden mirror so
       // existing readers (exports, CSV, etc.) keep working unchanged.
       if ($("weekstrip")) {
-        initWeekStrip(dateEl.value, (iso) => {
+        initWeekStrip("weekstrip", dateEl.value, (iso) => {
           dateEl.value = iso;
           renderHistory(iso);
         });
