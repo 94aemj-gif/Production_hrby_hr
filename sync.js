@@ -447,6 +447,71 @@
   function getDeadLetter() { return load(STORAGE.DEAD_LETTER, []); }
   function clearDeadLetter() { save(STORAGE.DEAD_LETTER, []); emitStatus(); }
 
+  // Hard-delete all rows for a given session date in Supabase. Requires
+  // DELETE RLS policies on captures/downtime/events for the anon role (see
+  // README for the SQL). Also drops any pending pushes for that date so the
+  // delete doesn't immediately get re-populated.
+  async function deleteDate(iso) {
+    if (!ENABLED) return { ok: false, errors: ["sync disabled"] };
+    if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return { ok: false, errors: ["bad date"] };
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      return { ok: false, errors: ["offline"] };
+    }
+    const dayStart = iso + "T00:00:00.000Z";
+    const dayEnd   = iso + "T23:59:59.999Z";
+    const errors = [];
+
+    // Drop pending items for this date so flush doesn't undo our delete.
+    const keptPending = [];
+    for (const p of pending) {
+      const row = p.row || {};
+      if ((p.table === "captures" || p.table === "downtime") && row.session_date === iso) continue;
+      if (p.table === "events" && typeof row.ts === "string" && row.ts.slice(0, 10) === iso) continue;
+      keptPending.push(p);
+    }
+    if (keptPending.length !== pending.length) {
+      pending = keptPending;
+      save(STORAGE.PENDING, pending);
+    }
+
+    // Also clear pending tombstones whose ts is today (they'd reapply on next pull).
+    const t = loadTombstones();
+    let tChanged = false;
+    for (const k of Object.keys(t)) {
+      if (t[k] && typeof t[k].ts === "string" && t[k].ts.slice(0, 10) === iso) {
+        delete t[k]; tChanged = true;
+      }
+    }
+    if (tChanged) saveTombstones(t);
+
+    async function del(table, qs) {
+      const res = await fetch(URL + "/rest/v1/" + table + "?" + qs, {
+        method: "DELETE",
+        headers: {
+          "apikey": KEY,
+          "Authorization": "Bearer " + KEY,
+          "Prefer": "return=minimal",
+        },
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        const err = new Error("HTTP " + res.status + " " + text.slice(0, 200));
+        err.status = res.status;
+        throw err;
+      }
+    }
+
+    try { await del("captures", "session_date=eq." + encodeURIComponent(iso)); }
+    catch (e) { errors.push("captures: " + e.message); }
+    try { await del("downtime", "session_date=eq." + encodeURIComponent(iso)); }
+    catch (e) { errors.push("downtime: " + e.message); }
+    try { await del("events", "ts=gte." + encodeURIComponent(dayStart) + "&ts=lte." + encodeURIComponent(dayEnd)); }
+    catch (e) { errors.push("events: " + e.message); }
+
+    emitStatus();
+    return { ok: errors.length === 0, errors };
+  }
+
   // Try to flush whenever the network comes back.
   window.addEventListener("online", () => { scheduleFlush(0); pull(); });
   // Periodic retry.
@@ -461,6 +526,7 @@
     pushCaptureUndone, pushCaptureDeleted,
     getStatus, flush, pull,
     getDeadLetter, clearDeadLetter,
+    deleteDate,
   };
 
   // Announce initial state so the UI can render immediately.
