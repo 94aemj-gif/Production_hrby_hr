@@ -42,25 +42,56 @@
   const ENABLED = !!(URL && KEY);
 
   const STORAGE = {
-    DEVICE_ID: "prod.sync.deviceId.v1",
-    PENDING:   "prod.sync.pending.v1",
-    LAST_SYNC: "prod.sync.lastSync.v1",
-    LAST_ERR:  "prod.sync.lastError.v1",
-    PULL_WM:   "prod.sync.pullWatermark.v1",
-    LAST_PULL: "prod.sync.lastPull.v1",
+    DEVICE_ID:   "prod.sync.deviceId.v1",
+    PENDING:     "prod.sync.pending.v1",
+    DEAD_LETTER: "prod.sync.deadLetter.v1",
+    TOMBSTONES:  "prod.sync.pendingTombstones.v1",
+    LAST_SYNC:   "prod.sync.lastSync.v1",
+    LAST_ERR:    "prod.sync.lastError.v1",
+    PULL_WM:     "prod.sync.pullWatermark.v1",
+    LAST_PULL:   "prod.sync.lastPull.v1",
+    MIGRATION:   "prod.sync.migration.v1",
+    TAB_LOCK:    "prod.sync.tabLock.v1",
   };
+  const MIGRATION_VERSION = 1;
 
   const FLUSH_INTERVAL_MS = 30 * 1000;
   const PULL_INTERVAL_MS  = 30 * 1000;
-  const PULL_OVERLAP_MS   = 5 * 60 * 1000; // re-fetch a 5min window each pull, dedupe by id
+  const PULL_OVERLAP_MS   = 5 * 60 * 1000; // re-fetch a 5min window on first page, dedupe by id
   const PULL_PAGE_SIZE    = 1000;
-  const MAX_BATCH = 25;
+  const PULL_MAX_PAGES    = 20;            // safety cap: 20k rows per pull cycle
+  const MAX_BATCH         = 25;
+  const DEAD_LETTER_MAX   = 100;
+  const TOMBSTONE_TTL_MS  = 7 * 24 * 60 * 60 * 1000;
+  const TAB_LOCK_TTL_MS   = 15 * 1000;
+  const TAB_ID = "tab-" + Math.random().toString(36).slice(2, 10);
 
   function load(k, fallback) {
     try { const v = localStorage.getItem(k); return v == null ? fallback : JSON.parse(v); }
     catch (_) { return fallback; }
   }
-  function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
+  function save(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); return true; }
+    catch (e) {
+      if (e && (e.name === "QuotaExceededError" || /quota/i.test(String(e.message)))) {
+        // Best-effort: record the failure so the topbar shows it. Don't recurse
+        // through save() — write the error key directly with a short payload.
+        try {
+          localStorage.setItem(STORAGE.LAST_ERR, JSON.stringify({
+            ts: new Date().toISOString(),
+            message: "Storage full — could not save " + k,
+          }));
+        } catch (_) {}
+        try {
+          window.dispatchEvent(new CustomEvent("syncstatuschange", {
+            detail: { enabled: ENABLED, pending: (pending || []).length, deviceId,
+                      lastSync, lastError: { message: "Storage full — could not save " + k }, lastPull },
+          }));
+        } catch (_) {}
+      }
+      return false;
+    }
+  }
 
   let deviceId = load(STORAGE.DEVICE_ID, null);
   let pending  = load(STORAGE.PENDING, []);
@@ -68,6 +99,17 @@
   let lastError = load(STORAGE.LAST_ERR, null);
   let pullWm   = load(STORAGE.PULL_WM, { captures: null, downtime: null, events: null });
   let lastPull = load(STORAGE.LAST_PULL, null);
+
+  // One-shot migration: earlier versions advanced the watermark before the
+  // log-merge code existed, so remote captures already pulled are not in the
+  // local bitácora. Reset the watermark so the next pull re-fetches recent
+  // rows. The merge step is idempotent (dedupe by id), so sessions won't
+  // double-up — only the log will gain entries it was previously missing.
+  if (load(STORAGE.MIGRATION, 0) < MIGRATION_VERSION) {
+    pullWm = { captures: null, downtime: null, events: null };
+    save(STORAGE.PULL_WM, pullWm);
+    save(STORAGE.MIGRATION, MIGRATION_VERSION);
+  }
   let flushTimer = null;
   let flushing = false;
   let pulling = false;
@@ -118,12 +160,51 @@
     }
   }
 
+  // Cross-tab cooperative lock so two tabs in the same browser don't
+  // simultaneously flush/pull and clobber each other's localStorage writes.
+  function acquireTabLock() {
+    try {
+      const raw = localStorage.getItem(STORAGE.TAB_LOCK);
+      if (raw) {
+        const cur = JSON.parse(raw);
+        if (cur && cur.tabId !== TAB_ID && cur.expiresAt > Date.now()) return false;
+      }
+      localStorage.setItem(STORAGE.TAB_LOCK, JSON.stringify({
+        tabId: TAB_ID, expiresAt: Date.now() + TAB_LOCK_TTL_MS,
+      }));
+      return true;
+    } catch (_) { return true; } // can't lock; let it proceed
+  }
+  function releaseTabLock() {
+    try {
+      const raw = localStorage.getItem(STORAGE.TAB_LOCK);
+      if (!raw) return;
+      const cur = JSON.parse(raw);
+      if (cur && cur.tabId === TAB_ID) localStorage.removeItem(STORAGE.TAB_LOCK);
+    } catch (_) {}
+  }
+
+  function deadLetter(item, err) {
+    const dl = load(STORAGE.DEAD_LETTER, []);
+    dl.push({
+      item,
+      error: { status: err && err.status, message: String((err && err.message) || err).slice(0, 300) },
+      droppedAt: new Date().toISOString(),
+    });
+    if (dl.length > DEAD_LETTER_MAX) dl.splice(0, dl.length - DEAD_LETTER_MAX);
+    save(STORAGE.DEAD_LETTER, dl);
+  }
+
+  function isPermanent(status) {
+    return status === 400 || status === 409 || status === 422;
+  }
+
   async function flush() {
     if (!ENABLED || flushing || !pending.length) return;
     if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+    if (!acquireTabLock()) return;
     flushing = true;
     try {
-      // Group consecutive items by table for batched POSTs.
       while (pending.length) {
         const head = pending[0];
         const batch = [head];
@@ -140,15 +221,52 @@
           save(STORAGE.LAST_SYNC, lastSync);
           if (lastError) { lastError = null; save(STORAGE.LAST_ERR, null); }
           emitStatus();
+          continue;
         } catch (e) {
+          // Permanent failure (bad data / constraint violation): isolate the
+          // bad row. If the batch had only one row, dead-letter it directly;
+          // otherwise retry just the head to see which row is poison.
+          if (isPermanent(e.status) && batch.length === 1) {
+            deadLetter(head, e);
+            pending.shift();
+            save(STORAGE.PENDING, pending);
+            lastError = { ts: new Date().toISOString(),
+              message: "Dropped 1 bad row to dead-letter (" + e.status + ")" };
+            save(STORAGE.LAST_ERR, lastError);
+            emitStatus();
+            continue;
+          }
+          if (isPermanent(e.status) && batch.length > 1) {
+            try {
+              await postRows(head.table, [head.row]);
+              pending.shift();
+              save(STORAGE.PENDING, pending);
+              continue;
+            } catch (e2) {
+              if (isPermanent(e2.status)) {
+                deadLetter(head, e2);
+                pending.shift();
+                save(STORAGE.PENDING, pending);
+                lastError = { ts: new Date().toISOString(),
+                  message: "Dropped 1 bad row to dead-letter (" + e2.status + ")" };
+                save(STORAGE.LAST_ERR, lastError);
+                emitStatus();
+                continue;
+              }
+              // Transient on the isolated retry: fall through to break.
+              e = e2;
+            }
+          }
+          // Transient failure (network / 5xx / auth): keep the row, retry next cycle.
           lastError = { ts: new Date().toISOString(), message: String(e && e.message || e) };
           save(STORAGE.LAST_ERR, lastError);
           emitStatus();
-          break; // Stop on first failure; retry on next interval.
+          break;
         }
       }
     } finally {
       flushing = false;
+      releaseTabLock();
     }
   }
 
@@ -221,47 +339,77 @@
   }
 
   function getStatus() {
-    return { enabled: ENABLED, pending: pending.length, deviceId, lastSync, lastError, lastPull };
+    return {
+      enabled: ENABLED, pending: pending.length,
+      deadLettered: (load(STORAGE.DEAD_LETTER, []) || []).length,
+      deviceId, lastSync, lastError, lastPull,
+    };
   }
 
   // ---- Pull (Supabase -> device) ----
 
+  // Paginated pull. First page uses gte.(wm - overlap) to catch backfills from
+  // devices that flushed older rows late. Subsequent pages use strict gt. so we
+  // don't infinite-loop. Returns the full set of rows across pages.
   async function pullTable(table, tsCol) {
-    const baseWm = pullWm[table];
-    const params = new URLSearchParams();
-    params.set("select", "*");
-    if (baseWm) {
-      const fromTs = new Date(Math.max(0, new Date(baseWm).getTime() - PULL_OVERLAP_MS)).toISOString();
-      params.set(tsCol, "gte." + fromTs);
-    }
-    params.set("order", tsCol + ".asc");
-    params.set("limit", String(PULL_PAGE_SIZE));
-    const res = await fetch(URL + "/rest/v1/" + table + "?" + params.toString(), {
-      headers: {
-        "apikey": KEY,
-        "Authorization": "Bearer " + KEY,
-      },
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      const err = new Error("HTTP " + res.status + ": " + text.slice(0, 200));
-      err.status = res.status;
-      throw err;
-    }
-    const rows = await res.json();
-    // Advance watermark to the max ts we observed (rows are asc).
-    if (rows.length) {
-      const maxTs = rows[rows.length - 1][tsCol];
-      if (maxTs && (!pullWm[table] || maxTs > pullWm[table])) {
-        pullWm[table] = maxTs;
+    const allRows = [];
+    let loopWm = pullWm[table];
+    let firstPage = true;
+    for (let page = 0; page < PULL_MAX_PAGES; page++) {
+      const params = new URLSearchParams();
+      params.set("select", "*");
+      if (loopWm) {
+        if (firstPage) {
+          const fromTs = new Date(Math.max(0, new Date(loopWm).getTime() - PULL_OVERLAP_MS)).toISOString();
+          params.set(tsCol, "gte." + fromTs);
+        } else {
+          params.set(tsCol, "gt." + loopWm);
+        }
       }
+      params.set("order", tsCol + ".asc");
+      params.set("limit", String(PULL_PAGE_SIZE));
+      const res = await fetch(URL + "/rest/v1/" + table + "?" + params.toString(), {
+        headers: { "apikey": KEY, "Authorization": "Bearer " + KEY },
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        const err = new Error("HTTP " + res.status + ": " + text.slice(0, 200));
+        err.status = res.status;
+        throw err;
+      }
+      const rows = await res.json();
+      if (!rows.length) break;
+      allRows.push.apply(allRows, rows);
+      const maxTs = rows[rows.length - 1][tsCol];
+      if (maxTs) {
+        loopWm = maxTs;
+        if (!pullWm[table] || maxTs > pullWm[table]) pullWm[table] = maxTs;
+      }
+      firstPage = false;
+      if (rows.length < PULL_PAGE_SIZE) break;
     }
-    return rows;
+    return allRows;
+  }
+
+  // Pending tombstones: undo/delete events that arrived before the matching
+  // capture row. We hold them and applyRemote consumes them when the capture
+  // finally lands. Keyed by capture_id; values include a ts so we can expire.
+  function loadTombstones() { return load(STORAGE.TOMBSTONES, {}); }
+  function saveTombstones(t) { save(STORAGE.TOMBSTONES, t); }
+  function pruneTombstones(t) {
+    const cutoff = Date.now() - TOMBSTONE_TTL_MS;
+    let changed = false;
+    for (const k of Object.keys(t)) {
+      const ts = t[k] && t[k].ts;
+      if (ts && new Date(ts).getTime() < cutoff) { delete t[k]; changed = true; }
+    }
+    return changed;
   }
 
   async function pull() {
     if (!ENABLED || pulling) return;
     if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+    if (!acquireTabLock()) return;
     pulling = true;
     try {
       const [captures, downtime, events] = await Promise.all([
@@ -273,9 +421,18 @@
       lastPull = new Date().toISOString();
       save(STORAGE.LAST_PULL, lastPull);
       if (window.app && typeof window.app.applyRemote === "function") {
-        try { window.app.applyRemote({ captures, downtime, events, ownDeviceId: deviceId }); }
-        catch (e) { /* renderer errors shouldn't break sync */ }
+        try {
+          window.app.applyRemote({ captures, downtime, events, ownDeviceId: deviceId });
+        } catch (e) {
+          // Surface renderer errors so they aren't silently lost.
+          lastError = { ts: new Date().toISOString(),
+            message: "applyRemote: " + String((e && e.message) || e).slice(0, 200) };
+          save(STORAGE.LAST_ERR, lastError);
+        }
       }
+      // Expire ancient pending tombstones.
+      const t = loadTombstones();
+      if (pruneTombstones(t)) saveTombstones(t);
       emitStatus();
     } catch (e) {
       lastError = { ts: new Date().toISOString(), message: "pull: " + String(e && e.message || e) };
@@ -283,8 +440,12 @@
       emitStatus();
     } finally {
       pulling = false;
+      releaseTabLock();
     }
   }
+
+  function getDeadLetter() { return load(STORAGE.DEAD_LETTER, []); }
+  function clearDeadLetter() { save(STORAGE.DEAD_LETTER, []); emitStatus(); }
 
   // Try to flush whenever the network comes back.
   window.addEventListener("online", () => { scheduleFlush(0); pull(); });
@@ -299,6 +460,7 @@
     registerDevice, pushCapture, pushDowntime, pushEvent,
     pushCaptureUndone, pushCaptureDeleted,
     getStatus, flush, pull,
+    getDeadLetter, clearDeadLetter,
   };
 
   // Announce initial state so the UI can render immediately.
