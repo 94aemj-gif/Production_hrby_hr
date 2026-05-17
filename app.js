@@ -47,11 +47,9 @@
       breaks: [{ start: "22:00", end: "22:15" }, { start: "01:30", end: "01:45" }] },
   ];
 
-  const NOTE_OPTIONS = [
-    "Personal entrenamiento",
-    "Junta producción",
-    "Falta material",
-  ];
+  const NOTE_KEYS = ["notes.training", "notes.meeting", "notes.noMaterial"];
+  function tt(key, params) { return (window.i18n && window.i18n.t) ? window.i18n.t(key, params) : key; }
+  function getLocale() { return (window.i18n && window.i18n.locale) ? window.i18n.locale() : "es-MX"; }
 
   function isOvertimeDate(dateStr) {
     const [Y, M, D] = dateStr.split("-").map(Number);
@@ -63,12 +61,14 @@
     { id: "OP-0847", name: "Operador Demo" },
   ];
 
-  const STATUS_LABEL = {
-    Running: "En operación",
-    Idle: "Inactivo",
-    Maintenance: "Mantenimiento",
-    Breakdown: "Avería",
-  };
+  function statusLabel(code) {
+    return tt({
+      Running: "top.statusOpt.running",
+      Idle: "top.statusOpt.idle",
+      Maintenance: "top.statusOpt.maintenance",
+      Breakdown: "top.statusOpt.breakdown",
+    }[code] || code);
+  }
 
   // ---- Storage helpers ----
   const load = (key, fallback) => {
@@ -210,7 +210,7 @@
     const now = new Date();
     const { start: shStart, end: shEnd } = getShiftWindow(s);
     if (now < shStart || now >= shEnd) {
-      label.textContent = "Fuera de turno";
+      label.textContent = tt("counter.outOfShift");
       cd.textContent = "—";
       fill.style.width = "0%";
       return;
@@ -225,8 +225,8 @@
     let lh2 = (hourStart.getHours() + 1) % 24;
     const ap2 = lh2 >= 12 ? "PM" : "AM";
     lh2 = lh2 % 12 || 12;
-    label.textContent = "Hora " + lh + ":00 " + ap + " – " + lh2 + ":00 " + ap2;
-    cd.textContent = minsLeft + " min para capturar";
+    label.textContent = tt("counter.hourRange", { h1: lh, ap1: ap, h2: lh2, ap2: ap2 });
+    cd.textContent = tt("counter.minToCapture", { n: minsLeft });
     fill.style.width = pct + "%";
     fill.style.background = pct >= 85 ? "var(--accent)" : "var(--blue)";
   }
@@ -344,11 +344,12 @@
     if (!filtered.length) {
       const empty = document.createElement("li");
       empty.className = "log-empty";
-      empty.textContent = entries.length ? "Sin coincidencias." : "Sin movimientos registrados.";
+      empty.textContent = entries.length ? tt("log.noMatches") : tt("log.empty");
       logListEl.appendChild(empty);
       return;
     }
     const isAdminPage = !$("counter");
+    const delTitle = tt("log.delTitle");
     filtered.slice().reverse().forEach((e) => {
       const d = new Date(e.ts);
       const li = document.createElement("li");
@@ -358,16 +359,16 @@
         '<span class="log-time">' + fmt12(d, true) + "</span>" +
         '<span class="log-tag">' + logTagLabel(e.type) + "</span>" +
         '<span class="log-msg"></span>' +
-        (canDelete ? '<button type="button" class="log-del" title="Eliminar captura" data-cap="' + e.captureId + '">✕</button>' : "");
+        (canDelete ? '<button type="button" class="log-del" title="' + escapeHtml(delTitle) + '" data-cap="' + e.captureId + '">✕</button>' : "");
       li.querySelector(".log-msg").textContent = e.message;
       logListEl.appendChild(li);
     });
     logListEl.querySelectorAll(".log-del").forEach((btn) => {
       btn.addEventListener("click", () => {
         const row = btn.closest(".log-item");
-        const msg = row ? row.querySelector(".log-msg").textContent : "captura";
+        const msg = row ? row.querySelector(".log-msg").textContent : "";
         const time = row ? row.querySelector(".log-time").textContent : "";
-        if (!confirm("¿Eliminar?\n\n" + time + " — " + msg)) return;
+        if (!confirm(tt("log.delConfirm", { time, msg }))) return;
         deleteCapture(btn.dataset.cap);
       });
     });
@@ -388,7 +389,7 @@
     }
     if (changed) {
       saveSessions(all);
-      logEvent("undo", "Admin eliminó captura: -" + qty + " (" + (kind === "scrap" ? "rechazos" : "piezas") + ")");
+      logEvent("undo", tt(kind === "scrap" ? "log.adminDelScrap" : "log.adminDelPieces", { qty }));
       renderLog();
       if (typeof renderHistory === "function") {
         const hd = $("history-date");
@@ -398,27 +399,19 @@
   }
 
   function logTagLabel(type) {
-    switch (type) {
-      case "capture": return "Captura";
-      case "scrap": return "Rechazo";
-      case "alert": return "Alerta";
-      case "snooze": return "Posponer";
-      case "submit": return "Envío";
-      case "adjust": return "Ajuste";
-      case "config": return "Config";
-      case "clear": return "Limpieza";
-      case "system": return "Sistema";
-      case "downtime": return "Paro";
-      case "status": return "Estado";
-      case "session": return "Sesión";
-      case "undo": return "Deshacer";
-      default: return type;
-    }
+    const keyMap = {
+      capture: "logTag.capture", scrap: "logTag.scrap", alert: "logTag.alert",
+      snooze: "logTag.snooze", submit: "logTag.submit", adjust: "logTag.adjust",
+      config: "logTag.config", clear: "logTag.clear", system: "logTag.system",
+      downtime: "logTag.downtime", status: "logTag.status", session: "logTag.session",
+      undo: "logTag.undo",
+    };
+    return keyMap[type] ? tt(keyMap[type]) : type;
   }
 
   function clearLog() {
     save(STORAGE.LOG, []);
-    logEvent("system", "Bitácora limpiada manualmente");
+    logEvent("system", tt("log.clearedManual"));
   }
 
   // ---- Time helpers ----
@@ -440,7 +433,7 @@
   }
   function fmtDate(d) {
     try {
-      return d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+      return d.toLocaleDateString(getLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
     } catch (_) {
       return d.toISOString().slice(0, 10);
     }
@@ -521,7 +514,11 @@
     if (!all.find((s) => sessionKey(s) === nextKey)) {
       all.push(newSessionShell(current));
       saveSessions(all);
-      logEvent("session", "Sesión iniciada (auto): " + lineLabel(current.lineId) + " · " + shiftLabel(current.shiftId) + " · " + operatorName(current.operatorId));
+      logEvent("session", tt("log.sessionStarted", {
+        line: lineLabel(current.lineId),
+        shift: shiftLabel(current.shiftId),
+        operator: operatorName(current.operatorId),
+      }));
     }
     return true;
   }
@@ -544,7 +541,7 @@
     setText("eos-good", totals.good.toLocaleString());
     setText("eos-scrap", totals.scrap.toLocaleString());
     setText("eos-oee", oee + "%");
-    setText("eos-down", downMin + " min");
+    setText("eos-down", tt("eos.min", { n: downMin }));
     const ov = $("eos-overlay");
     if (ov) { ov.classList.remove("hidden"); ov.setAttribute("aria-hidden", "false"); }
     const btnX = $("btn-eos-close");
@@ -596,7 +593,7 @@
     const s = getSession();
     const capBtn = $("btn-capture");
     if (!s) {
-      setText("shift-label", device.lineId ? lineLabel(device.lineId) + " · Sin turno activo" : "Configure dispositivo en Admin");
+      setText("shift-label", device.lineId ? lineLabel(device.lineId) + " · " + tt("shift.noActive") : tt("shift.configDevice"));
       setText("operator-label", device.operatorId ? operatorName(device.operatorId) : "—");
       setText("counter", "—");
       setText("scrap-count", "—");
@@ -604,11 +601,11 @@
       setText("metric-hour", "—");
       setText("metric-hour-range", "—");
       setText("metric-efficiency", "—");
-      setText("metric-efficiency-sub", "Fuera de turno");
+      setText("metric-efficiency-sub", tt("counter.outOfShift"));
       setText("oee", "—");
       setDisabled("equip-status", true);
       const pill = $("shift-status");
-      if (pill) { pill.className = "status-pill status-paused"; pill.textContent = "Fuera de Turno"; }
+      if (pill) { pill.className = "status-pill status-paused"; pill.textContent = tt("status.outOfShift"); }
       renderSchedule();
       updateNextAlert();
       if (capBtn) capBtn.disabled = true;
@@ -618,7 +615,7 @@
     setDisabled("equip-status", false);
     updateSession(rolloverHourIfNeeded);
     const fresh = getSession();
-    const otSuffix = isOvertimeDate(fresh.date) ? " · Tiempo Extra" : "";
+    const otSuffix = isOvertimeDate(fresh.date) ? " · " + tt("shift.overtime") : "";
     setText("shift-label", lineLabel(fresh.lineId) + " · " + shiftLabel(fresh.shiftId) + otSuffix);
     setText("operator-label", operatorName(fresh.operatorId));
     const totals = shiftTotals(fresh);
@@ -641,7 +638,7 @@
     setText("metric-efficiency", shiftEff.pct + "%");
     const effEl = $("metric-efficiency");
     if (effEl) effEl.style.color = shiftEff.pct >= 90 ? "var(--green)" : shiftEff.pct >= 60 ? "var(--blue)" : "var(--accent)";
-    setText("metric-efficiency-sub", shiftEff.completedHours + (shiftEff.completedHours === 1 ? " hr completa" : " hrs completas"));
+    setText("metric-efficiency-sub", tt(shiftEff.completedHours === 1 ? "metric.hrComplete" : "metric.hrsComplete", { n: shiftEff.completedHours }));
 
     setText("oee", computeOEE(fresh) + "%");
     const eqs = $("equip-status"); if (eqs) eqs.value = fresh.currentStatus;
@@ -669,7 +666,8 @@
     if (lastEl && lastText) {
       if (last) {
         const ts = new Date(last.ts);
-        lastText.textContent = "Emp " + last.employeeId + " · " + (last.kind === "scrap" ? last.qty + " rechazos" : "+" + last.qty + " piezas") + " · " + fmt12(ts);
+        lastText.textContent = tt(last.kind === "scrap" ? "counter.lastCapture.scrap" : "counter.lastCapture.good",
+          { emp: last.employeeId, qty: last.qty, time: fmt12(ts) });
         lastEl.classList.remove("hidden");
       } else {
         lastEl.classList.add("hidden");
@@ -718,10 +716,10 @@
     const pill = $("shift-status");
     if (!pill) return;
     pill.className = "status-pill";
-    if (status === "Running") { pill.classList.add("status-active"); pill.textContent = "Activo"; }
-    else if (status === "Idle") { pill.classList.add("status-paused"); pill.textContent = "Inactivo"; }
-    else if (status === "Maintenance") { pill.classList.add("status-completed"); pill.textContent = "Mantenimiento"; }
-    else if (status === "Breakdown") { pill.classList.add("status-paused"); pill.textContent = "Avería"; }
+    if (status === "Running") { pill.classList.add("status-active"); pill.textContent = tt("status.active"); }
+    else if (status === "Idle") { pill.classList.add("status-paused"); pill.textContent = tt("status.idle"); }
+    else if (status === "Maintenance") { pill.classList.add("status-completed"); pill.textContent = tt("status.maintenance"); }
+    else if (status === "Breakdown") { pill.classList.add("status-paused"); pill.textContent = tt("status.breakdown"); }
   }
 
   // ---- OEE (availability * performance * quality) within shift window ----
@@ -790,7 +788,7 @@
       elapsedHrs = Math.min(totalHrs, Math.max(0, (hourTo - shStart) / 3600000));
       points.push({ x: elapsedHrs, val: cum, target: cumTarget });
     }
-    if (!points.length) { ctx.fillStyle = getCss("--muted"); ctx.font = "13px system-ui"; ctx.fillText("Sin datos aún", 10, 30); return; }
+    if (!points.length) { ctx.fillStyle = getCss("--muted"); ctx.font = "13px system-ui"; ctx.fillText(tt("charts.noData"), 10, 30); return; }
     const padL = 44, padR = 14, padT = 14, padB = 22;
     const cw = w - padL - padR, ch = h - padT - padB;
     const maxY = Math.max(...points.map(p => Math.max(p.val, p.target)), 1);
@@ -828,7 +826,7 @@
     ctx.fillStyle = getCss("--blue");
     ctx.beginPath(); ctx.arc(lx, ly, 5, 0, Math.PI * 2); ctx.fill();
     // legend
-    ctx.fillStyle = getCss("--muted"); ctx.fillText("─ real  · · · meta", padL, h - 4);
+    ctx.fillStyle = getCss("--muted"); ctx.fillText(tt("charts.legend"), padL, h - 4);
   }
 
   function drawScrapChart(cv, s) {
@@ -889,7 +887,7 @@
     const arr = Object.entries(byEmp).map(([emp, qty]) => ({ emp, qty })).sort((a, b) => b.qty - a.qty).slice(0, 8);
     const padL = 60, padR = 14, padT = 10, padB = 16;
     const cw = w - padL - padR, ch = h - padT - padB;
-    if (!arr.length) { ctx.fillStyle = getCss("--muted"); ctx.font = "13px system-ui"; ctx.fillText("Sin capturas con empleado aún", 10, 30); return; }
+    if (!arr.length) { ctx.fillStyle = getCss("--muted"); ctx.font = "13px system-ui"; ctx.fillText(tt("charts.noEmployees"), 10, 30); return; }
     const max = Math.max(...arr.map(a => a.qty), 1);
     const rowH = ch / arr.length;
     ctx.font = "12px system-ui";
@@ -1060,10 +1058,10 @@
       const passed = mins < nowMin;
       const li = document.createElement("li");
       if (passed) li.classList.add("done");
-      const label = idx === 0 ? "Primer registro horario"
-        : idx === times.length - 1 ? "Resumen de fin de turno"
-        : "Registrar producción de la hora";
-      li.innerHTML = `<span class="sched-time">${fmt12FromHHMM(t)}</span><span class="sched-tag">Alerta</span><span>${escapeHtml(label)}</span>`;
+      const label = idx === 0 ? tt("sched.first")
+        : idx === times.length - 1 ? tt("sched.last")
+        : tt("sched.regular");
+      li.innerHTML = `<span class="sched-time">${fmt12FromHHMM(t)}</span><span class="sched-tag">${escapeHtml(tt("sched.tag"))}</span><span>${escapeHtml(label)}</span>`;
       scheduleListEl.appendChild(li);
     });
   }
@@ -1081,7 +1079,7 @@
     const capBtn = $("btn-capture");
     if (upcoming.length) {
       const minsToNext = upcoming[0].mins - nowMin;
-      if (cd) cd.textContent = "en " + minsToNext + " min";
+      if (cd) cd.textContent = tt("sched.in", { n: minsToNext });
       if (capBtn) capBtn.classList.toggle("pulse", minsToNext <= 5);
     } else {
       if (cd) cd.textContent = "—";
@@ -1116,15 +1114,20 @@
     }
   }
 
+  function updateSnoozeButton() {
+    const btn = $("btn-snooze");
+    if (btn) btn.textContent = tt("btn.snooze", { n: config.snoozeMinutes });
+  }
+
   function showAlert(hhmm) {
     activeAlertTime = hhmm;
     $("alert-time").textContent = fmt12FromHHMM(hhmm);
-    $("snooze-label").textContent = String(config.snoozeMinutes);
+    updateSnoozeButton();
     $("alert-overlay").classList.remove("hidden");
     $("alert-overlay").setAttribute("aria-hidden", "false");
     playBeep();
     buzz([200, 100, 200, 100, 200]);
-    logEvent("alert", "Alerta disparada para " + fmt12FromHHMM(hhmm));
+    logEvent("alert", tt("log.alertFired", { time: fmt12FromHHMM(hhmm) }));
   }
 
   function hideAlert() {
@@ -1171,17 +1174,19 @@
       let lh2 = (t.getHours() + 1) % 24;
       const ap2 = lh2 >= 12 ? "PM" : "AM";
       const lh212 = lh2 % 12 || 12;
-      const label = lh12 + ":00 " + ap + " – " + lh212 + ":00 " + ap2 + (filled[key] ? "  (ya capturado: " + filled[key] + ")" : "");
+      const label = filled[key]
+        ? tt("form.hourOptCaptured", { h1: lh12, ap1: ap, h2: lh212, ap2: ap2, n: filled[key] })
+        : tt("form.hourOpt", { h1: lh12, ap1: ap, h2: lh212, ap2: ap2 });
       const isDefault = key === defaultForHour;
       opts.push(`<option value="${key}"${isDefault ? " selected" : ""}>${escapeHtml(label)}</option>`);
     }
-    sel.innerHTML = opts.join("") || '<option value="">Sin horas disponibles</option>';
+    sel.innerHTML = opts.join("") || '<option value="">' + escapeHtml(tt("form.noHours")) + '</option>';
   }
 
   function hideForm(force) {
     const hasValues = !force && (($("f-count") && $("f-count").value) || ($("f-scrap") && $("f-scrap").value) || ($("f-operator") && $("f-operator").value) || (selectedNotes && selectedNotes.length));
     if (hasValues) {
-      if (!confirm("¿Cancelar captura sin guardar?")) return;
+      if (!confirm(tt("form.confirmCancel"))) return;
     }
     $("form-overlay").classList.add("hidden");
     $("form-overlay").setAttribute("aria-hidden", "true");
@@ -1243,7 +1248,7 @@
     if (!input) return;
     numpadTarget = input;
     numpadBuffer = (input.value || "").replace(/[^0-9]/g, "");
-    const label = (input.previousElementSibling && input.previousElementSibling.textContent) || "Ingrese cantidad";
+    const label = (input.previousElementSibling && input.previousElementSibling.textContent) || tt("numpad.enterQty");
     const title = $("numpad-title");
     if (title) title.textContent = label;
     // Show quick chips only for quantity fields (f-count, f-scrap)
@@ -1318,14 +1323,15 @@
     const container = $("f-notes");
     if (!container) return;
     container.innerHTML = "";
-    NOTE_OPTIONS.forEach((label) => {
+    NOTE_KEYS.forEach((key) => {
+      const label = tt(key);
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "note-chip" + (selectedNotes.indexOf(label) !== -1 ? " active" : "");
+      btn.className = "note-chip" + (selectedNotes.indexOf(key) !== -1 ? " active" : "");
       btn.textContent = label;
       btn.addEventListener("click", () => {
-        const i = selectedNotes.indexOf(label);
-        if (i === -1) selectedNotes.push(label);
+        const i = selectedNotes.indexOf(key);
+        if (i === -1) selectedNotes.push(key);
         else selectedNotes.splice(i, 1);
         renderNoteChips();
       });
@@ -1340,7 +1346,7 @@
     const now = new Date();
     if (!isWithinShift(now, sess)) {
       const { start, end } = getShiftWindow(sess);
-      const msg = "Fuera del horario del turno (" + fmt12(start) + " – " + fmt12(end) + "). ¿Registrar de todas formas?";
+      const msg = tt("form.outOfShift", { start: fmt12(start), end: fmt12(end) });
       if (!confirm(msg)) return;
     }
     const id = "c" + Date.now() + Math.random().toString(36).slice(2, 6);
@@ -1351,9 +1357,9 @@
     const fresh = getSession();
     const totals = shiftTotals(fresh);
     if (kind === "scrap") {
-      logEvent("scrap", "Rechazos: +" + qty + " (total " + totals.scrap.toLocaleString() + ")", { captureId: id });
+      logEvent("scrap", tt("log.scrapMsg", { qty, total: totals.scrap.toLocaleString() }), { captureId: id });
     } else {
-      logEvent("capture", "Captura: +" + qty + " piezas (total " + totals.good.toLocaleString() + ")", { captureId: id });
+      logEvent("capture", tt("log.captureMsg", { qty, total: totals.good.toLocaleString() }), { captureId: id });
     }
     renderAll();
   }
@@ -1365,7 +1371,7 @@
     if (last.undone) return;
     if (Date.now() - new Date(last.ts).getTime() > UNDO_WINDOW_MS) return;
     updateSession((s2) => { s2.captures[s2.captures.length - 1].undone = true; });
-    logEvent("undo", "Captura deshecha: -" + last.qty + " (" + (last.kind === "scrap" ? "rechazos" : "piezas") + ")");
+    logEvent("undo", tt(last.kind === "scrap" ? "log.undoMsgScrap" : "log.undoMsgPieces", { qty: last.qty }));
     renderAll();
   }
 
@@ -1379,7 +1385,7 @@
     if (age < 0 || age > UNDO_WINDOW_MS) { btn.classList.add("hidden"); return; }
     btn.classList.remove("hidden");
     const remain = Math.ceil((UNDO_WINDOW_MS - age) / 1000);
-    btn.textContent = "Deshacer (" + remain + "s)";
+    btn.textContent = tt("btn.undoCountdown", { s: remain });
     clearTimeout(undoTimer);
     undoTimer = setTimeout(() => updateUndoButton(getSession()), 1000);
   }
@@ -1404,13 +1410,13 @@
     });
     const fresh = getSession();
     const lastDt = fresh.downtime[fresh.downtime.length - 1];
-    logEvent("status", "Estado cambiado a: " + STATUS_LABEL[newStatus]);
+    logEvent("status", tt("log.statusChanged", { status: statusLabel(newStatus) }));
     if (newStatus !== "Running") {
-      logEvent("downtime", "Paro iniciado: " + STATUS_LABEL[newStatus]);
+      logEvent("downtime", tt("log.downStarted", { status: statusLabel(newStatus) }));
     } else {
       if (lastDt && lastDt.durationMs) {
         const mins = Math.round(lastDt.durationMs / 60000);
-        logEvent("downtime", "Paro terminado: " + STATUS_LABEL[lastDt.status] + " (" + mins + " min)");
+        logEvent("downtime", tt("log.downEnded", { status: statusLabel(lastDt.status), mins }));
       }
     }
     renderAll();
@@ -1431,7 +1437,7 @@
     const now = new Date();
     const ts = now.toISOString();
     if (!isWithinShift(now, s)) {
-      if (!confirm("Fuera del horario del turno. ¿Registrar de todas formas?")) return;
+      if (!confirm(tt("form.outOfShiftSimple"))) return;
     }
     const goodId = "c" + Date.now() + "g" + Math.random().toString(36).slice(2, 5);
     const scrapId = "c" + Date.now() + "s" + Math.random().toString(36).slice(2, 5);
@@ -1444,14 +1450,16 @@
         employeeId, productionCount: qty, scrapCount: scrap, notes, forHour,
       });
     });
-    const noteStr = notes.length ? " · " + notes.join(", ") : "";
-    logEvent("capture", "Emp " + employeeId + ": +" + qty + " piezas" + (scrap ? ", " + scrap + " rechazos" : "") + noteStr);
+    const noteLabels = notes.map((n) => /^notes\./.test(n) ? tt(n) : n);
+    const noteStr = noteLabels.length ? tt("log.captureNotePart", { notes: noteLabels.join(", ") }) : "";
+    const scrapStr = scrap ? tt("log.captureScrapPart", { n: scrap }) : "";
+    logEvent("capture", tt("log.captureFull", { emp: employeeId, qty, scrap: scrapStr, notes: noteStr }));
     activeAlertTime = null;
     hideForm(true);
     renderAll();
     const cv = $("view-charts");
     if (cv && !cv.hidden) renderChartsView();
-    toast("✓ Registrado +" + qty + " piezas — Emp " + employeeId);
+    toast(tt("toast.registered", { qty, emp: employeeId }));
     buzz(80);
   }
 
@@ -1460,7 +1468,7 @@
     const pending = load(STORAGE.PENDING, []);
     if (!pending.length) return;
     save(STORAGE.PENDING, []);
-    logEvent("system", "Envíos pendientes sincronizados: " + pending.length);
+    logEvent("system", tt("log.flushed", { n: pending.length }));
   }
 
   // ---- History ----
@@ -1482,7 +1490,7 @@
     if (!listEl) return;
     const all = loadSessions().filter((s) => s.date === date);
     if (!all.length) {
-      listEl.innerHTML = '<p class="muted">Sin sesiones para esta fecha.</p>';
+      listEl.innerHTML = '<p class="muted">' + escapeHtml(tt("history.empty")) + '</p>';
       return;
     }
     listEl.innerHTML = all.map((s, idx) => {
@@ -1496,11 +1504,11 @@
             <span class="muted">${escapeHtml(operatorName(s.operatorId))}</span>
           </div>
           <div class="hi-stats">
-            <span>Producción: <strong>${totals.good.toLocaleString()}</strong></span>
-            <span>Rechazos: <strong>${totals.scrap.toLocaleString()}</strong></span>
-            <span>OEE: <strong>${oee}%</strong></span>
-            <span>Paro: <strong>${downMin} min</strong></span>
-            <span>Envíos: <strong>${(s.submissions || []).length}</strong></span>
+            <span>${escapeHtml(tt("history.production"))}: <strong>${totals.good.toLocaleString()}</strong></span>
+            <span>${escapeHtml(tt("history.scrap"))}: <strong>${totals.scrap.toLocaleString()}</strong></span>
+            <span>${escapeHtml(tt("history.oee"))}: <strong>${oee}%</strong></span>
+            <span>${escapeHtml(tt("history.down"))}: <strong>${escapeHtml(tt("history.min", { n: downMin }))}</strong></span>
+            <span>${escapeHtml(tt("history.submissions"))}: <strong>${(s.submissions || []).length}</strong></span>
           </div>
           <canvas class="hist-chart" data-idx="${idx}" width="600" height="140"></canvas>
         </div>
@@ -1537,7 +1545,7 @@
     a.download = "produccion-" + date + ".csv";
     a.click();
     URL.revokeObjectURL(url);
-    logEvent("system", "Exportado CSV: " + date);
+    logEvent("system", tt("log.exportedCSV", { date }));
   }
 
   function exportAllCSV() {
@@ -1560,7 +1568,7 @@
     a.download = "produccion-todos.csv";
     a.click();
     URL.revokeObjectURL(url);
-    logEvent("system", "Exportado CSV completo (" + all.length + " sesiones)");
+    logEvent("system", tt("log.exportedAllCSV", { n: all.length }));
   }
 
   // ---- Wiring ----
@@ -1626,7 +1634,7 @@
     if (eqs) eqs.addEventListener("change", (e) => changeStatus(e.target.value));
 
     const _on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
-    _on("btn-log-clear", "click", () => { if (confirm("¿Limpiar la bitácora de movimientos?")) clearLog(); });
+    _on("btn-log-clear", "click", () => { if (confirm(tt("log.confirmClear"))) clearLog(); });
     _on("log-search", "input", (e) => { logFilterText = e.target.value.toLowerCase().trim(); renderLog(); });
     document.querySelectorAll(".log-chip").forEach((chip) => {
       chip.addEventListener("click", () => {
@@ -1715,7 +1723,7 @@
       snoozeUntil = Date.now() + config.snoozeMinutes * 60 * 1000;
       save(STORAGE.SNOOZE, snoozeUntil);
       hideAlert();
-      logEvent("snooze", "Alerta pospuesta " + config.snoozeMinutes + " min");
+      logEvent("snooze", tt("log.snoozed", { n: config.snoozeMinutes }));
     });
     $("entry-form").addEventListener("submit", submitForm);
 
@@ -1741,6 +1749,7 @@
 
   function bootAdmin() {
     wireNumpad();
+    if (window.i18n && window.i18n.bindToggle) window.i18n.bindToggle($("lang-toggle"));
     renderLog();
     const dateEl = $("history-date");
     if (dateEl) {
@@ -1753,7 +1762,7 @@
     const btnExpAll = $("btn-history-export-all");
     if (btnExpAll) btnExpAll.addEventListener("click", exportAllCSV);
     const btnClr = $("btn-log-clear");
-    if (btnClr) btnClr.addEventListener("click", () => { if (confirm("¿Limpiar la bitácora de movimientos?")) clearLog(); });
+    if (btnClr) btnClr.addEventListener("click", () => { if (confirm(tt("log.confirmClear"))) clearLog(); });
     const search = $("log-search");
     if (search) search.addEventListener("input", (e) => { logFilterText = e.target.value.toLowerCase().trim(); renderLog(); });
     document.querySelectorAll(".log-chip").forEach((chip) => {
@@ -1767,6 +1776,7 @@
     window.addEventListener("storage", (e) => {
       if (e.key === STORAGE.LOG) renderLog();
     });
+    window.addEventListener("languagechange", () => { renderLog(); });
   }
 
   // ---- Boot ----
@@ -1774,9 +1784,11 @@
     if ($("counter")) {
       wire();
       wireNumpad();
+      if (window.i18n && window.i18n.bindToggle) window.i18n.bindToggle($("lang-toggle"));
       ensureAutoSession();
       renderAll();
       renderLog();
+      updateSnoozeButton();
       tick();
       setInterval(tick, 1000);
       setInterval(() => {
@@ -1785,6 +1797,14 @@
         if (ch && !ch.hidden) renderChartsView();
         else renderAll();
       }, 30000);
+      window.addEventListener("languagechange", () => {
+        renderAll();
+        renderLog();
+        renderNoteChips();
+        updateSnoozeButton();
+        const ch = $("view-charts");
+        if (ch && !ch.hidden) renderChartsView();
+      });
       flushPending();
       registerSW();
     } else {
