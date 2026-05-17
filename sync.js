@@ -20,8 +20,16 @@
  *   pushEvent(event)
  *   pushCaptureUndone(captureId)   // tombstone event
  *   pushCaptureDeleted(captureId)  // tombstone event (admin)
- *   getStatus()        -> { enabled, pending, deviceId, lastSync, lastError }
+ *   getStatus()        -> { enabled, pending, deviceId, lastSync, lastError, lastPull }
  *   flush()            -> force a flush attempt
+ *   pull()             -> force a pull attempt
+ *
+ * Pull-sync (device <- Supabase):
+ *  - Every PULL_INTERVAL_MS we fetch new rows from captures/downtime/events
+ *    using a per-table timestamp watermark (with a small overlap window so
+ *    backfills from offline devices aren't missed).
+ *  - Merging into local state is delegated to window.app.applyRemote(payload).
+ *  - Requires SELECT-to-anon RLS policies on captures/downtime/events.
  *
  * Emits window 'syncstatuschange' on every state change so the UI can
  * update the topbar indicator.
@@ -38,9 +46,14 @@
     PENDING:   "prod.sync.pending.v1",
     LAST_SYNC: "prod.sync.lastSync.v1",
     LAST_ERR:  "prod.sync.lastError.v1",
+    PULL_WM:   "prod.sync.pullWatermark.v1",
+    LAST_PULL: "prod.sync.lastPull.v1",
   };
 
   const FLUSH_INTERVAL_MS = 30 * 1000;
+  const PULL_INTERVAL_MS  = 30 * 1000;
+  const PULL_OVERLAP_MS   = 5 * 60 * 1000; // re-fetch a 5min window each pull, dedupe by id
+  const PULL_PAGE_SIZE    = 1000;
   const MAX_BATCH = 25;
 
   function load(k, fallback) {
@@ -53,8 +66,11 @@
   let pending  = load(STORAGE.PENDING, []);
   let lastSync = load(STORAGE.LAST_SYNC, null);
   let lastError = load(STORAGE.LAST_ERR, null);
+  let pullWm   = load(STORAGE.PULL_WM, { captures: null, downtime: null, events: null });
+  let lastPull = load(STORAGE.LAST_PULL, null);
   let flushTimer = null;
   let flushing = false;
+  let pulling = false;
 
   function newId() {
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -65,7 +81,7 @@
   function emitStatus() {
     try {
       window.dispatchEvent(new CustomEvent("syncstatuschange", {
-        detail: { enabled: ENABLED, pending: pending.length, deviceId, lastSync, lastError }
+        detail: { enabled: ENABLED, pending: pending.length, deviceId, lastSync, lastError, lastPull }
       }));
     } catch (_) {}
   }
@@ -205,20 +221,84 @@
   }
 
   function getStatus() {
-    return { enabled: ENABLED, pending: pending.length, deviceId, lastSync, lastError };
+    return { enabled: ENABLED, pending: pending.length, deviceId, lastSync, lastError, lastPull };
+  }
+
+  // ---- Pull (Supabase -> device) ----
+
+  async function pullTable(table, tsCol) {
+    const baseWm = pullWm[table];
+    const params = new URLSearchParams();
+    params.set("select", "*");
+    if (baseWm) {
+      const fromTs = new Date(Math.max(0, new Date(baseWm).getTime() - PULL_OVERLAP_MS)).toISOString();
+      params.set(tsCol, "gte." + fromTs);
+    }
+    params.set("order", tsCol + ".asc");
+    params.set("limit", String(PULL_PAGE_SIZE));
+    const res = await fetch(URL + "/rest/v1/" + table + "?" + params.toString(), {
+      headers: {
+        "apikey": KEY,
+        "Authorization": "Bearer " + KEY,
+      },
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      const err = new Error("HTTP " + res.status + ": " + text.slice(0, 200));
+      err.status = res.status;
+      throw err;
+    }
+    const rows = await res.json();
+    // Advance watermark to the max ts we observed (rows are asc).
+    if (rows.length) {
+      const maxTs = rows[rows.length - 1][tsCol];
+      if (maxTs && (!pullWm[table] || maxTs > pullWm[table])) {
+        pullWm[table] = maxTs;
+      }
+    }
+    return rows;
+  }
+
+  async function pull() {
+    if (!ENABLED || pulling) return;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+    pulling = true;
+    try {
+      const [captures, downtime, events] = await Promise.all([
+        pullTable("captures", "ts"),
+        pullTable("downtime", "start_ts"),
+        pullTable("events",   "ts"),
+      ]);
+      save(STORAGE.PULL_WM, pullWm);
+      lastPull = new Date().toISOString();
+      save(STORAGE.LAST_PULL, lastPull);
+      if (window.app && typeof window.app.applyRemote === "function") {
+        try { window.app.applyRemote({ captures, downtime, events, ownDeviceId: deviceId }); }
+        catch (e) { /* renderer errors shouldn't break sync */ }
+      }
+      emitStatus();
+    } catch (e) {
+      lastError = { ts: new Date().toISOString(), message: "pull: " + String(e && e.message || e) };
+      save(STORAGE.LAST_ERR, lastError);
+      emitStatus();
+    } finally {
+      pulling = false;
+    }
   }
 
   // Try to flush whenever the network comes back.
-  window.addEventListener("online", () => scheduleFlush(0));
+  window.addEventListener("online", () => { scheduleFlush(0); pull(); });
   // Periodic retry.
   setInterval(() => { scheduleFlush(0); }, FLUSH_INTERVAL_MS);
-  // Initial flush a couple seconds after load (let i18n/app boot first).
+  setInterval(pull, PULL_INTERVAL_MS);
+  // Initial flush + pull a couple seconds after load (let i18n/app boot first).
   scheduleFlush(2000);
+  setTimeout(pull, 2500);
 
   window.sync = {
     registerDevice, pushCapture, pushDowntime, pushEvent,
     pushCaptureUndone, pushCaptureDeleted,
-    getStatus, flush,
+    getStatus, flush, pull,
   };
 
   // Announce initial state so the UI can render immediately.

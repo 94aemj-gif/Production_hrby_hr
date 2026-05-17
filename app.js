@@ -1802,6 +1802,115 @@
     window.addEventListener("languagechange", () => { renderLog(); });
   }
 
+  // ---- Remote merge (pull-sync from Supabase) ----
+  // Server wins: undo/delete tombstones from any device propagate here.
+  // Inserts are idempotent by id. Pulled-only sessions get a minimal shell.
+  function shellForRemoteSession(date, lineId, shiftId, operatorId) {
+    const sh = shifts.find((x) => x.id === shiftId);
+    const alertTimes = sh && sh.startTime && sh.endTime
+      ? generateHourlyAlerts(sh.startTime, sh.endTime)
+      : config.alertTimes.slice();
+    return {
+      date, lineId, shiftId, operatorId,
+      startedAt: date + "T00:00:00.000Z",
+      endedAt: null,
+      goodCount: 0, scrapCount: 0,
+      hourValue: 0,
+      hourStart: date + "T00",
+      hourly: {},
+      captures: [],
+      submissions: [],
+      downtime: [],
+      currentStatus: "Running",
+      alertTimes,
+      updatedAt: new Date().toISOString(),
+      _remote: true,
+    };
+  }
+
+  function applyRemote(payload) {
+    if (!payload) return;
+    const all = loadSessions();
+    let changed = false;
+
+    function findOrCreate(date, lineId, shiftId, operatorId) {
+      if (!date || !lineId || !shiftId || !operatorId) return null;
+      const k = date + "|" + lineId + "|" + shiftId + "|" + operatorId;
+      let s = all.find((x) => sessionKey(x) === k);
+      if (!s) {
+        s = shellForRemoteSession(date, lineId, shiftId, operatorId);
+        all.push(s);
+        changed = true;
+      }
+      return s;
+    }
+
+    for (const r of payload.captures || []) {
+      const sess = findOrCreate(r.session_date, r.line_id, r.shift_id, r.operator_id);
+      if (!sess) continue;
+      if (!sess.captures) sess.captures = [];
+      if (!sess.captures.find((c) => c.id === r.id)) {
+        sess.captures.push({
+          id: r.id,
+          ts: r.ts,
+          qty: r.qty,
+          kind: r.kind,
+          employeeId: r.employee_id || undefined,
+          notes: r.notes || undefined,
+          forHour: r.for_hour || undefined,
+          undone: !!r.undone,
+        });
+        changed = true;
+      }
+    }
+
+    for (const r of payload.downtime || []) {
+      const sess = findOrCreate(r.session_date, r.line_id, r.shift_id, r.operator_id);
+      if (!sess) continue;
+      if (!sess.downtime) sess.downtime = [];
+      if (!sess.downtime.find((d) => d.id === r.id)) {
+        sess.downtime.push({
+          id: r.id,
+          start: r.start_ts,
+          end: r.end_ts || null,
+          status: r.status || null,
+          durationMs: r.duration_ms || null,
+        });
+        changed = true;
+      }
+    }
+
+    for (const r of payload.events || []) {
+      if (r.type !== "capture_undone" && r.type !== "capture_deleted") continue;
+      const capId = r.capture_id;
+      if (!capId) continue;
+      for (const sess of all) {
+        const cap = (sess.captures || []).find((c) => c.id === capId);
+        if (cap && !cap.undone) { cap.undone = true; changed = true; break; }
+      }
+    }
+
+    if (changed) {
+      saveSessions(all);
+      refreshAfterRemote();
+    }
+  }
+
+  function refreshAfterRemote() {
+    // Counter view present?
+    if ($("counter")) {
+      renderAll();
+      const ch = $("view-charts");
+      if (ch && !ch.hidden && typeof renderChartsView === "function") renderChartsView();
+    }
+    // Admin view present?
+    if ($("log-list")) renderLog();
+    const hd = $("history-date");
+    if (hd && typeof renderHistory === "function") renderHistory(hd.value);
+  }
+
+  window.app = Object.assign(window.app || {}, { applyRemote });
+
   // ---- Boot ----
   function renderSyncStatus(detail) {
     const el = $("sync-status");
@@ -1814,7 +1923,7 @@
       el.title = tt("sync.offTitle");
       return;
     }
-    if (s.lastError && s.pending > 0) {
+    if (s.lastError) {
       el.classList.add("sync-err");
       el.textContent = tt("sync.error", { n: s.pending });
       el.title = (s.lastError && s.lastError.message) || tt("sync.errorTitle");
@@ -1838,7 +1947,10 @@
       if (window.i18n && window.i18n.bindToggle) window.i18n.bindToggle($("lang-toggle"));
       const syncEl = $("sync-status");
       if (syncEl) {
-        syncEl.addEventListener("click", () => { if (window.sync && window.sync.flush) window.sync.flush(); });
+        syncEl.addEventListener("click", () => {
+          if (window.sync && window.sync.flush) window.sync.flush();
+          if (window.sync && window.sync.pull)  window.sync.pull();
+        });
         window.addEventListener("syncstatuschange", (e) => renderSyncStatus(e.detail));
         renderSyncStatus();
       }
