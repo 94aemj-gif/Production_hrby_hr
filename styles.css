@@ -1668,3 +1668,120 @@ button { font-family: inherit; cursor: pointer; }
   font-weight: 600;
   border-radius: 999px;
 }
+
+/* ============ Admin polish v=35: tighten layout ============ */
+
+/* Consistent vertical rhythm across admin cards */
+.admin {
+  display: flex;
+  flex-direction: column;
+}
+.admin .admin-card + .admin-card,
+.admin form + .admin-card { margin-top: 0; }
+.admin .admin-card { margin-bottom: 16px; }
+.admin form .admin-card:last-of-type { margin-bottom: 16px; }
+
+/* Header row: tighter, single line at desktop */
+.admin > div:first-child {
+  margin-bottom: 6px;
+}
+
+/* Entity tables — keep action buttons on one row, vertically center cells */
+.admin .entity-table td,
+.admin .entity-table th { vertical-align: middle; }
+.admin .entity-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;          /* shrink-to-fit the actions cell */
+}
+.admin .entity-table td:last-child .btn {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  min-height: 0;
+  border-radius: 8px;
+}
+.admin .entity-table td:last-child .btn:first-child { margin-left: 0; }
+/* Allow row wrap only if the viewport is very narrow */
+@media (max-width: 720px) {
+  .admin .entity-table td:last-child { white-space: normal; }
+  .admin .entity-table td:last-child .btn { margin-top: 4px; }
+}
+
+/* Recesos / Días columns that contain long text: wrap on commas naturally */
+.admin .entity-table td { line-height: 1.45; }
+
+/* Tighten the "Agregar" row */
+.entity-add { align-items: stretch; }
+.entity-add .btn { padding: 9px 16px; font-size: 13px; min-height: 0; }
+.entity-add-shift { gap: 8px; }
+
+/* Form labels: spacing tightened */
+.admin .field-label { margin-bottom: 4px; }
+.admin .field { gap: 4px; }
+
+/* Inputs in admin: consistent height */
+.admin input[type="text"],
+.admin input[type="number"],
+.admin input[type="password"],
+.admin input[type="time"],
+.admin select {
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-press);
+  color: var(--text);
+}
+.admin input:focus,
+.admin select:focus {
+  border-color: var(--blue);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31,126,224,0.15);
+}
+
+/* Datos section: action buttons stretch evenly */
+.admin .admin-card:last-of-type .admin-actions { gap: 12px; }
+.admin .admin-card:last-of-type .admin-actions .btn {
+  flex: 1 1 220px;
+}
+
+/* History filter actions row: equal width buttons */
+.history-filter-actions .btn { min-width: 140px; }
+
+/* History item: chart sits more comfortably */
+.hist-chart {
+  border-color: var(--border-soft);
+  padding: 8px;
+  margin-top: 2px;
+}
+
+/* Helper text under shifts section: smaller and more breathing */
+.admin .admin-card .muted[style*="font-size:13px"] {
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+/* Weekstrip inside history filter: refine outer card */
+.history-filter .weekstrip {
+  border: 1px solid var(--border-soft);
+  box-shadow: none;       /* nested inside admin-card already has elevation */
+  padding: 14px 16px;
+  max-width: none;
+}
+.history-filter .weekstrip-day { font-size: 14px; }
+
+/* Lock screen card: a touch more breathing room */
+.popup-login { padding: 28px; }
+.popup-login .popup-title-left { font-size: 22px; margin-bottom: 4px; }
+.popup-login .popup-subtle { margin-bottom: 18px; }
+
+/* Lang toggle inside admin header sits flush with Cerrar Admin */
+.admin > div:first-child .lang-toggle { padding: 7px 14px; min-width: 42px; }
+
+/* Saved-flash inline next to action buttons */
+.admin-actions .saved-flash { margin-left: 4px; }
