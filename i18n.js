@@ -29,6 +29,15 @@
       "top.lang.toLabel": "EN",
       "top.lang.title": "English",
 
+      "sync.ok": "✓ Sync",
+      "sync.okTitle": "Sincronizado · última: {when}",
+      "sync.pending": "⟳ {n}",
+      "sync.pendingTitle": "Sincronizando… toque para reintentar.",
+      "sync.error": "⚠ {n}",
+      "sync.errorTitle": "Error al sincronizar. Toque para reintentar.",
+      "sync.off": "○ Local",
+      "sync.offTitle": "Sin conexión a base de datos. Los datos sólo viven en este dispositivo.",
+
       // Status pill
       "status.active": "Activo",
       "status.idle": "Inactivo",
@@ -335,6 +344,15 @@
       "top.admin": "Admin",
       "top.lang.toLabel": "ES",
       "top.lang.title": "Español",
+
+      "sync.ok": "✓ Sync",
+      "sync.okTitle": "Synced · last: {when}",
+      "sync.pending": "⟳ {n}",
+      "sync.pendingTitle": "Syncing… tap to retry.",
+      "sync.error": "⚠ {n}",
+      "sync.errorTitle": "Sync error. Tap to retry.",
+      "sync.off": "○ Local",
+      "sync.offTitle": "No database connection. Data lives only on this device.",
 
       "status.active": "Active",
       "status.idle": "Idle",

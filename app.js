@@ -315,6 +315,9 @@
     return target * Math.max(0, 1 - breakFrac);
   }
 
+  // Event types we DON'T push to Supabase (already captured in other tables or pure noise).
+  const SYNC_SKIP_TYPES = { capture: 1, scrap: 1, undo: 1 };
+
   // ---- Log ----
   function logEvent(type, message, extra) {
     const entries = load(STORAGE.LOG, []);
@@ -329,6 +332,9 @@
     if (entries.length > LOG_MAX) entries.splice(0, entries.length - LOG_MAX);
     save(STORAGE.LOG, entries);
     renderLog();
+    if (window.sync && window.sync.pushEvent && !SYNC_SKIP_TYPES[type]) {
+      window.sync.pushEvent(entry);
+    }
   }
 
   function renderLog() {
@@ -390,6 +396,7 @@
     if (changed) {
       saveSessions(all);
       logEvent("undo", tt(kind === "scrap" ? "log.adminDelScrap" : "log.adminDelPieces", { qty }));
+      if (window.sync && window.sync.pushCaptureDeleted) window.sync.pushCaptureDeleted(captureId);
       renderLog();
       if (typeof renderHistory === "function") {
         const hd = $("history-date");
@@ -519,6 +526,13 @@
         shift: shiftLabel(current.shiftId),
         operator: operatorName(current.operatorId),
       }));
+    }
+    if (window.sync && window.sync.registerDevice) {
+      window.sync.registerDevice({
+        lineId: current.lineId,
+        operatorId: current.operatorId,
+        name: lineLabel(current.lineId),
+      });
     }
     return true;
   }
@@ -1361,6 +1375,9 @@
     } else {
       logEvent("capture", tt("log.captureMsg", { qty, total: totals.good.toLocaleString() }), { captureId: id });
     }
+    if (window.sync && window.sync.pushCapture) {
+      window.sync.pushCapture({ id, ts, qty, kind }, current);
+    }
     renderAll();
   }
 
@@ -1372,6 +1389,7 @@
     if (Date.now() - new Date(last.ts).getTime() > UNDO_WINDOW_MS) return;
     updateSession((s2) => { s2.captures[s2.captures.length - 1].undone = true; });
     logEvent("undo", tt(last.kind === "scrap" ? "log.undoMsgScrap" : "log.undoMsgPieces", { qty: last.qty }));
+    if (window.sync && window.sync.pushCaptureUndone) window.sync.pushCaptureUndone(last.id);
     renderAll();
   }
 
@@ -1417,6 +1435,7 @@
       if (lastDt && lastDt.durationMs) {
         const mins = Math.round(lastDt.durationMs / 60000);
         logEvent("downtime", tt("log.downEnded", { status: statusLabel(lastDt.status), mins }));
+        if (window.sync && window.sync.pushDowntime) window.sync.pushDowntime(lastDt, current);
       }
     }
     renderAll();
@@ -1450,6 +1469,10 @@
         employeeId, productionCount: qty, scrapCount: scrap, notes, forHour,
       });
     });
+    if (window.sync && window.sync.pushCapture) {
+      window.sync.pushCapture({ id: goodId, ts, qty, kind: "good", employeeId, notes, forHour }, current);
+      if (scrap > 0) window.sync.pushCapture({ id: scrapId, ts, qty: scrap, kind: "scrap", employeeId, notes, forHour }, current);
+    }
     const noteLabels = notes.map((n) => /^notes\./.test(n) ? tt(n) : n);
     const noteStr = noteLabels.length ? tt("log.captureNotePart", { notes: noteLabels.join(", ") }) : "";
     const scrapStr = scrap ? tt("log.captureScrapPart", { n: scrap }) : "";
@@ -1780,11 +1803,45 @@
   }
 
   // ---- Boot ----
+  function renderSyncStatus(detail) {
+    const el = $("sync-status");
+    if (!el) return;
+    const s = detail || (window.sync && window.sync.getStatus && window.sync.getStatus()) || { enabled: false, pending: 0 };
+    el.classList.remove("sync-ok", "sync-pending", "sync-off", "sync-err");
+    if (!s.enabled) {
+      el.classList.add("sync-off");
+      el.textContent = tt("sync.off");
+      el.title = tt("sync.offTitle");
+      return;
+    }
+    if (s.lastError && s.pending > 0) {
+      el.classList.add("sync-err");
+      el.textContent = tt("sync.error", { n: s.pending });
+      el.title = (s.lastError && s.lastError.message) || tt("sync.errorTitle");
+      return;
+    }
+    if (s.pending > 0) {
+      el.classList.add("sync-pending");
+      el.textContent = tt("sync.pending", { n: s.pending });
+      el.title = tt("sync.pendingTitle");
+      return;
+    }
+    el.classList.add("sync-ok");
+    el.textContent = tt("sync.ok");
+    el.title = s.lastSync ? tt("sync.okTitle", { when: new Date(s.lastSync).toLocaleString(window.i18n ? window.i18n.locale() : "es-MX") }) : tt("sync.ok");
+  }
+
   function boot() {
     if ($("counter")) {
       wire();
       wireNumpad();
       if (window.i18n && window.i18n.bindToggle) window.i18n.bindToggle($("lang-toggle"));
+      const syncEl = $("sync-status");
+      if (syncEl) {
+        syncEl.addEventListener("click", () => { if (window.sync && window.sync.flush) window.sync.flush(); });
+        window.addEventListener("syncstatuschange", (e) => renderSyncStatus(e.detail));
+        renderSyncStatus();
+      }
       ensureAutoSession();
       renderAll();
       renderLog();
@@ -1802,6 +1859,7 @@
         renderLog();
         renderNoteChips();
         updateSnoozeButton();
+        renderSyncStatus();
         const ch = $("view-charts");
         if (ch && !ch.hidden) renderChartsView();
       });
