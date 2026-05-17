@@ -176,6 +176,23 @@ button { font-family: inherit; cursor: pointer; }
 }
 .lang-toggle:hover { color: var(--text); border-color: var(--muted); background: var(--panel); }
 
+.sync-status {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  background: var(--panel-2);
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  min-width: 44px;
+}
+.sync-status.sync-ok      { color: var(--green); border-color: rgba(26,160,90,0.35); background: rgba(26,160,90,0.08); }
+.sync-status.sync-pending { color: var(--blue);  border-color: rgba(31,126,224,0.35); background: rgba(31,126,224,0.08); }
+.sync-status.sync-err     { color: var(--red);   border-color: rgba(210,59,77,0.35);  background: rgba(210,59,77,0.08); }
+.sync-status.sync-off     { color: var(--muted); }
+
 /* Main */
 .main {
   flex: 1;

@@ -6,7 +6,7 @@
   <title data-i18n="page.title.capture">Registro de Producción</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f5f7fb" />
-  <link rel="stylesheet" href="styles.css?v=22" />
+  <link rel="stylesheet" href="styles.css?v=23" />
 </head>
 <body class="screen with-sidebar">
   <aside class="sidebar">
@@ -42,6 +42,7 @@
         <span id="next-alert-time">--:--</span>
         <span id="next-alert-countdown" class="next-alert-sub muted">—</span>
       </div>
+      <button type="button" id="sync-status" class="sync-status sync-off" title="">—</button>
       <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
       <a class="admin-link" id="admin-link" href="admin.html" data-i18n-title="top.admin" data-i18n="top.admin" title="Configuración admin">Admin</a>
     </div>
@@ -280,7 +281,9 @@
 
   <audio id="alert-sound" preload="auto"></audio>
 
-  <script src="i18n.js?v=22"></script>
-  <script src="app.js?v=22"></script>
+  <script src="i18n.js?v=23"></script>
+  <script src="supabase-config.js?v=23"></script>
+  <script src="sync.js?v=23"></script>
+  <script src="app.js?v=23"></script>
 </body>
 </html>
