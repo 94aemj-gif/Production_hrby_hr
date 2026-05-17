@@ -214,35 +214,6 @@
 
   // forHour rule: capture at HH:MM represents previous hour if MM < 30, else current hour.
   // Result is the hour ISO key (UTC) the capture should bucket into.
-  function updateHourProgress(s) {
-    const fill = $("hour-progress-fill");
-    const cd = $("hour-progress-countdown");
-    const label = $("hour-progress-label");
-    if (!fill || !cd || !label) return;
-    if (!s) { fill.style.width = "0%"; cd.textContent = "—"; label.textContent = "—"; return; }
-    const now = new Date();
-    const { start: shStart, end: shEnd } = getShiftWindow(s);
-    if (now < shStart || now >= shEnd) {
-      label.textContent = tt("counter.outOfShift");
-      cd.textContent = "—";
-      fill.style.width = "0%";
-      return;
-    }
-    const hourStart = new Date(now); hourStart.setMinutes(0, 0, 0);
-    const elapsedMs = now - hourStart;
-    const pct = Math.min(100, Math.round((elapsedMs / 3600000) * 100));
-    const minsLeft = Math.max(0, 60 - Math.floor(elapsedMs / 60000));
-    let lh = hourStart.getHours();
-    const ap = lh >= 12 ? "PM" : "AM";
-    lh = lh % 12 || 12;
-    let lh2 = (hourStart.getHours() + 1) % 24;
-    const ap2 = lh2 >= 12 ? "PM" : "AM";
-    lh2 = lh2 % 12 || 12;
-    label.textContent = tt("counter.hourRange", { h1: lh, ap1: ap, h2: lh2, ap2: ap2 });
-    cd.textContent = tt("counter.minToCapture", { n: minsLeft });
-    fill.style.width = pct + "%";
-    fill.style.background = pct >= 85 ? "var(--accent)" : "var(--blue)";
-  }
 
   function computeForHour(ts) {
     const d = new Date(ts);
@@ -571,6 +542,9 @@
     setText("eos-down", tt("eos.min", { n: downMin }));
     const ov = $("eos-overlay");
     if (ov) { ov.classList.remove("hidden"); ov.setAttribute("aria-hidden", "false"); }
+    // Show celebration banner + confetti AFTER the overlay is visible so
+    // the canvas has real dimensions.
+    setTimeout(() => showEosCelebration(s), 30);
     const btnX = $("btn-eos-close");
     const btnE = $("btn-eos-export");
     if (btnX) btnX.onclick = () => { ov.classList.add("hidden"); ov.setAttribute("aria-hidden", "true"); };
@@ -616,13 +590,222 @@
   function setText(id, txt) { const el = $(id); if (el) el.textContent = txt; }
   function setDisabled(id, v) { const el = $(id); if (el) el.disabled = v; }
 
+  // ---- Animated counter ----
+  function animateCounter(val) {
+    const el = $("counter");
+    if (!el) return;
+    if (typeof val !== "number" || !Number.isFinite(val)) {
+      el.textContent = val == null ? "—" : String(val);
+      el.dataset.current = "";
+      return;
+    }
+    const target = val;
+    const start = Number(el.dataset.current);
+    if (!Number.isFinite(start)) { el.dataset.current = String(target); el.textContent = target.toLocaleString(); return; }
+    if (start === target) { el.textContent = target.toLocaleString(); return; }
+    el.dataset.current = String(target);
+    const t0 = performance.now();
+    const duration = Math.min(900, 250 + Math.abs(target - start) * 4);
+    function step(t) {
+      const k = Math.min(1, (t - t0) / duration);
+      const eased = 1 - Math.pow(1 - k, 3);
+      const cur = Math.round(start + (target - start) * eased);
+      el.textContent = cur.toLocaleString();
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+    if (target > start) {
+      el.classList.remove("counter-flash");
+      void el.offsetWidth;
+      el.classList.add("counter-flash");
+    }
+  }
+
+  // ---- Hour progress (horizontal bar under the counter) ----
+  function updateHourRing(s) {
+    const fill  = $("hour-progress-fill");
+    const cd    = $("hour-progress-countdown");
+    const label = $("hour-progress-label");
+    if (!fill || !cd || !label) return;
+    if (!s) { fill.style.width = "0%"; cd.textContent = "—"; label.textContent = "—"; return; }
+    const now = new Date();
+    const { start: shStart, end: shEnd } = getShiftWindow(s);
+    if (now < shStart || now >= shEnd) {
+      label.textContent = tt("counter.outOfShift");
+      cd.textContent = "—";
+      fill.style.width = "0%";
+      return;
+    }
+    const hourStart = new Date(now); hourStart.setMinutes(0, 0, 0);
+    const elapsedMs = now - hourStart;
+    const pct = Math.min(100, Math.round((elapsedMs / 3600000) * 100));
+    const minsLeft = Math.max(0, 60 - Math.floor(elapsedMs / 60000));
+    let lh = hourStart.getHours();
+    const ap = lh >= 12 ? "PM" : "AM";
+    lh = lh % 12 || 12;
+    let lh2 = (hourStart.getHours() + 1) % 24;
+    const ap2 = lh2 >= 12 ? "PM" : "AM";
+    lh2 = lh2 % 12 || 12;
+    label.textContent = tt("counter.hourRange", { h1: lh, ap1: ap, h2: lh2, ap2: ap2 });
+    cd.textContent    = tt("counter.minToCapture", { n: minsLeft });
+    fill.style.width  = pct + "%";
+    fill.style.background = pct >= 85 ? "var(--accent)" : "var(--blue)";
+  }
+
+  // ---- OEE donut (topbar) ----
+  const OEE_RADIUS = 24;
+  const OEE_CIRC = 2 * Math.PI * OEE_RADIUS;
+  function updateOEEDonut(oeePct) {
+    const arc  = $("oee-arc");
+    const txt  = $("oee-pct");
+    const wrap = $("oee-donut");
+    if (!arc || !txt || !wrap) return;
+    const v = Math.max(0, Math.min(100, Number.isFinite(oeePct) ? oeePct : 0));
+    const len = (v / 100) * OEE_CIRC;
+    arc.style.strokeDasharray = len + " " + Math.max(0.001, OEE_CIRC - len);
+    arc.style.strokeDashoffset = "0";
+    txt.textContent = Math.round(v) + "%";
+    wrap.classList.remove("oee-low", "oee-mid", "oee-high");
+    wrap.classList.add(v < 50 ? "oee-low" : v < 85 ? "oee-mid" : "oee-high");
+  }
+
+  // ---- Production heatmap (charts view) ----
+  const HEATMAP_DAYS = 14;
+  function renderHeatmap() {
+    const wrap = $("heatmap");
+    if (!wrap) return;
+    const all = loadSessions();
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const dates = [];
+    for (let i = HEATMAP_DAYS - 1; i >= 0; i--) {
+      dates.push(new Date(today.getTime() - i * 86400000).toISOString().slice(0, 10));
+    }
+    const dateSet = new Set(dates);
+    const grid = {};
+    let maxVal = 0;
+    for (const s of all) {
+      if (!s || !s.captures || !dateSet.has(s.date)) continue;
+      for (const c of s.captures) {
+        if (c.undone || c.kind === "scrap") continue;
+        const h = new Date(c.ts).getHours();
+        grid[s.date] = grid[s.date] || {};
+        grid[s.date][h] = (grid[s.date][h] || 0) + (Number(c.qty) || 0);
+        if (grid[s.date][h] > maxVal) maxVal = grid[s.date][h];
+      }
+    }
+    wrap.innerHTML = "";
+    wrap.appendChild(document.createElement("div")); // top-left corner
+    for (let h = 0; h < 24; h++) {
+      const lbl = document.createElement("div");
+      lbl.className = "heatmap-col-label";
+      lbl.textContent = (h % 6 === 0) ? ((h % 12) || 12) + (h < 12 ? "a" : "p") : "";
+      wrap.appendChild(lbl);
+    }
+    for (const d of dates) {
+      const dd = new Date(d + "T00:00:00");
+      const rowLbl = document.createElement("div");
+      rowLbl.className = "heatmap-row-label";
+      rowLbl.textContent = pad2(dd.getDate()) + "/" + pad2(dd.getMonth() + 1);
+      wrap.appendChild(rowLbl);
+      for (let h = 0; h < 24; h++) {
+        const cell = document.createElement("div");
+        cell.className = "heatmap-cell";
+        const v = (grid[d] && grid[d][h]) || 0;
+        let level = 0;
+        if (maxVal > 0 && v > 0) {
+          const r = v / maxVal;
+          level = r < 0.2 ? 1 : r < 0.45 ? 2 : r < 0.75 ? 3 : 4;
+        }
+        cell.dataset.level = String(level);
+        cell.title = d + " · " + (((h % 12) || 12) + (h < 12 ? "a" : "p")) + " — " + v.toLocaleString();
+        wrap.appendChild(cell);
+      }
+    }
+  }
+
+  // ---- EOS celebration (banner + confetti when target met) ----
+  function eosBannerKind(goodTotal, shiftTarget) {
+    if (shiftTarget <= 0) return null;
+    const ratio = goodTotal / shiftTarget;
+    if (ratio >= 1.0) return "win";
+    if (ratio >= 0.9) return "close";
+    return "miss";
+  }
+  let confettiRaf = null;
+  function runConfetti() {
+    const cv = $("eos-confetti");
+    if (!cv) return;
+    const parent = cv.parentElement;
+    const rect = parent ? parent.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
+    cv.width = rect.width;
+    cv.height = rect.height;
+    const ctx = cv.getContext("2d");
+    const colors = ["#1aa05a", "#1f7ee0", "#e07a2b", "#d23b4d", "#f4c430"];
+    const pieces = [];
+    for (let i = 0; i < 120; i++) {
+      pieces.push({
+        x: Math.random() * rect.width,
+        y: -20 - Math.random() * rect.height * 0.5,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 1 + Math.random() * 3,
+        w: 6 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        a: Math.random() * Math.PI * 2,
+        va: (Math.random() - 0.5) * 0.25,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      });
+    }
+    const t0 = performance.now();
+    const DURATION = 4000;
+    if (confettiRaf) cancelAnimationFrame(confettiRaf);
+    function step(t) {
+      const elapsed = t - t0;
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      for (const p of pieces) {
+        p.vy += 0.04; p.x += p.vx; p.y += p.vy; p.a += p.va;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.a);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+      if (elapsed < DURATION) confettiRaf = requestAnimationFrame(step);
+      else { ctx.clearRect(0, 0, rect.width, rect.height); confettiRaf = null; }
+    }
+    confettiRaf = requestAnimationFrame(step);
+  }
+  function showEosCelebration(s) {
+    const banner = $("eos-banner");
+    if (!banner || !s) return;
+    const totals = shiftTotals(s);
+    const { start, end } = getShiftWindow(s);
+    const shiftHours = Math.max(1, (end - start) / 3600000);
+    const shiftTarget = (config.hourlyTarget || 0) * shiftHours;
+    const kind = eosBannerKind(totals.good, shiftTarget);
+    banner.classList.remove("eos-win", "eos-close", "eos-miss", "hidden");
+    if (kind === "win") {
+      banner.classList.add("eos-win");
+      banner.textContent = "🎉  " + tt("eos.bannerWin");
+      runConfetti();
+    } else if (kind === "close") {
+      banner.classList.add("eos-close");
+      banner.textContent = "🏅  " + tt("eos.bannerClose");
+    } else if (kind === "miss") {
+      banner.classList.add("eos-miss");
+      banner.textContent = tt("eos.bannerMiss");
+    } else {
+      banner.classList.add("hidden");
+    }
+  }
+
   function renderAll() {
     const s = getSession();
     const capBtn = $("btn-capture");
     if (!s) {
       setText("shift-label", device.lineId ? lineLabel(device.lineId) + " · " + tt("shift.noActive") : tt("shift.configDevice"));
       setText("operator-label", device.operatorId ? operatorName(device.operatorId) : "—");
-      setText("counter", "—");
+      animateCounter("—");
       setText("scrap-count", "—");
       setText("metric-target", config.hourlyTarget);
       setText("metric-hour", "—");
@@ -630,6 +813,7 @@
       setText("metric-efficiency", "—");
       setText("metric-efficiency-sub", tt("counter.outOfShift"));
       setText("oee", "—");
+      updateOEEDonut(0);
       setDisabled("equip-status", true);
       const pill = $("shift-status");
       if (pill) { pill.className = "status-pill status-paused"; pill.textContent = tt("status.outOfShift"); }
@@ -646,7 +830,7 @@
     setText("shift-label", lineLabel(fresh.lineId) + " · " + shiftLabel(fresh.shiftId) + otSuffix);
     setText("operator-label", operatorName(fresh.operatorId));
     const totals = shiftTotals(fresh);
-    setText("counter", totals.good.toLocaleString());
+    animateCounter(totals.good);
     setText("scrap-count", totals.scrap.toLocaleString());
     setText("metric-target", config.hourlyTarget);
 
@@ -667,7 +851,9 @@
     if (effEl) effEl.style.color = shiftEff.pct >= 90 ? "var(--green)" : shiftEff.pct >= 60 ? "var(--blue)" : "var(--accent)";
     setText("metric-efficiency-sub", tt(shiftEff.completedHours === 1 ? "metric.hrComplete" : "metric.hrsComplete", { n: shiftEff.completedHours }));
 
-    setText("oee", computeOEE(fresh) + "%");
+    const oeePct = computeOEE(fresh);
+    setText("oee", oeePct + "%");
+    updateOEEDonut(oeePct);
     const eqs = $("equip-status"); if (eqs) eqs.value = fresh.currentStatus;
     applyStatusPill(fresh.currentStatus);
     renderChart(fresh);
@@ -685,7 +871,7 @@
     const emptyEl = $("counter-empty");
     if (emptyEl) emptyEl.classList.toggle("hidden", totals.good > 0);
     // Hour-in-progress bar + countdown
-    updateHourProgress(fresh);
+    updateHourRing(fresh);
     // Last capture row
     const last = getLastUserCapture(fresh);
     const lastEl = $("last-capture");
@@ -743,10 +929,10 @@
     const pill = $("shift-status");
     if (!pill) return;
     pill.className = "status-pill";
-    if (status === "Running") { pill.classList.add("status-active"); pill.textContent = tt("status.active"); }
-    else if (status === "Idle") { pill.classList.add("status-paused"); pill.textContent = tt("status.idle"); }
-    else if (status === "Maintenance") { pill.classList.add("status-completed"); pill.textContent = tt("status.maintenance"); }
-    else if (status === "Breakdown") { pill.classList.add("status-paused"); pill.textContent = tt("status.breakdown"); }
+    if (status === "Running")          { pill.classList.add("status-active", "status-running");   pill.textContent = tt("status.active"); }
+    else if (status === "Idle")        { pill.classList.add("status-paused", "status-idle");       pill.textContent = tt("status.idle"); }
+    else if (status === "Maintenance") { pill.classList.add("status-completed", "status-maint");   pill.textContent = tt("status.maintenance"); }
+    else if (status === "Breakdown")   { pill.classList.add("status-paused", "status-breakdown");  pill.textContent = tt("status.breakdown"); }
   }
 
   // ---- OEE (availability * performance * quality) within shift window ----
@@ -792,6 +978,37 @@
     return { ctx, w: rect.width, h: rect.height };
   }
 
+  // Rounded-top rectangle (bar with rounded top corners, flat bottom).
+  function barRoundedTop(ctx, x, y, w, h, r) {
+    if (h <= 0 || w <= 0) return;
+    const rr = Math.min(r, w / 2, h);
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function softGridline(ctx, x1, y, x2) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(15,23,42,0.06)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+    ctx.restore();
+  }
+  function hexWithAlpha(hex, a) {
+    if (!hex || hex[0] !== "#") return hex;
+    const h = hex.slice(1);
+    const n = h.length === 3
+      ? [h[0]+h[0], h[1]+h[1], h[2]+h[2]]
+      : [h.slice(0,2), h.slice(2,4), h.slice(4,6)];
+    return "rgba(" + parseInt(n[0],16) + "," + parseInt(n[1],16) + "," + parseInt(n[2],16) + "," + a + ")";
+  }
+
   function drawCumulativeChart(cv, s) {
     if (!cv || !s) return;
     const { ctx, w, h } = fitCanvas(cv);
@@ -820,15 +1037,34 @@
     const cw = w - padL - padR, ch = h - padT - padB;
     const maxY = Math.max(...points.map(p => Math.max(p.val, p.target)), 1);
     const maxX = totalHrs;
-    ctx.strokeStyle = getCss("--border"); ctx.lineWidth = 1; ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
+    // soft dashed gridlines
+    ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
     [0, 0.5, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+      softGridline(ctx, padL, y, padL + cw);
       ctx.fillText(Math.round(maxY * p).toLocaleString(), 4, y + 3);
     });
+    const blue = getCss("--blue") || "#1f7ee0";
+    // area fill under actual line (gradient)
+    const grad = ctx.createLinearGradient(0, padT, 0, padT + ch);
+    grad.addColorStop(0, hexWithAlpha(blue, 0.28));
+    grad.addColorStop(1, hexWithAlpha(blue, 0.0));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const x = padL + (p.x / maxX) * cw;
+      const y = padT + ch * (1 - p.val / maxY);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    const lastX = padL + (points[points.length - 1].x / maxX) * cw;
+    ctx.lineTo(lastX, padT + ch);
+    ctx.lineTo(padL + (points[0].x / maxX) * cw, padT + ch);
+    ctx.closePath();
+    ctx.fill();
     // target line
     ctx.strokeStyle = getCss("--accent");
     ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 2;
     ctx.beginPath();
     points.forEach((p, i) => {
       const x = padL + (p.x / maxX) * cw;
@@ -838,7 +1074,9 @@
     ctx.stroke();
     ctx.setLineDash([]);
     // actual line
-    ctx.strokeStyle = getCss("--blue"); ctx.lineWidth = 3;
+    ctx.strokeStyle = blue;
+    ctx.lineWidth = 3;
+    ctx.lineJoin = "round";
     ctx.beginPath();
     points.forEach((p, i) => {
       const x = padL + (p.x / maxX) * cw;
@@ -846,12 +1084,16 @@
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.stroke();
-    // last point dot
+    // last point dot with halo
     const last = points[points.length - 1];
     const lx = padL + (last.x / maxX) * cw;
     const ly = padT + ch * (1 - last.val / maxY);
-    ctx.fillStyle = getCss("--blue");
+    ctx.fillStyle = hexWithAlpha(blue, 0.2);
+    ctx.beginPath(); ctx.arc(lx, ly, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = blue;
     ctx.beginPath(); ctx.arc(lx, ly, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(lx, ly, 2, 0, Math.PI * 2); ctx.fill();
     // legend
     ctx.fillStyle = getCss("--muted"); ctx.fillText(tt("charts.legend"), padL, h - 4);
   }
@@ -878,17 +1120,18 @@
     const padL = 30, padR = 14, padT = 12, padB = 22;
     const cw = w - padL - padR, ch = h - padT - padB;
     const max = Math.max(1, ...bars.map(b => b.value));
-    ctx.strokeStyle = getCss("--border"); ctx.lineWidth = 1; ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
+    ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
     [0, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+      softGridline(ctx, padL, y, padL + cw);
       ctx.fillText(Math.round(max * p), 4, y + 3);
     });
     const bw = cw / Math.max(1, bars.length);
     ctx.fillStyle = getCss("--red");
     bars.forEach((b, i) => {
       const bh = (b.value / max) * ch;
-      ctx.fillRect(padL + i * bw + 2, padT + ch - bh, Math.max(2, bw - 4), bh);
+      const bwInner = Math.max(2, bw - 6);
+      barRoundedTop(ctx, padL + i * bw + 3, padT + ch - bh, bwInner, bh, 4);
     });
     ctx.fillStyle = getCss("--muted");
     const step = Math.max(1, Math.ceil(bars.length / 10));
@@ -932,9 +1175,45 @@
     });
   }
 
+  // Charts view can be scrubbed back in time via the weekstrip. When the
+  // selected date is today, use the live current session; otherwise pick the
+  // best matching session for that date (prefer same line+shift+operator as
+  // this device, fall back to the most recently updated).
+  let chartsViewDate = null; // ISO yyyy-mm-dd; null = today/live
+  function pickSessionForChartsDate(iso) {
+    if (!iso || iso === todayKey()) return getSession();
+    const matches = loadSessions().filter((s) => s.date === iso);
+    if (!matches.length) return null;
+    const preferred = matches.find((s) =>
+      s.lineId === device.lineId &&
+      s.shiftId === (current && current.shiftId) &&
+      s.operatorId === device.operatorId
+    );
+    if (preferred) return preferred;
+    const sorted = matches.slice().sort((a, b) =>
+      (b.updatedAt || b.startedAt || "").localeCompare(a.updatedAt || a.startedAt || "")
+    );
+    return sorted[0];
+  }
   function renderChartsView() {
-    const s = getSession();
-    if (!s) return;
+    const iso = chartsViewDate || todayKey();
+    const s = pickSessionForChartsDate(iso);
+    const empty = $("charts-empty");
+    if (!s) {
+      if (empty) empty.classList.remove("hidden");
+      setText("kpi-oee", "—"); setText("kpi-avail", "—");
+      setText("kpi-perf", "—"); setText("kpi-qual", "—");
+      const cvs = ["chart-hourly", "chart-cumulative", "chart-scrap"];
+      for (const id of cvs) {
+        const cv = $(id);
+        if (cv) { const c = cv.getContext("2d"); c && c.clearRect(0, 0, cv.width, cv.height); }
+      }
+      renderHeatmap();
+      const d2 = $("date-label-2");
+      if (d2) d2.textContent = fmtDate(new Date(iso + "T00:00:00"));
+      return;
+    }
+    if (empty) empty.classList.add("hidden");
     const oeeStats = computeOEEBreakdown(s);
     setText("kpi-oee", oeeStats.oee + "%");
     setText("kpi-avail", oeeStats.availability + "%");
@@ -943,8 +1222,9 @@
     drawShiftChart($("chart-hourly"), s);
     drawCumulativeChart($("chart-cumulative"), s);
     drawScrapChart($("chart-scrap"), s);
+    renderHeatmap();
     const d = $("date-label-2");
-    if (d) d.textContent = fmtDate(new Date());
+    if (d) d.textContent = fmtDate(new Date(iso + "T00:00:00"));
   }
 
   function computeOEEBreakdown(s) {
@@ -1014,13 +1294,12 @@
     const ch = h - padT - padB;
     const bw = cw / buckets.length;
 
-    // grid
+    // grid (soft dashed)
     const text = getCss("--muted") || "#5c6678";
-    const border = getCss("--border") || "#d8dee9";
-    ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = text;
+    ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = text;
     [0, 0.5, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+      softGridline(ctx, padL, y, padL + cw);
       ctx.fillText(Math.round(max * p), 4, y + 3);
     });
 
@@ -1028,6 +1307,7 @@
     const targetY = padT + ch * (1 - target / max);
     ctx.strokeStyle = getCss("--accent") || "#e07a2b";
     ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(padL, targetY); ctx.lineTo(padL + cw, targetY); ctx.stroke();
     ctx.setLineDash([]);
 
@@ -1043,17 +1323,17 @@
       return b.isCurrent ? cAccent : cRed;
     }
     buckets.forEach((b, i) => {
-      const x = padL + i * bw + 2;
-      const bwInner = Math.max(2, bw - 4);
+      const x = padL + i * bw + 3;
+      const bwInner = Math.max(2, bw - 6);
       // shade break hours
       if (b.hasBreak) {
-        ctx.fillStyle = "rgba(150,150,150,0.12)";
+        ctx.fillStyle = "rgba(150,150,150,0.10)";
         ctx.fillRect(x, padT, bwInner, ch);
       }
       const bh = (b.value / max) * ch;
       const y = padT + ch - bh;
       ctx.fillStyle = barColorFor(b);
-      ctx.fillRect(x, y, bwInner, bh);
+      barRoundedTop(ctx, x, y, bwInner, bh, 4);
     });
 
     // x labels (skip if cramped)
@@ -1121,7 +1401,7 @@
     if (dateEl) dateEl.textContent = fmtDate(now);
     const changed = ensureAutoSession();
     if (changed) renderAll();
-    updateHourProgress(getSession());
+    updateHourRing(getSession());
     if (!isShiftActive()) return;
 
     const popupOpen = !$("alert-overlay").classList.contains("hidden") || !$("form-overlay").classList.contains("hidden");
@@ -1716,6 +1996,20 @@
       if (s) renderChart(s);
     });
 
+    // Charts-view weekstrip (lets the user scrub past dates). Initialized
+    // lazily on first switch to the charts view, since its container starts
+    // hidden and Intl rendering needs the DOM laid out.
+    let chartsWeekStripReady = false;
+    function ensureChartsWeekStrip() {
+      if (chartsWeekStripReady) return;
+      if (!$("charts-weekstrip")) return;
+      chartsWeekStripReady = true;
+      initWeekStrip("charts-weekstrip", chartsViewDate || todayKey(), (iso) => {
+        chartsViewDate = iso;
+        renderChartsView();
+      });
+    }
+
     // Sidebar nav
     function switchView(view) {
       document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
@@ -1724,7 +2018,7 @@
       if (cap) cap.hidden = view !== "capture";
       if (ch) ch.hidden = view !== "charts";
       save("prod.ui.view", view);
-      if (view === "charts") renderChartsView();
+      if (view === "charts") { ensureChartsWeekStrip(); renderChartsView(); }
       if (view === "capture") {
         renderAll();
       }
@@ -1783,6 +2077,122 @@
     return;
   }
 
+  // ---- Weekstrip date picker (admin history + charts view) ----
+  function initWeekStrip(prefix, initialIso, onSelect) {
+    // Back-compat: old call signature was initWeekStrip(initialIso, onSelect).
+    if (typeof prefix === "string" && typeof initialIso === "function" && onSelect === undefined) {
+      onSelect = initialIso; initialIso = prefix; prefix = "weekstrip";
+    }
+    if (!prefix) prefix = "weekstrip";
+    const container = $(prefix);
+    const monthBtn = $(prefix + "-month");
+    const todayBtn = $(prefix + "-today");
+    const prevBtn  = $(prefix + "-prev");
+    const nextBtn  = $(prefix + "-next");
+    const dowsEl   = $(prefix + "-dows");
+    const daysEl   = $(prefix + "-days");
+    if (!container || !monthBtn || !daysEl || !dowsEl) return null;
+
+    let weekStart;
+    let selectedIso = initialIso || todayKey();
+
+    function isoToDate(iso) {
+      const [Y, M, D] = iso.split("-").map(Number);
+      return new Date(Y, M - 1, D, 0, 0, 0, 0);
+    }
+    function dateToIso(d) {
+      return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+    }
+    function sundayOf(d) {
+      const r = new Date(d); r.setHours(0, 0, 0, 0);
+      r.setDate(r.getDate() - r.getDay());
+      return r;
+    }
+    function capFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    function renderDows() {
+      const locale = getLocale();
+      const fmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
+      const ref = sundayOf(new Date());
+      dowsEl.innerHTML = "";
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(ref); d.setDate(ref.getDate() + i);
+        const span = document.createElement("span");
+        span.textContent = capFirst(fmt.format(d).replace(/\.$/, ""));
+        dowsEl.appendChild(span);
+      }
+    }
+
+    function render() {
+      const sel = isoToDate(selectedIso);
+      const ws = new Date(weekStart);
+      const we = new Date(ws); we.setDate(we.getDate() + 6);
+      const monthRef = (sel >= ws && sel <= we) ? sel : new Date(ws.getTime() + 3 * 86400000);
+      const locale = getLocale();
+      const monthFmt = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" });
+      monthBtn.textContent = capFirst(monthFmt.format(monthRef));
+
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const todayIso = dateToIso(today);
+
+      daysEl.innerHTML = "";
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+        const iso = dateToIso(d);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "weekstrip-day";
+        if (iso === selectedIso) btn.classList.add("is-selected");
+        if (iso === todayIso)    btn.classList.add("is-today");
+        if (d > today)           btn.classList.add("is-future");
+        btn.textContent = String(d.getDate());
+        btn.setAttribute("aria-label", d.toLocaleDateString(locale, {
+          weekday: "long", day: "numeric", month: "long", year: "numeric",
+        }));
+        if (iso === selectedIso) btn.setAttribute("aria-selected", "true");
+        const isoCaptured = iso;
+        btn.addEventListener("click", () => {
+          if (btn.classList.contains("is-future")) return;
+          selectInternal(isoCaptured);
+        });
+        daysEl.appendChild(btn);
+      }
+    }
+
+    function selectInternal(iso) {
+      selectedIso = iso;
+      const sel = isoToDate(iso);
+      const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+      if (sel < weekStart || sel >= weekEnd) weekStart = sundayOf(sel);
+      render();
+      if (typeof onSelect === "function") onSelect(iso);
+    }
+    function next() { weekStart = new Date(weekStart.getTime() + 7 * 86400000); render(); }
+    function prev() { weekStart = new Date(weekStart.getTime() - 7 * 86400000); render(); }
+    function jumpToday() {
+      const t = new Date(); t.setHours(0, 0, 0, 0);
+      weekStart = sundayOf(t);
+      selectInternal(dateToIso(t));
+    }
+
+    weekStart = sundayOf(isoToDate(selectedIso));
+    renderDows();
+    render();
+
+    if (todayBtn) todayBtn.addEventListener("click", jumpToday);
+    if (prevBtn)  prevBtn.addEventListener("click", prev);
+    if (nextBtn)  nextBtn.addEventListener("click", next);
+    if (monthBtn) monthBtn.addEventListener("click", jumpToday);
+
+    window.addEventListener("languagechange", () => { renderDows(); render(); });
+
+    return {
+      select: selectInternal,
+      today: jumpToday,
+      getValue: function () { return selectedIso; },
+    };
+  }
+
   function bootAdmin() {
     wireNumpad();
     if (window.i18n && window.i18n.bindToggle) window.i18n.bindToggle($("lang-toggle"));
@@ -1791,7 +2201,16 @@
     if (dateEl) {
       dateEl.value = todayKey();
       renderHistory(dateEl.value);
-      dateEl.addEventListener("change", (e) => renderHistory(e.target.value));
+      // Weekstrip is the visible picker; #history-date is a hidden mirror so
+      // existing readers (exports, CSV, etc.) keep working unchanged.
+      if ($("weekstrip")) {
+        initWeekStrip("weekstrip", dateEl.value, (iso) => {
+          dateEl.value = iso;
+          renderHistory(iso);
+        });
+      } else {
+        dateEl.addEventListener("change", (e) => renderHistory(e.target.value));
+      }
     }
     const btnExp = $("btn-history-export");
     if (btnExp) btnExp.addEventListener("click", () => exportCSV($("history-date").value));
