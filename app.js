@@ -1970,6 +1970,117 @@
     return;
   }
 
+  // ---- Weekstrip date picker (admin history) ----
+  function initWeekStrip(initialIso, onSelect) {
+    const container = $("weekstrip");
+    const monthBtn = $("weekstrip-month");
+    const todayBtn = $("weekstrip-today");
+    const prevBtn  = $("weekstrip-prev");
+    const nextBtn  = $("weekstrip-next");
+    const dowsEl   = $("weekstrip-dows");
+    const daysEl   = $("weekstrip-days");
+    if (!container || !monthBtn || !daysEl || !dowsEl) return null;
+
+    let weekStart;
+    let selectedIso = initialIso || todayKey();
+
+    function isoToDate(iso) {
+      const [Y, M, D] = iso.split("-").map(Number);
+      return new Date(Y, M - 1, D, 0, 0, 0, 0);
+    }
+    function dateToIso(d) {
+      return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+    }
+    function sundayOf(d) {
+      const r = new Date(d); r.setHours(0, 0, 0, 0);
+      r.setDate(r.getDate() - r.getDay());
+      return r;
+    }
+    function capFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    function renderDows() {
+      const locale = getLocale();
+      const fmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
+      const ref = sundayOf(new Date());
+      dowsEl.innerHTML = "";
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(ref); d.setDate(ref.getDate() + i);
+        const span = document.createElement("span");
+        span.textContent = capFirst(fmt.format(d).replace(/\.$/, ""));
+        dowsEl.appendChild(span);
+      }
+    }
+
+    function render() {
+      const sel = isoToDate(selectedIso);
+      const ws = new Date(weekStart);
+      const we = new Date(ws); we.setDate(we.getDate() + 6);
+      const monthRef = (sel >= ws && sel <= we) ? sel : new Date(ws.getTime() + 3 * 86400000);
+      const locale = getLocale();
+      const monthFmt = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" });
+      monthBtn.textContent = capFirst(monthFmt.format(monthRef));
+
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const todayIso = dateToIso(today);
+
+      daysEl.innerHTML = "";
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+        const iso = dateToIso(d);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "weekstrip-day";
+        if (iso === selectedIso) btn.classList.add("is-selected");
+        if (iso === todayIso)    btn.classList.add("is-today");
+        if (d > today)           btn.classList.add("is-future");
+        btn.textContent = String(d.getDate());
+        btn.setAttribute("aria-label", d.toLocaleDateString(locale, {
+          weekday: "long", day: "numeric", month: "long", year: "numeric",
+        }));
+        if (iso === selectedIso) btn.setAttribute("aria-selected", "true");
+        const isoCaptured = iso;
+        btn.addEventListener("click", () => {
+          if (btn.classList.contains("is-future")) return;
+          selectInternal(isoCaptured);
+        });
+        daysEl.appendChild(btn);
+      }
+    }
+
+    function selectInternal(iso) {
+      selectedIso = iso;
+      const sel = isoToDate(iso);
+      const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+      if (sel < weekStart || sel >= weekEnd) weekStart = sundayOf(sel);
+      render();
+      if (typeof onSelect === "function") onSelect(iso);
+    }
+    function next() { weekStart = new Date(weekStart.getTime() + 7 * 86400000); render(); }
+    function prev() { weekStart = new Date(weekStart.getTime() - 7 * 86400000); render(); }
+    function jumpToday() {
+      const t = new Date(); t.setHours(0, 0, 0, 0);
+      weekStart = sundayOf(t);
+      selectInternal(dateToIso(t));
+    }
+
+    weekStart = sundayOf(isoToDate(selectedIso));
+    renderDows();
+    render();
+
+    if (todayBtn) todayBtn.addEventListener("click", jumpToday);
+    if (prevBtn)  prevBtn.addEventListener("click", prev);
+    if (nextBtn)  nextBtn.addEventListener("click", next);
+    if (monthBtn) monthBtn.addEventListener("click", jumpToday);
+
+    window.addEventListener("languagechange", () => { renderDows(); render(); });
+
+    return {
+      select: selectInternal,
+      today: jumpToday,
+      getValue: function () { return selectedIso; },
+    };
+  }
+
   function bootAdmin() {
     wireNumpad();
     if (window.i18n && window.i18n.bindToggle) window.i18n.bindToggle($("lang-toggle"));
@@ -1978,7 +2089,16 @@
     if (dateEl) {
       dateEl.value = todayKey();
       renderHistory(dateEl.value);
-      dateEl.addEventListener("change", (e) => renderHistory(e.target.value));
+      // Weekstrip is the visible picker; #history-date is a hidden mirror so
+      // existing readers (exports, CSV, etc.) keep working unchanged.
+      if ($("weekstrip")) {
+        initWeekStrip(dateEl.value, (iso) => {
+          dateEl.value = iso;
+          renderHistory(iso);
+        });
+      } else {
+        dateEl.addEventListener("change", (e) => renderHistory(e.target.value));
+      }
     }
     const btnExp = $("btn-history-export");
     if (btnExp) btnExp.addEventListener("click", () => exportCSV($("history-date").value));

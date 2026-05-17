@@ -1150,3 +1150,110 @@ button { font-family: inherit; cursor: pointer; }
 .eos-banner.eos-win   { background: rgba(26,160,90,0.14);  color: var(--green); }
 .eos-banner.eos-close { background: rgba(31,126,224,0.14); color: var(--blue);  }
 .eos-banner.eos-miss  { background: rgba(210,59,77,0.10);  color: var(--red);   }
+
+/* --- Weekstrip date picker (admin history) --- */
+.weekstrip {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px 16px;
+  width: 100%;
+  max-width: 560px;
+}
+.weekstrip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.weekstrip-month {
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  font: inherit;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.weekstrip-month:hover { background: var(--panel-2); }
+.weekstrip-nav { display: flex; gap: 4px; align-items: center; }
+.weekstrip-icon {
+  width: 32px; height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.weekstrip-icon:hover { background: var(--panel-2); color: var(--text); }
+.weekstrip-dows,
+.weekstrip-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.weekstrip-dows {
+  margin: 6px 0 4px;
+}
+.weekstrip-dows span {
+  text-align: center;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.weekstrip-day {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
+}
+.weekstrip-day:hover { background: var(--panel-2); }
+.weekstrip-day.is-today {
+  outline: 1.5px solid var(--blue);
+  outline-offset: -2px;
+}
+.weekstrip-day.is-selected {
+  background: #0c2440;
+  color: #fff;
+  font-weight: 600;
+}
+.weekstrip-day.is-selected.is-today { outline-color: var(--blue); }
+.weekstrip-day.is-future {
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.weekstrip-day:active { transform: scale(0.96); }
+
+.history-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.history-filter-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
