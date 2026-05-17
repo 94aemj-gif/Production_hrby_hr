@@ -511,7 +511,34 @@
   renderEntities();
   populateDevice();
   gateInit();
+  initAdminTabs();
   initCollapsibleSections();
+
+  function initAdminTabs() {
+    const KEY = "prod.admin.activeTab.v1";
+    const DEFAULT_TAB = "resumen";
+    const tabs   = document.querySelectorAll(".admin-tab");
+    const panels = document.querySelectorAll(".admin-panel");
+    if (!tabs.length || !panels.length) return;
+    let active = DEFAULT_TAB;
+    try { active = localStorage.getItem(KEY) || DEFAULT_TAB; } catch (_) {}
+    if (!document.querySelector('[data-panel="' + active + '"]')) active = DEFAULT_TAB;
+
+    function activate(name) {
+      active = name;
+      tabs.forEach((t) => {
+        const on = t.dataset.tab === name;
+        t.classList.toggle("active", on);
+        t.setAttribute("aria-selected", String(on));
+      });
+      panels.forEach((p) => {
+        p.classList.toggle("active", p.dataset.panel === name);
+      });
+      try { localStorage.setItem(KEY, name); } catch (_) {}
+    }
+    tabs.forEach((t) => t.addEventListener("click", () => activate(t.dataset.tab)));
+    activate(active);
+  }
 
   function initCollapsibleSections() {
     const KEY = "prod.admin.collapsed.v1";

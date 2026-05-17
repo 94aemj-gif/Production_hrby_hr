@@ -216,6 +216,10 @@
       // ---- Admin page ----
       "admin.title": "Configuración Admin",
       "admin.back": "← Volver a Pantalla de Producción",
+      "admin.tab.resumen": "Resumen",
+      "admin.tab.catalogos": "Catálogos",
+      "admin.tab.config": "Configuración",
+      "admin.tab.datos": "Datos",
       "admin.lock": "Cerrar Admin",
       "admin.lock.title": "Acceso Admin",
       "admin.lock.subtle": "Ingrese contraseña para acceder.",
@@ -524,6 +528,10 @@
 
       "admin.title": "Admin Settings",
       "admin.back": "← Back to Production Screen",
+      "admin.tab.resumen": "Overview",
+      "admin.tab.catalogos": "Catalogs",
+      "admin.tab.config": "Configuration",
+      "admin.tab.datos": "Data",
       "admin.lock": "Lock Admin",
       "admin.lock.title": "Admin Access",
       "admin.lock.subtle": "Enter password to access.",

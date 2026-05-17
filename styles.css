@@ -1920,3 +1920,71 @@ button { font-family: inherit; cursor: pointer; }
     padding-bottom: 12px;
   }
 }
+
+/* ============ Admin tabs + panels (v=41) ============ */
+
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: var(--shadow-sm);
+  margin: 0 0 16px;
+}
+.admin-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 600 13px/1 inherit;
+  letter-spacing: 0.02em;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  text-align: center;
+}
+.admin-tab:hover { color: var(--text); background: var(--panel-2); }
+.admin-tab.active {
+  color: #fff;
+  background: var(--blue);
+  box-shadow: 0 2px 8px rgba(31,126,224,0.25);
+}
+
+/* Panels: only the active one is visible. */
+.admin-panel { display: none; }
+.admin-panel.active {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 1024px) {
+  .admin-panel.active {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
+    row-gap: 14px;
+    align-items: start;
+  }
+  .admin-panel.active .admin-card[data-wide="1"] {
+    grid-column: 1 / -1;
+  }
+  .admin-panel.active > form { display: contents; }
+}
+
+@media (min-width: 1400px) {
+  .admin-panel[data-panel="config"].active,
+  .admin-panel[data-panel="catalogos"].active {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Supersede the v=40 .admin grid layout — panels now own that. */
+@media (min-width: 1024px) {
+  .admin { display: block; padding: 22px 28px 32px; }
+}
