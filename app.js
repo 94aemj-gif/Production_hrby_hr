@@ -2410,6 +2410,23 @@
     try { localStorage.setItem(TOMBSTONES_KEY, JSON.stringify(t)); } catch (_) {}
   }
 
+  // Track day_reset broadcasts already applied so we don't re-apply on every pull.
+  // Each entry: eventId -> { day, ts, appliedAt }. Pruned after 30 days.
+  const APPLIED_RESETS_KEY = "prod.sync.appliedResets.v1";
+  function loadAppliedResets() {
+    try { return JSON.parse(localStorage.getItem(APPLIED_RESETS_KEY) || "{}"); }
+    catch (_) { return {}; }
+  }
+  function saveAppliedResets(m) {
+    // Prune entries older than 30 days to bound growth.
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    for (const k of Object.keys(m)) {
+      const t = m[k] && m[k].appliedAt;
+      if (t && new Date(t).getTime() < cutoff) delete m[k];
+    }
+    try { localStorage.setItem(APPLIED_RESETS_KEY, JSON.stringify(m)); } catch (_) {}
+  }
+
   function applyRemote(payload) {
     if (!payload) return;
     const all = loadSessions();
@@ -2473,6 +2490,45 @@
       }
     }
 
+    // day_reset broadcast: another device wiped a day on Supabase. Apply
+    // the same wipe locally so the bitácora/sessions match. Idempotent via
+    // applied-id set so we don't re-apply on every pull.
+    const appliedResets = loadAppliedResets();
+    let appliedChanged = false;
+    let logForcedClear = false;
+    for (const r of payload.events || []) {
+      if (r.type !== "day_reset" || !r.message || !r.id) continue;
+      if (appliedResets[r.id]) continue;
+      const dayIso = r.message;
+      // Mark as applied even for our own broadcasts (we already wiped locally).
+      appliedResets[r.id] = { day: dayIso, ts: r.ts || new Date().toISOString(),
+                              appliedAt: new Date().toISOString() };
+      appliedChanged = true;
+      if (r.device_id && r.device_id === payload.ownDeviceId) continue;
+      // Drop sessions for that day from the in-memory list (saveSessions below).
+      for (let i = all.length - 1; i >= 0; i--) {
+        if (all[i] && all[i].date === dayIso) { all.splice(i, 1); changed = true; }
+      }
+      // Forcibly clear log entries for the day (and any pending tombstones for the same).
+      const log = load(STORAGE.LOG, []);
+      const logKept = log.filter((en) => !(en && typeof en.ts === "string" && en.ts.slice(0, 10) === dayIso));
+      if (logKept.length !== log.length) {
+        save(STORAGE.LOG, logKept);
+        logForcedClear = true;
+      }
+      for (const k of Object.keys(tombstones)) {
+        const t = tombstones[k];
+        if (t && typeof t.ts === "string" && t.ts.slice(0, 10) === dayIso) {
+          delete tombstones[k]; tombstonesChanged = true;
+        }
+      }
+      // Tell sync to drop pending pushes for that date too.
+      if (window.sync && typeof window.sync.purgePendingForDate === "function") {
+        window.sync.purgePendingForDate(dayIso);
+      }
+    }
+    if (appliedChanged) saveAppliedResets(appliedResets);
+
     for (const r of payload.events || []) {
       if (r.type !== "capture_undone" && r.type !== "capture_deleted") continue;
       const capId = r.capture_id;
@@ -2497,7 +2553,7 @@
     if (changed) saveSessions(all);
     if (tombstonesChanged) savePendingTombstones(tombstones);
     const logChanged = mergeRemoteIntoLog(payload, payload.ownDeviceId);
-    if (changed || logChanged) refreshAfterRemote();
+    if (changed || logChanged || logForcedClear) refreshAfterRemote();
   }
 
   function refreshAfterRemote() {

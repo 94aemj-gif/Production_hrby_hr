@@ -170,6 +170,46 @@
     logEvent("clear", tt("admin.log.clearedSessions"));
   });
 
+  const resetTodayBtn = document.getElementById("btn-reset-today-cloud");
+  if (resetTodayBtn) resetTodayBtn.addEventListener("click", async () => {
+    function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+    const d = new Date();
+    const iso = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+    if (!(await window.appConfirm(tt("admin.confirmResetTodayCloud", { date: iso }), { danger: true }))) return;
+
+    resetTodayBtn.disabled = true;
+    const origText = resetTodayBtn.textContent;
+    resetTodayBtn.textContent = tt("admin.resetTodayCloudBusy");
+
+    let cloud = { ok: true, errors: [] };
+    if (window.sync && typeof window.sync.deleteDate === "function") {
+      cloud = await window.sync.deleteDate(iso);
+    } else {
+      cloud = { ok: false, errors: ["sync no disponible"] };
+    }
+
+    // Local cleanup regardless of cloud result so a partial failure still
+    // leaves the device in a consistent state and the user can retry.
+    const sessions = load(STORAGE.SESSIONS, []);
+    const sessionsKept = sessions.filter((s) => s && s.date !== iso);
+    save(STORAGE.SESSIONS, sessionsKept);
+    const log = load(STORAGE.LOG, []);
+    const logKept = log.filter((e) => !(e && typeof e.ts === "string" && e.ts.slice(0, 10) === iso));
+    save(STORAGE.LOG, logKept);
+    localStorage.removeItem(STORAGE.LAST_FIRED);
+
+    resetTodayBtn.disabled = false;
+    resetTodayBtn.textContent = origText;
+
+    if (cloud.ok) {
+      showFlash();
+      logEvent("clear", tt("admin.log.resetTodayCloud", { date: iso }));
+    } else {
+      logEvent("clear", tt("admin.log.resetTodayCloudPartial", { date: iso }));
+      alert(tt("admin.resetTodayCloudPartial") + "\n\n" + cloud.errors.join("\n\n"));
+    }
+  });
+
   // ---- Entity tables ----
   function renderEntities() {
     renderLines();
