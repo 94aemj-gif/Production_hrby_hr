@@ -1498,3 +1498,12 @@ button { font-family: inherit; cursor: pointer; }
   .nav-label { display: none; }
   .oee-donut { display: none; }
 }
+
+/* --- Non-blocking confirm dialog (v=34) --- */
+.app-confirm-overlay { z-index: 9999; }
+.app-confirm-popup {
+  max-width: 420px;
+  width: calc(100% - 32px);
+}
+.app-confirm-popup .popup-title-left { font-size: 18px; margin-bottom: 8px; }
+.app-confirm-popup #app-confirm-msg { margin-bottom: 18px; }

@@ -354,11 +354,11 @@
       logListEl.appendChild(li);
     });
     logListEl.querySelectorAll(".log-del").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         const row = btn.closest(".log-item");
         const msg = row ? row.querySelector(".log-msg").textContent : "";
         const time = row ? row.querySelector(".log-time").textContent : "";
-        if (!confirm(tt("log.delConfirm", { time, msg }))) return;
+        if (!(await appConfirm(tt("log.delConfirm", { time, msg }), { danger: true }))) return;
         deleteCapture(btn.dataset.cap);
       });
     });
@@ -1490,10 +1490,10 @@
     sel.innerHTML = opts.join("") || '<option value="">' + escapeHtml(tt("form.noHours")) + '</option>';
   }
 
-  function hideForm(force) {
+  async function hideForm(force) {
     const hasValues = !force && (($("f-count") && $("f-count").value) || ($("f-scrap") && $("f-scrap").value) || ($("f-operator") && $("f-operator").value) || (selectedNotes && selectedNotes.length));
     if (hasValues) {
-      if (!confirm(tt("form.confirmCancel"))) return;
+      if (!(await appConfirm(tt("form.confirmCancel")))) return;
     }
     $("form-overlay").classList.add("hidden");
     $("form-overlay").setAttribute("aria-hidden", "true");
@@ -1531,6 +1531,73 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.classList.remove("show"), opts && opts.duration ? opts.duration : 3000);
   }
+
+  // ---- Non-blocking confirm (replaces window.confirm) ----
+  // window.confirm is synchronous and freezes the main thread for as long
+  // as the dialog is open, which Chrome attributes to the click handler
+  // and reports as an INP issue. This helper renders an in-app modal,
+  // returns a Promise<boolean>, and lets the page paint immediately.
+  let _confirmEl = null;
+  function appConfirm(message, opts) {
+    opts = opts || {};
+    return new Promise((resolve) => {
+      if (!_confirmEl) {
+        const overlay = document.createElement("div");
+        overlay.className = "overlay app-confirm-overlay hidden";
+        overlay.setAttribute("aria-hidden", "true");
+        overlay.innerHTML =
+          '<div class="popup app-confirm-popup" role="alertdialog" aria-labelledby="app-confirm-title" aria-describedby="app-confirm-msg">' +
+            '<h2 id="app-confirm-title" class="popup-title-left"></h2>' +
+            '<p id="app-confirm-msg" class="popup-subtle" style="white-space:pre-line"></p>' +
+            '<div class="form-actions-row">' +
+              '<button type="button" class="btn btn-ghost btn-block" data-act="cancel"></button>' +
+              '<button type="button" class="btn btn-block" data-act="ok"></button>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener("click", (e) => {
+          // Click on the backdrop (outside the popup) cancels.
+          if (e.target === overlay) overlay._cancel && overlay._cancel();
+        });
+        _confirmEl = overlay;
+      }
+      const titleEl  = _confirmEl.querySelector("#app-confirm-title");
+      const msgEl    = _confirmEl.querySelector("#app-confirm-msg");
+      const okBtn    = _confirmEl.querySelector('[data-act="ok"]');
+      const cancelBtn = _confirmEl.querySelector('[data-act="cancel"]');
+
+      titleEl.textContent = opts.title || tt("confirm.title");
+      msgEl.textContent   = message || "";
+      okBtn.textContent     = opts.okLabel     || tt("btn.confirm");
+      cancelBtn.textContent = opts.cancelLabel || tt("btn.cancel");
+      okBtn.className = "btn btn-block " + (opts.danger ? "btn-warn" : "btn-success");
+
+      function cleanup(result) {
+        _confirmEl.classList.add("hidden");
+        _confirmEl.setAttribute("aria-hidden", "true");
+        okBtn.removeEventListener("click", onOk);
+        cancelBtn.removeEventListener("click", onCancel);
+        document.removeEventListener("keydown", onKey);
+        _confirmEl._cancel = null;
+        resolve(result);
+      }
+      function onOk()     { cleanup(true);  }
+      function onCancel() { cleanup(false); }
+      function onKey(e) {
+        if (e.key === "Escape") onCancel();
+        else if (e.key === "Enter") onOk();
+      }
+      _confirmEl._cancel = onCancel;
+      okBtn.addEventListener("click", onOk);
+      cancelBtn.addEventListener("click", onCancel);
+      document.addEventListener("keydown", onKey);
+      _confirmEl.classList.remove("hidden");
+      _confirmEl.setAttribute("aria-hidden", "false");
+      // Focus OK after the next frame so the dialog has rendered.
+      requestAnimationFrame(() => { try { okBtn.focus(); } catch (_) {} });
+    });
+  }
+  window.appConfirm = appConfirm;
 
   // ---- Vibration ----
   function buzz(pattern) {
@@ -1647,14 +1714,14 @@
   }
 
   // ---- Captures (good + scrap) with undo ----
-  function addCapture(qty, kind) {
+  async function addCapture(qty, kind) {
     const sess = getSession();
     if (!sess) return;
     const now = new Date();
     if (!isWithinShift(now, sess)) {
       const { start, end } = getShiftWindow(sess);
       const msg = tt("form.outOfShift", { start: fmt12(start), end: fmt12(end) });
-      if (!confirm(msg)) return;
+      if (!(await appConfirm(msg))) return;
     }
     const id = "c" + Date.now() + Math.random().toString(36).slice(2, 6);
     const ts = now.toISOString();
@@ -1735,10 +1802,10 @@
   }
 
   // ---- Submissions ----
-  function submitForm(e) {
+  async function submitForm(e) {
     e.preventDefault();
     const s = getSession();
-    if (!s) { hideForm(); return; }
+    if (!s) { await hideForm(); return; }
     const employeeId = ($("f-operator").value || "").trim();
     const qty = Number($("f-count").value);
     const scrap = Number($("f-scrap").value) || 0;
@@ -1749,7 +1816,7 @@
     const now = new Date();
     const ts = now.toISOString();
     if (!isWithinShift(now, s)) {
-      if (!confirm(tt("form.outOfShiftSimple"))) return;
+      if (!(await appConfirm(tt("form.outOfShiftSimple")))) return;
     }
     const goodId = "c" + Date.now() + "g" + Math.random().toString(36).slice(2, 5);
     const scrapId = "c" + Date.now() + "s" + Math.random().toString(36).slice(2, 5);
@@ -1771,7 +1838,7 @@
     const scrapStr = scrap ? tt("log.captureScrapPart", { n: scrap }) : "";
     logEvent("capture", tt("log.captureFull", { emp: employeeId, qty, scrap: scrapStr, notes: noteStr }));
     activeAlertTime = null;
-    hideForm(true);
+    await hideForm(true);
     renderAll();
     const cv = $("view-charts");
     if (cv && !cv.hidden) renderChartsView();
@@ -1950,7 +2017,7 @@
     if (eqs) eqs.addEventListener("change", (e) => changeStatus(e.target.value));
 
     const _on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
-    _on("btn-log-clear", "click", () => { if (confirm(tt("log.confirmClear"))) clearLog(); });
+    _on("btn-log-clear", "click", async () => { if (await appConfirm(tt("log.confirmClear"), { danger: true })) clearLog(); });
     _on("log-search", "input", (e) => { logFilterText = e.target.value.toLowerCase().trim(); renderLog(); });
     document.querySelectorAll(".log-chip").forEach((chip) => {
       chip.addEventListener("click", () => {
@@ -2217,7 +2284,7 @@
     const btnExpAll = $("btn-history-export-all");
     if (btnExpAll) btnExpAll.addEventListener("click", exportAllCSV);
     const btnClr = $("btn-log-clear");
-    if (btnClr) btnClr.addEventListener("click", () => { if (confirm(tt("log.confirmClear"))) clearLog(); });
+    if (btnClr) btnClr.addEventListener("click", async () => { if (await appConfirm(tt("log.confirmClear"), { danger: true })) clearLog(); });
     const search = $("log-search");
     if (search) search.addEventListener("input", (e) => { logFilterText = e.target.value.toLowerCase().trim(); renderLog(); });
     document.querySelectorAll(".log-chip").forEach((chip) => {

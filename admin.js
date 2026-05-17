@@ -155,16 +155,16 @@
     logEvent("config", tt("admin.log.cfgReset"));
   });
 
-  document.getElementById("btn-clear-data").addEventListener("click", () => {
-    if (!confirm(tt("admin.confirmClearToday"))) return;
+  document.getElementById("btn-clear-data").addEventListener("click", async () => {
+    if (!(await window.appConfirm(tt("admin.confirmClearToday"), { danger: true }))) return;
     localStorage.removeItem(STORAGE.SUBMISSIONS);
     localStorage.removeItem(STORAGE.LAST_FIRED);
     showFlash();
     logEvent("clear", tt("admin.log.clearedToday"));
   });
 
-  document.getElementById("btn-clear-sessions").addEventListener("click", () => {
-    if (!confirm(tt("admin.confirmClearSessions"))) return;
+  document.getElementById("btn-clear-sessions").addEventListener("click", async () => {
+    if (!(await window.appConfirm(tt("admin.confirmClearSessions"), { danger: true }))) return;
     localStorage.removeItem(STORAGE.SESSIONS);
     showFlash();
     logEvent("clear", tt("admin.log.clearedSessions"));
@@ -411,9 +411,9 @@
     renderLines();
   }
 
-  function removeLine(idx) {
+  async function removeLine(idx) {
     const list = load(STORAGE.LINES, DEFAULT_LINES);
-    if (!confirm(tt("admin.confirmDelLine", { id: list[idx].id }))) return;
+    if (!(await window.appConfirm(tt("admin.confirmDelLine", { id: list[idx].id }), { danger: true }))) return;
     const removed = list.splice(idx, 1)[0];
     save(STORAGE.LINES, list);
     logEvent("config", tt("admin.log.lineRemoved", { id: removed.id }));
@@ -440,9 +440,9 @@
     renderShifts();
   }
 
-  function removeShift(idx) {
+  async function removeShift(idx) {
     const list = load(STORAGE.SHIFTS, DEFAULT_SHIFTS);
-    if (!confirm(tt("admin.confirmDelShift", { id: list[idx].id }))) return;
+    if (!(await window.appConfirm(tt("admin.confirmDelShift", { id: list[idx].id }), { danger: true }))) return;
     const removed = list.splice(idx, 1)[0];
     save(STORAGE.SHIFTS, list);
     logEvent("config", tt("admin.log.shiftRemoved", { id: removed.id }));
@@ -463,9 +463,9 @@
     renderOperators();
   }
 
-  function removeOperator(idx) {
+  async function removeOperator(idx) {
     const list = load(STORAGE.OPERATORS, DEFAULT_OPERATORS);
-    if (!confirm(tt("admin.confirmDelOp", { id: list[idx].id }))) return;
+    if (!(await window.appConfirm(tt("admin.confirmDelOp", { id: list[idx].id }), { danger: true }))) return;
     const removed = list.splice(idx, 1)[0];
     save(STORAGE.OPERATORS, list);
     logEvent("config", tt("admin.log.opRemoved", { id: removed.id }));
