@@ -1828,6 +1828,74 @@
     };
   }
 
+  // Window for adding remote rows to the local capture log. Older rows still
+  // merge into sessions (History/Charts) but don't flood the bitácora.
+  const REMOTE_LOG_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+  function mergeRemoteIntoLog(payload, ownDeviceId) {
+    const log = load(STORAGE.LOG, []);
+    const seen = new Set();
+    for (const e of log) { if (e._remoteId) seen.add(e._remoteId); }
+    const now = Date.now();
+    let added = 0;
+
+    function recent(ts) {
+      if (!ts) return false;
+      const t = new Date(ts).getTime();
+      return Number.isFinite(t) && (now - t) <= REMOTE_LOG_WINDOW_MS;
+    }
+
+    for (const r of payload.captures || []) {
+      if (!r.device_id || r.device_id === ownDeviceId) continue;
+      if (!recent(r.ts)) continue;
+      const key = "c:" + r.id;
+      if (seen.has(key)) continue;
+      const isScrap = r.kind === "scrap";
+      const message = tt(isScrap ? "log.scrapRemote" : "log.captureRemote", { qty: r.qty });
+      log.push({
+        ts: r.ts,
+        type: isScrap ? "scrap" : "capture",
+        message,
+        sessionRef: r.session_date + "|" + r.line_id + "|" + r.shift_id + "|" + r.operator_id,
+        captureId: r.id,
+        _remoteId: key,
+        _remoteDeviceId: r.device_id,
+      });
+      seen.add(key);
+      added++;
+    }
+
+    for (const e of payload.events || []) {
+      if (!e.device_id || e.device_id === ownDeviceId) continue;
+      if (!recent(e.ts)) continue;
+      const key = "e:" + e.id;
+      if (seen.has(key)) continue;
+      let type = e.type || "system";
+      let message = e.message || "";
+      if (type === "capture_undone") { type = "undo"; message = tt("log.undoRemote"); }
+      else if (type === "capture_deleted") { type = "undo"; message = tt("log.adminDelRemote"); }
+      log.push({
+        ts: e.ts,
+        type,
+        message,
+        sessionRef: null,
+        captureId: e.capture_id || undefined,
+        _remoteId: key,
+        _remoteDeviceId: e.device_id,
+      });
+      seen.add(key);
+      added++;
+    }
+
+    if (added > 0) {
+      log.sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
+      if (log.length > LOG_MAX) log.splice(0, log.length - LOG_MAX);
+      save(STORAGE.LOG, log);
+      return true;
+    }
+    return false;
+  }
+
   function applyRemote(payload) {
     if (!payload) return;
     const all = loadSessions();
@@ -1890,10 +1958,9 @@
       }
     }
 
-    if (changed) {
-      saveSessions(all);
-      refreshAfterRemote();
-    }
+    if (changed) saveSessions(all);
+    const logChanged = mergeRemoteIntoLog(payload, payload.ownDeviceId);
+    if (changed || logChanged) refreshAfterRemote();
   }
 
   function refreshAfterRemote() {
