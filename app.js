@@ -214,35 +214,6 @@
 
   // forHour rule: capture at HH:MM represents previous hour if MM < 30, else current hour.
   // Result is the hour ISO key (UTC) the capture should bucket into.
-  function updateHourProgress(s) {
-    const fill = $("hour-progress-fill");
-    const cd = $("hour-progress-countdown");
-    const label = $("hour-progress-label");
-    if (!fill || !cd || !label) return;
-    if (!s) { fill.style.width = "0%"; cd.textContent = "—"; label.textContent = "—"; return; }
-    const now = new Date();
-    const { start: shStart, end: shEnd } = getShiftWindow(s);
-    if (now < shStart || now >= shEnd) {
-      label.textContent = tt("counter.outOfShift");
-      cd.textContent = "—";
-      fill.style.width = "0%";
-      return;
-    }
-    const hourStart = new Date(now); hourStart.setMinutes(0, 0, 0);
-    const elapsedMs = now - hourStart;
-    const pct = Math.min(100, Math.round((elapsedMs / 3600000) * 100));
-    const minsLeft = Math.max(0, 60 - Math.floor(elapsedMs / 60000));
-    let lh = hourStart.getHours();
-    const ap = lh >= 12 ? "PM" : "AM";
-    lh = lh % 12 || 12;
-    let lh2 = (hourStart.getHours() + 1) % 24;
-    const ap2 = lh2 >= 12 ? "PM" : "AM";
-    lh2 = lh2 % 12 || 12;
-    label.textContent = tt("counter.hourRange", { h1: lh, ap1: ap, h2: lh2, ap2: ap2 });
-    cd.textContent = tt("counter.minToCapture", { n: minsLeft });
-    fill.style.width = pct + "%";
-    fill.style.background = pct >= 85 ? "var(--accent)" : "var(--blue)";
-  }
 
   function computeForHour(ts) {
     const d = new Date(ts);
@@ -571,6 +542,9 @@
     setText("eos-down", tt("eos.min", { n: downMin }));
     const ov = $("eos-overlay");
     if (ov) { ov.classList.remove("hidden"); ov.setAttribute("aria-hidden", "false"); }
+    // Show celebration banner + confetti AFTER the overlay is visible so
+    // the canvas has real dimensions.
+    setTimeout(() => showEosCelebration(s), 30);
     const btnX = $("btn-eos-close");
     const btnE = $("btn-eos-export");
     if (btnX) btnX.onclick = () => { ov.classList.add("hidden"); ov.setAttribute("aria-hidden", "true"); };
@@ -616,13 +590,259 @@
   function setText(id, txt) { const el = $(id); if (el) el.textContent = txt; }
   function setDisabled(id, v) { const el = $(id); if (el) el.disabled = v; }
 
+  // ---- Animated counter ----
+  function animateCounter(val) {
+    const el = $("counter");
+    if (!el) return;
+    if (typeof val !== "number" || !Number.isFinite(val)) {
+      el.textContent = val == null ? "—" : String(val);
+      el.dataset.current = "";
+      return;
+    }
+    const target = val;
+    const start = Number(el.dataset.current);
+    if (!Number.isFinite(start)) { el.dataset.current = String(target); el.textContent = target.toLocaleString(); return; }
+    if (start === target) { el.textContent = target.toLocaleString(); return; }
+    el.dataset.current = String(target);
+    const t0 = performance.now();
+    const duration = Math.min(900, 250 + Math.abs(target - start) * 4);
+    function step(t) {
+      const k = Math.min(1, (t - t0) / duration);
+      const eased = 1 - Math.pow(1 - k, 3);
+      const cur = Math.round(start + (target - start) * eased);
+      el.textContent = cur.toLocaleString();
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+    if (target > start) {
+      el.classList.remove("counter-flash");
+      void el.offsetWidth;
+      el.classList.add("counter-flash");
+    }
+  }
+
+  // ---- Radial hour-progress ring (replaces horizontal bar) ----
+  const RING_RADIUS = 184;
+  const RING_CIRC = 2 * Math.PI * RING_RADIUS;
+  function setRingArc(circleEl, fractionStart, fractionLen) {
+    if (!circleEl) return;
+    const len = Math.max(0, Math.min(1, fractionLen)) * RING_CIRC;
+    const offset = -Math.max(0, Math.min(1, fractionStart)) * RING_CIRC;
+    circleEl.style.strokeDasharray = len + " " + Math.max(0.001, RING_CIRC - len);
+    circleEl.style.strokeDashoffset = String(offset);
+  }
+  function updateHourRing(s) {
+    const ring = document.querySelector(".counter-ring");
+    const progressEl = $("ring-progress");
+    const breaksEl = $("ring-breaks");
+    const labelEl = $("hour-progress-label");
+    const cdEl = $("hour-progress-countdown");
+    if (!ring || !progressEl || !breaksEl) return;
+    ring.classList.remove("is-on-pace", "is-near-end", "is-off-shift");
+    setRingArc(breaksEl, 0, 0);
+    if (!s) {
+      setRingArc(progressEl, 0, 0);
+      if (labelEl) labelEl.textContent = "—";
+      if (cdEl) cdEl.textContent = "—";
+      return;
+    }
+    const now = new Date();
+    const { start: shStart, end: shEnd } = getShiftWindow(s);
+    if (now < shStart || now >= shEnd) {
+      setRingArc(progressEl, 0, 0);
+      ring.classList.add("is-off-shift");
+      if (labelEl) labelEl.textContent = tt("counter.outOfShift");
+      if (cdEl) cdEl.textContent = "—";
+      return;
+    }
+    const hourStart = new Date(now); hourStart.setMinutes(0, 0, 0);
+    const hourEnd = new Date(hourStart.getTime() + 3600000);
+    const elapsedMs = now - hourStart;
+    const frac = Math.min(1, elapsedMs / 3600000);
+    setRingArc(progressEl, 0, frac);
+    if (frac >= 0.85) ring.classList.add("is-near-end");
+
+    // Union of break minutes within the current hour, rendered as one arc.
+    let bFracStart = -1, bFracEnd = -1;
+    for (const b of getShiftBreaks(s)) {
+      const ovStart = b.start > hourStart ? b.start : hourStart;
+      const ovEnd   = b.end   < hourEnd   ? b.end   : hourEnd;
+      if (ovEnd > ovStart) {
+        const fs = (ovStart - hourStart) / 3600000;
+        const fe = (ovEnd   - hourStart) / 3600000;
+        if (bFracStart < 0 || fs < bFracStart) bFracStart = fs;
+        if (fe > bFracEnd) bFracEnd = fe;
+      }
+    }
+    if (bFracStart >= 0 && bFracEnd > bFracStart) {
+      setRingArc(breaksEl, bFracStart, bFracEnd - bFracStart);
+    }
+
+    const minsLeft = Math.max(0, 60 - Math.floor(elapsedMs / 60000));
+    let lh = hourStart.getHours();
+    const ap = lh >= 12 ? "PM" : "AM";
+    lh = lh % 12 || 12;
+    let lh2 = (hourStart.getHours() + 1) % 24;
+    const ap2 = lh2 >= 12 ? "PM" : "AM";
+    lh2 = lh2 % 12 || 12;
+    if (labelEl) labelEl.textContent = tt("counter.hourRange", { h1: lh, ap1: ap, h2: lh2, ap2: ap2 });
+    if (cdEl)    cdEl.textContent    = tt("counter.minToCapture", { n: minsLeft });
+  }
+
+  // ---- OEE donut (topbar) ----
+  const OEE_RADIUS = 24;
+  const OEE_CIRC = 2 * Math.PI * OEE_RADIUS;
+  function updateOEEDonut(oeePct) {
+    const arc  = $("oee-arc");
+    const txt  = $("oee-pct");
+    const wrap = $("oee-donut");
+    if (!arc || !txt || !wrap) return;
+    const v = Math.max(0, Math.min(100, Number.isFinite(oeePct) ? oeePct : 0));
+    const len = (v / 100) * OEE_CIRC;
+    arc.style.strokeDasharray = len + " " + Math.max(0.001, OEE_CIRC - len);
+    arc.style.strokeDashoffset = "0";
+    txt.textContent = Math.round(v) + "%";
+    wrap.classList.remove("oee-low", "oee-mid", "oee-high");
+    wrap.classList.add(v < 50 ? "oee-low" : v < 85 ? "oee-mid" : "oee-high");
+  }
+
+  // ---- Production heatmap (charts view) ----
+  const HEATMAP_DAYS = 14;
+  function renderHeatmap() {
+    const wrap = $("heatmap");
+    if (!wrap) return;
+    const all = loadSessions();
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const dates = [];
+    for (let i = HEATMAP_DAYS - 1; i >= 0; i--) {
+      dates.push(new Date(today.getTime() - i * 86400000).toISOString().slice(0, 10));
+    }
+    const dateSet = new Set(dates);
+    const grid = {};
+    let maxVal = 0;
+    for (const s of all) {
+      if (!s || !s.captures || !dateSet.has(s.date)) continue;
+      for (const c of s.captures) {
+        if (c.undone || c.kind === "scrap") continue;
+        const h = new Date(c.ts).getHours();
+        grid[s.date] = grid[s.date] || {};
+        grid[s.date][h] = (grid[s.date][h] || 0) + (Number(c.qty) || 0);
+        if (grid[s.date][h] > maxVal) maxVal = grid[s.date][h];
+      }
+    }
+    wrap.innerHTML = "";
+    wrap.appendChild(document.createElement("div")); // top-left corner
+    for (let h = 0; h < 24; h++) {
+      const lbl = document.createElement("div");
+      lbl.className = "heatmap-col-label";
+      lbl.textContent = (h % 6 === 0) ? ((h % 12) || 12) + (h < 12 ? "a" : "p") : "";
+      wrap.appendChild(lbl);
+    }
+    for (const d of dates) {
+      const dd = new Date(d + "T00:00:00");
+      const rowLbl = document.createElement("div");
+      rowLbl.className = "heatmap-row-label";
+      rowLbl.textContent = pad2(dd.getDate()) + "/" + pad2(dd.getMonth() + 1);
+      wrap.appendChild(rowLbl);
+      for (let h = 0; h < 24; h++) {
+        const cell = document.createElement("div");
+        cell.className = "heatmap-cell";
+        const v = (grid[d] && grid[d][h]) || 0;
+        let level = 0;
+        if (maxVal > 0 && v > 0) {
+          const r = v / maxVal;
+          level = r < 0.2 ? 1 : r < 0.45 ? 2 : r < 0.75 ? 3 : 4;
+        }
+        cell.dataset.level = String(level);
+        cell.title = d + " · " + (((h % 12) || 12) + (h < 12 ? "a" : "p")) + " — " + v.toLocaleString();
+        wrap.appendChild(cell);
+      }
+    }
+  }
+
+  // ---- EOS celebration (banner + confetti when target met) ----
+  function eosBannerKind(goodTotal, shiftTarget) {
+    if (shiftTarget <= 0) return null;
+    const ratio = goodTotal / shiftTarget;
+    if (ratio >= 1.0) return "win";
+    if (ratio >= 0.9) return "close";
+    return "miss";
+  }
+  let confettiRaf = null;
+  function runConfetti() {
+    const cv = $("eos-confetti");
+    if (!cv) return;
+    const parent = cv.parentElement;
+    const rect = parent ? parent.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
+    cv.width = rect.width;
+    cv.height = rect.height;
+    const ctx = cv.getContext("2d");
+    const colors = ["#1aa05a", "#1f7ee0", "#e07a2b", "#d23b4d", "#f4c430"];
+    const pieces = [];
+    for (let i = 0; i < 120; i++) {
+      pieces.push({
+        x: Math.random() * rect.width,
+        y: -20 - Math.random() * rect.height * 0.5,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 1 + Math.random() * 3,
+        w: 6 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        a: Math.random() * Math.PI * 2,
+        va: (Math.random() - 0.5) * 0.25,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      });
+    }
+    const t0 = performance.now();
+    const DURATION = 4000;
+    if (confettiRaf) cancelAnimationFrame(confettiRaf);
+    function step(t) {
+      const elapsed = t - t0;
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      for (const p of pieces) {
+        p.vy += 0.04; p.x += p.vx; p.y += p.vy; p.a += p.va;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.a);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+      if (elapsed < DURATION) confettiRaf = requestAnimationFrame(step);
+      else { ctx.clearRect(0, 0, rect.width, rect.height); confettiRaf = null; }
+    }
+    confettiRaf = requestAnimationFrame(step);
+  }
+  function showEosCelebration(s) {
+    const banner = $("eos-banner");
+    if (!banner || !s) return;
+    const totals = shiftTotals(s);
+    const { start, end } = getShiftWindow(s);
+    const shiftHours = Math.max(1, (end - start) / 3600000);
+    const shiftTarget = (config.hourlyTarget || 0) * shiftHours;
+    const kind = eosBannerKind(totals.good, shiftTarget);
+    banner.classList.remove("eos-win", "eos-close", "eos-miss", "hidden");
+    if (kind === "win") {
+      banner.classList.add("eos-win");
+      banner.textContent = "🎉  " + tt("eos.bannerWin");
+      runConfetti();
+    } else if (kind === "close") {
+      banner.classList.add("eos-close");
+      banner.textContent = "🏅  " + tt("eos.bannerClose");
+    } else if (kind === "miss") {
+      banner.classList.add("eos-miss");
+      banner.textContent = tt("eos.bannerMiss");
+    } else {
+      banner.classList.add("hidden");
+    }
+  }
+
   function renderAll() {
     const s = getSession();
     const capBtn = $("btn-capture");
     if (!s) {
       setText("shift-label", device.lineId ? lineLabel(device.lineId) + " · " + tt("shift.noActive") : tt("shift.configDevice"));
       setText("operator-label", device.operatorId ? operatorName(device.operatorId) : "—");
-      setText("counter", "—");
+      animateCounter("—");
       setText("scrap-count", "—");
       setText("metric-target", config.hourlyTarget);
       setText("metric-hour", "—");
@@ -630,6 +850,7 @@
       setText("metric-efficiency", "—");
       setText("metric-efficiency-sub", tt("counter.outOfShift"));
       setText("oee", "—");
+      updateOEEDonut(0);
       setDisabled("equip-status", true);
       const pill = $("shift-status");
       if (pill) { pill.className = "status-pill status-paused"; pill.textContent = tt("status.outOfShift"); }
@@ -646,7 +867,7 @@
     setText("shift-label", lineLabel(fresh.lineId) + " · " + shiftLabel(fresh.shiftId) + otSuffix);
     setText("operator-label", operatorName(fresh.operatorId));
     const totals = shiftTotals(fresh);
-    setText("counter", totals.good.toLocaleString());
+    animateCounter(totals.good);
     setText("scrap-count", totals.scrap.toLocaleString());
     setText("metric-target", config.hourlyTarget);
 
@@ -667,7 +888,9 @@
     if (effEl) effEl.style.color = shiftEff.pct >= 90 ? "var(--green)" : shiftEff.pct >= 60 ? "var(--blue)" : "var(--accent)";
     setText("metric-efficiency-sub", tt(shiftEff.completedHours === 1 ? "metric.hrComplete" : "metric.hrsComplete", { n: shiftEff.completedHours }));
 
-    setText("oee", computeOEE(fresh) + "%");
+    const oeePct = computeOEE(fresh);
+    setText("oee", oeePct + "%");
+    updateOEEDonut(oeePct);
     const eqs = $("equip-status"); if (eqs) eqs.value = fresh.currentStatus;
     applyStatusPill(fresh.currentStatus);
     renderChart(fresh);
@@ -685,7 +908,7 @@
     const emptyEl = $("counter-empty");
     if (emptyEl) emptyEl.classList.toggle("hidden", totals.good > 0);
     // Hour-in-progress bar + countdown
-    updateHourProgress(fresh);
+    updateHourRing(fresh);
     // Last capture row
     const last = getLastUserCapture(fresh);
     const lastEl = $("last-capture");
@@ -743,10 +966,10 @@
     const pill = $("shift-status");
     if (!pill) return;
     pill.className = "status-pill";
-    if (status === "Running") { pill.classList.add("status-active"); pill.textContent = tt("status.active"); }
-    else if (status === "Idle") { pill.classList.add("status-paused"); pill.textContent = tt("status.idle"); }
-    else if (status === "Maintenance") { pill.classList.add("status-completed"); pill.textContent = tt("status.maintenance"); }
-    else if (status === "Breakdown") { pill.classList.add("status-paused"); pill.textContent = tt("status.breakdown"); }
+    if (status === "Running")          { pill.classList.add("status-active", "status-running");   pill.textContent = tt("status.active"); }
+    else if (status === "Idle")        { pill.classList.add("status-paused", "status-idle");       pill.textContent = tt("status.idle"); }
+    else if (status === "Maintenance") { pill.classList.add("status-completed", "status-maint");   pill.textContent = tt("status.maintenance"); }
+    else if (status === "Breakdown")   { pill.classList.add("status-paused", "status-breakdown");  pill.textContent = tt("status.breakdown"); }
   }
 
   // ---- OEE (availability * performance * quality) within shift window ----
@@ -943,6 +1166,7 @@
     drawShiftChart($("chart-hourly"), s);
     drawCumulativeChart($("chart-cumulative"), s);
     drawScrapChart($("chart-scrap"), s);
+    renderHeatmap();
     const d = $("date-label-2");
     if (d) d.textContent = fmtDate(new Date());
   }
@@ -1121,7 +1345,7 @@
     if (dateEl) dateEl.textContent = fmtDate(now);
     const changed = ensureAutoSession();
     if (changed) renderAll();
-    updateHourProgress(getSession());
+    updateHourRing(getSession());
     if (!isShiftActive()) return;
 
     const popupOpen = !$("alert-overlay").classList.contains("hidden") || !$("form-overlay").classList.contains("hidden");

@@ -1020,3 +1020,188 @@ button { font-family: inherit; cursor: pointer; }
   .main { padding: 18px; }
   .admin-grid { grid-template-columns: 1fr; }
 }
+
+/* ============ UX improvements (v=28) ============ */
+
+/* --- Counter ring (radial hour timer around the production count) --- */
+.counter-ring-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+}
+.counter-ring {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: rotate(-90deg);
+}
+.counter-ring circle {
+  fill: none;
+  stroke-width: 16;
+  stroke-linecap: butt;
+}
+.counter-ring .ring-bg       { stroke: var(--border); opacity: 0.55; }
+.counter-ring .ring-breaks   { stroke: rgba(150,150,150,0.55); stroke-dasharray: 0 9999; }
+.counter-ring .ring-progress {
+  stroke: var(--blue);
+  stroke-dasharray: 0 9999;
+  transition: stroke-dasharray 0.5s ease, stroke 0.4s ease;
+}
+.counter-ring.is-on-pace   .ring-progress { stroke: var(--green); }
+.counter-ring.is-near-end  .ring-progress { stroke: var(--accent); }
+.counter-ring.is-off-shift .ring-progress { stroke: transparent; }
+
+.counter-ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  pointer-events: none;
+}
+.counter-ring-center .counter {
+  font-size: clamp(64px, 14vw, 156px);
+  line-height: 1;
+}
+.counter-ring-center .counter.counter-flash {
+  animation: counterFlash 0.6s ease-out;
+}
+@keyframes counterFlash {
+  0%   { transform: scale(1);    text-shadow: 0 0 0 rgba(26,160,90,0); }
+  35%  { transform: scale(1.06); text-shadow: 0 6px 24px rgba(26,160,90,0.45); }
+  100% { transform: scale(1);    text-shadow: 0 0 0 rgba(26,160,90,0); }
+}
+.ring-hour-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-top: 8px;
+}
+.ring-hour-cd {
+  font-size: 14px;
+  color: var(--blue);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- OEE donut in topbar --- */
+.oee-donut {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.oee-donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.oee-donut .donut-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 5;
+  opacity: 0.5;
+}
+.oee-donut .donut-arc {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 0 9999;
+  transition: stroke-dasharray 0.5s ease, stroke 0.3s ease;
+}
+.oee-donut.oee-low  .donut-arc { stroke: var(--red); }
+.oee-donut.oee-mid  .donut-arc { stroke: var(--accent); }
+.oee-donut.oee-high .donut-arc { stroke: var(--green); }
+.oee-donut-text {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+/* --- Pulsing status pill --- */
+@keyframes statusPulseGreen {
+  0%,100% { box-shadow: 0 0 0 0 rgba(26,160,90,0.55); }
+  50%     { box-shadow: 0 0 0 9px rgba(26,160,90,0);  }
+}
+@keyframes statusPulseRed {
+  0%,100% { box-shadow: 0 0 0 0 rgba(210,59,77,0.65); }
+  50%     { box-shadow: 0 0 0 11px rgba(210,59,77,0); }
+}
+@keyframes statusPulseAmber {
+  0%,100% { box-shadow: 0 0 0 0 rgba(224,122,43,0.45); }
+  50%     { box-shadow: 0 0 0 7px rgba(224,122,43,0);  }
+}
+.status-pill.status-running   { animation: statusPulseGreen 2.4s ease-out infinite; }
+.status-pill.status-breakdown { animation: statusPulseRed   1.2s ease-out infinite; }
+.status-pill.status-maint     { animation: statusPulseAmber 1.8s ease-out infinite; }
+.status-pill.status-idle      { opacity: 0.75; }
+
+/* --- Heatmap (charts view) --- */
+.heatmap {
+  display: grid;
+  grid-template-columns: 32px repeat(24, minmax(14px, 1fr));
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.heatmap-row-label, .heatmap-col-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+}
+.heatmap-col-label { padding-bottom: 2px; }
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--panel-2);
+  border: 1px solid rgba(0,0,0,0.04);
+  transition: transform 0.1s ease;
+  cursor: default;
+}
+.heatmap-cell[data-level="1"] { background: rgba(26,160,90,0.18); }
+.heatmap-cell[data-level="2"] { background: rgba(26,160,90,0.38); }
+.heatmap-cell[data-level="3"] { background: rgba(26,160,90,0.62); }
+.heatmap-cell[data-level="4"] { background: rgba(26,160,90,0.92); }
+.heatmap-cell:hover { transform: scale(1.4); z-index: 2; position: relative; }
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 11px;
+}
+.heatmap-swatch {
+  width: 14px; height: 14px; border-radius: 3px; display: inline-block;
+}
+.heatmap-swatch[data-level="0"] { background: var(--panel-2); border: 1px solid var(--border); }
+.heatmap-swatch[data-level="1"] { background: rgba(26,160,90,0.18); }
+.heatmap-swatch[data-level="2"] { background: rgba(26,160,90,0.38); }
+.heatmap-swatch[data-level="3"] { background: rgba(26,160,90,0.62); }
+.heatmap-swatch[data-level="4"] { background: rgba(26,160,90,0.92); }
+
+/* --- EOS celebration --- */
+.eos-confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.popup-eos { position: relative; z-index: 2; }
+.eos-banner {
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+}
+.eos-banner.eos-win   { background: rgba(26,160,90,0.14);  color: var(--green); }
+.eos-banner.eos-close { background: rgba(31,126,224,0.14); color: var(--blue);  }
+.eos-banner.eos-miss  { background: rgba(210,59,77,0.10);  color: var(--red);   }
