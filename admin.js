@@ -511,6 +511,42 @@
   renderEntities();
   populateDevice();
   gateInit();
+  initCollapsibleSections();
+
+  function initCollapsibleSections() {
+    const KEY = "prod.admin.collapsed.v1";
+    let state = {};
+    try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (_) {}
+    const cards = document.querySelectorAll(".admin .admin-card");
+    cards.forEach((card, idx) => {
+      const h2 = card.querySelector(":scope > h2");
+      if (!h2 || h2.dataset.collapsibleBound === "1") return;
+      h2.dataset.collapsibleBound = "1";
+      const label = h2.textContent.trim();
+      const key = label || ("card-" + idx);
+      const chevron = document.createElement("span");
+      chevron.className = "admin-card-chevron";
+      chevron.setAttribute("aria-hidden", "true");
+      chevron.textContent = "▾";
+      h2.appendChild(chevron);
+      h2.setAttribute("role", "button");
+      h2.setAttribute("tabindex", "0");
+      function set(collapsed) {
+        card.dataset.collapsed = collapsed ? "true" : "false";
+        h2.setAttribute("aria-expanded", String(!collapsed));
+        state[key] = !!collapsed;
+        try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {}
+      }
+      // Default to collapsed for first-time visitors. Per-card persistence
+      // overrides whenever the user has explicitly toggled the section.
+      set(state.hasOwnProperty(key) ? !!state[key] : true);
+      function toggle() { set(card.dataset.collapsed !== "true"); }
+      h2.addEventListener("click", toggle);
+      h2.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+      });
+    });
+  }
 
   window.addEventListener("languagechange", () => {
     renderEntities();

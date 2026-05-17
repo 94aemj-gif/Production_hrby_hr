@@ -1498,3 +1498,377 @@ button { font-family: inherit; cursor: pointer; }
   .nav-label { display: none; }
   .oee-donut { display: none; }
 }
+
+/* ============ Admin polish (v=34) ============
+ * Visual-only refinements for the admin page. No JS / chart / sync
+ * behavior is touched.
+ */
+
+/* Page header */
+.admin h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 4px 0 22px;
+}
+.admin .back-link {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 999px;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.admin .back-link:hover { background: var(--panel-2); color: var(--text); }
+
+/* Card rhythm */
+.admin .admin-card { margin-bottom: 18px; }
+.admin .admin-card h2 {
+  margin: 0 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin .admin-card h2::before {
+  content: "";
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--blue);
+  flex-shrink: 0;
+}
+
+/* Section helper text under h2 */
+.admin .admin-card > .muted {
+  margin-top: -6px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Form rows + actions */
+.admin .admin-grid { gap: 16px 18px; }
+.admin .field-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.admin-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.saved-flash {
+  font-size: 12px;
+  color: var(--green);
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  font-weight: 600;
+}
+.saved-flash.show { opacity: 1; transform: translateY(0); }
+
+/* Entity tables */
+.admin .entity-table {
+  font-size: 13.5px;
+  margin-bottom: 14px;
+}
+.admin .entity-table th {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+}
+.admin .entity-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+}
+.admin .entity-table tbody tr {
+  transition: background 0.12s ease;
+}
+.admin .entity-table tbody tr:hover { background: rgba(15,23,42,0.018); }
+.admin .entity-table code {
+  background: var(--panel-2);
+  border: 1px solid var(--border-soft);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.entity-add {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+  gap: 10px;
+}
+.entity-add input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-color: var(--border);
+  box-shadow: var(--shadow-press);
+}
+.entity-add input:focus {
+  border-color: var(--blue);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31,126,224,0.15);
+}
+
+/* Filter chips (bitácora) */
+.log-chip {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.log-chip:hover { color: var(--text); border-color: var(--muted); }
+.log-chip.active {
+  box-shadow: 0 2px 8px rgba(31,126,224,0.25);
+}
+
+/* History session card */
+.history-item {
+  background: var(--panel);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+  transition: box-shadow 0.18s ease;
+}
+.history-item:hover { box-shadow: var(--shadow-md); }
+.hi-head {
+  margin-bottom: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.hi-stats {
+  margin-bottom: 12px;
+  gap: 16px;
+  font-size: 13px;
+}
+.hi-stats strong { font-weight: 600; }
+
+/* History-filter actions row spacing */
+.history-filter-actions { margin-top: 6px; }
+
+/* Lock screen polish */
+.popup-login { border-radius: 18px; }
+
+/* Cerrar Admin button */
+.admin .btn-small {
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+/* ============ Admin polish v=35: tighten layout ============ */
+
+/* Consistent vertical rhythm across admin cards */
+.admin {
+  display: flex;
+  flex-direction: column;
+}
+.admin .admin-card + .admin-card,
+.admin form + .admin-card { margin-top: 0; }
+.admin .admin-card { margin-bottom: 16px; }
+.admin form .admin-card:last-of-type { margin-bottom: 16px; }
+
+/* Header row: tighter, single line at desktop */
+.admin > div:first-child {
+  margin-bottom: 6px;
+}
+
+/* Entity tables — keep action buttons on one row, vertically center cells */
+.admin .entity-table td,
+.admin .entity-table th { vertical-align: middle; }
+.admin .entity-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;          /* shrink-to-fit the actions cell */
+}
+.admin .entity-table td:last-child .btn {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 5px 12px;
+  font-size: 12px;
+  min-height: 0;
+  border-radius: 8px;
+}
+.admin .entity-table td:last-child .btn:first-child { margin-left: 0; }
+/* Allow row wrap only if the viewport is very narrow */
+@media (max-width: 720px) {
+  .admin .entity-table td:last-child { white-space: normal; }
+  .admin .entity-table td:last-child .btn { margin-top: 4px; }
+}
+
+/* Recesos / Días columns that contain long text: wrap on commas naturally */
+.admin .entity-table td { line-height: 1.45; }
+
+/* Tighten the "Agregar" row */
+.entity-add { align-items: stretch; }
+.entity-add .btn { padding: 9px 16px; font-size: 13px; min-height: 0; }
+.entity-add-shift { gap: 8px; }
+
+/* Form labels: spacing tightened */
+.admin .field-label { margin-bottom: 4px; }
+.admin .field { gap: 4px; }
+
+/* Inputs in admin: consistent height */
+.admin input[type="text"],
+.admin input[type="number"],
+.admin input[type="password"],
+.admin input[type="time"],
+.admin select {
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-press);
+  color: var(--text);
+}
+.admin input:focus,
+.admin select:focus {
+  border-color: var(--blue);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(31,126,224,0.15);
+}
+
+/* (Superseded by v=37 button standardization further down.) */
+
+/* History item: chart sits more comfortably */
+.hist-chart {
+  border-color: var(--border-soft);
+  padding: 8px;
+  margin-top: 2px;
+}
+
+/* Helper text under shifts section: smaller and more breathing */
+.admin .admin-card .muted[style*="font-size:13px"] {
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+/* Weekstrip inside history filter: refine outer card */
+.history-filter .weekstrip {
+  border: 1px solid var(--border-soft);
+  box-shadow: none;       /* nested inside admin-card already has elevation */
+  padding: 14px 16px;
+  max-width: none;
+}
+.history-filter .weekstrip-day { font-size: 14px; }
+
+/* Lock screen card: a touch more breathing room */
+.popup-login { padding: 28px; }
+.popup-login .popup-title-left { font-size: 22px; margin-bottom: 4px; }
+.popup-login .popup-subtle { margin-bottom: 18px; }
+
+/* Lang toggle inside admin header sits flush with Cerrar Admin */
+.admin > div:first-child .lang-toggle { padding: 7px 14px; min-width: 42px; }
+
+/* Saved-flash inline next to action buttons */
+.admin-actions .saved-flash { margin-left: 4px; }
+
+/* ============ Admin polish v=36: button heights + density ============ */
+
+/* Shorter buttons across the admin page — the page was running too tall. */
+.admin .btn {
+  min-height: 0;
+  padding: 9px 18px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+.admin .btn-small {
+  padding: 5px 12px;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
+/* Card density: tighter padding, tighter section gap */
+.admin .admin-card { padding: 22px 24px; margin-bottom: 14px; }
+.admin .admin-card h2 { margin: 0 0 14px; }
+.admin .admin-card .muted { margin-bottom: 10px; }
+
+/* Form fields take less vertical room */
+.admin .admin-grid { gap: 14px 18px; }
+.admin .field { gap: 4px; }
+.admin input[type="text"],
+.admin input[type="number"],
+.admin input[type="password"],
+.admin input[type="time"],
+.admin select { padding: 8px 12px; font-size: 13.5px; }
+
+/* admin-actions: compact, single row, top divider for visual anchor */
+.admin .admin-actions {
+  gap: 10px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+/* Entity table density */
+.admin .entity-table th { padding: 8px 10px; }
+.admin .entity-table td { padding: 9px 10px; }
+.admin .entity-add { padding-top: 12px; margin-top: 4px; }
+.admin .entity-add .btn { padding: 8px 16px; font-size: 13px; }
+.admin .entity-add input { padding: 8px 12px; font-size: 13.5px; }
+
+/* Header row */
+.admin > div:first-child { margin-bottom: 4px; }
+
+/* Page outer padding (the admin element) */
+.admin { padding: 24px 28px 32px; }
+
+/* Lock screen popup tighter */
+.popup-login { padding: 24px; }
+
+/* ============ Admin polish v=37: standardize buttons + collapsible cards ============ */
+
+/* Buttons: all admin buttons same shape, natural width. No stretching. */
+.admin .admin-actions .btn,
+.admin .entity-add .btn,
+.admin .history-filter-actions .btn {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding: 9px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  min-height: 0;
+}
+.admin .history-filter-actions { gap: 10px; }
+
+/* Collapsible admin cards */
+.admin .admin-card h2 {
+  cursor: pointer;
+  user-select: none;
+  justify-content: flex-start;
+}
+.admin .admin-card h2 .admin-card-chevron {
+  margin-left: auto;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform 0.18s ease;
+}
+.admin .admin-card[data-collapsed="true"] .admin-card-chevron {
+  transform: rotate(-90deg);
+}
+.admin .admin-card[data-collapsed="true"] > *:not(h2) {
+  display: none;
+}
+.admin .admin-card[data-collapsed="true"] h2 {
+  margin-bottom: 0;
+}
+.admin .admin-card[data-collapsed="true"] {
+  padding-bottom: 22px;
+}
