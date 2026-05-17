@@ -1394,3 +1394,107 @@ button { font-family: inherit; cursor: pointer; }
 
 /* --- Heatmap cells: softer corners --- */
 .heatmap-cell { border-radius: 4px; border-color: transparent; }
+
+/* ============ Responsive layer (v=33) ============
+ * Targets laptop (≥1024px), tablet (600–1023px), and phone (<600px).
+ * Fixes topbar wrapping, counter overflow, dense grids, and sidebar
+ * cramping on phones.
+ */
+
+/* Counter scales fluidly across all viewports. */
+.counter { font-size: clamp(56px, 16vw, 180px); line-height: 1; }
+.kpi-value { font-size: clamp(22px, 4vw, 40px); }
+.metric-value { font-size: clamp(28px, 4vw, 48px); }
+.clock { font-size: clamp(40px, 7vw, 72px); }
+
+/* Always keep the shift label on one line; truncate if narrow. */
+#shift-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 100%;
+}
+.shift-info { min-width: 0; flex: 1 1 auto; }
+
+/* --- Tablet (≤1024px) --- */
+@media (max-width: 1024px) {
+  .topbar { padding: 12px 18px; gap: 12px; flex-wrap: wrap; }
+  .topbar-right { gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+  .main { padding: 22px 22px 32px; gap: 22px; }
+  .counter-card { padding: 28px 24px; }
+  .chart-card, .log, .schedule, .admin-card { padding: 20px; }
+  .next-alert { padding: 5px 10px; }
+  .next-alert .muted, .next-alert-sub { display: none; }
+  #next-alert-time { font-size: 14px; }
+  .status-select .muted { display: none; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* --- Large phones / small tablets (≤768px) --- */
+@media (max-width: 768px) {
+  .topbar { padding: 10px 14px; gap: 8px; }
+  .topbar-right { gap: 6px; }
+  .shift-info { font-size: 14px; gap: 8px; }
+  .next-alert { display: none; }
+  .admin-link, .lang-toggle, .sync-status {
+    padding: 6px 10px; font-size: 11px; min-width: 0; min-height: 0;
+  }
+  .status-pill { padding: 4px 10px; font-size: 10px; }
+  .oee-donut { width: 38px; height: 38px; }
+  .oee-donut-text { font-size: 10px; }
+  .clock-row { margin-top: 4px; }
+  .metrics { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .metric { padding: 16px 14px; }
+  .btn-capture { font-size: 18px; padding: 16px 36px; min-width: 0; width: 100%; }
+  .counter-actions { flex-direction: column; }
+}
+
+/* --- Phones (≤600px): collapse sidebar to a top tab strip --- */
+@media (max-width: 600px) {
+  .with-sidebar {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  .sidebar {
+    flex-direction: row;
+    padding: 6px 10px;
+    gap: 6px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-soft);
+    justify-content: center;
+  }
+  .nav-item { flex: 0 1 auto; padding: 8px 14px; min-width: 0; border-radius: 999px; }
+  .nav-label { display: inline; font-size: 13px; margin-left: 8px; }
+  .nav-icon { font-size: 18px; }
+
+  .main { padding: 14px 12px 28px; gap: 16px; }
+  .counter-card { padding: 22px 16px; gap: 14px; border-radius: 16px; }
+  .chart-card, .log, .schedule, .admin-card, .kpi-tile {
+    padding: 16px 14px; border-radius: 14px;
+  }
+  .card-label { font-size: 11px; letter-spacing: 0.12em; }
+  .metrics { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi-tile { padding: 14px; }
+  .kpi-label { font-size: 10px; }
+  .topbar { padding: 8px 12px; }
+  .form-actions-row { flex-direction: column; }
+  .popup { border-radius: 16px; padding: 18px; }
+  .eos-stats { grid-template-columns: 1fr 1fr; }
+  /* Heatmap & weekstrip: shrink labels */
+  .heatmap { grid-template-columns: 26px repeat(24, minmax(8px, 1fr)); gap: 1px; }
+  .heatmap-row-label, .heatmap-col-label { font-size: 9px; }
+  .weekstrip { padding: 12px; }
+  .weekstrip-day { font-size: 13px; }
+  .weekstrip-dows span { font-size: 10px; }
+}
+
+/* --- Tiny phones (≤380px) --- */
+@media (max-width: 380px) {
+  .topbar-right .lang-toggle { display: none; }
+  .status-select { display: none; }
+  .kpi-grid { grid-template-columns: 1fr; }
+  .nav-label { display: none; }
+  .oee-donut { display: none; }
+}
