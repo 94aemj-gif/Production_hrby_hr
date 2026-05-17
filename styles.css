@@ -1988,3 +1988,12 @@ button { font-family: inherit; cursor: pointer; }
 @media (min-width: 1024px) {
   .admin { display: block; padding: 22px 28px 32px; }
 }
+
+/* --- Non-blocking confirm dialog (from PR #9) --- */
+.app-confirm-overlay { z-index: 9999; }
+.app-confirm-popup {
+  max-width: 420px;
+  width: calc(100% - 32px);
+}
+.app-confirm-popup .popup-title-left { font-size: 18px; margin-bottom: 8px; }
+.app-confirm-popup #app-confirm-msg { margin-bottom: 18px; }
