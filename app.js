@@ -10,6 +10,8 @@
     LINES: "prod.lines.v1",
     SHIFTS: "prod.shifts.v1",
     OPERATORS: "prod.operators.v1",
+    DOWNTIME_REASONS: "prod.downtime.reasons.v1",
+    SCRAP_REASONS:    "prod.scrap.reasons.v1",
     DEVICE: "prod.device.v1",
     SESSIONS: "prod.sessions.v1",
     LOG: "prod.log.v1",
@@ -46,7 +48,6 @@
       breaks: [{ start: "22:00", end: "22:15" }, { start: "01:30", end: "01:45" }] },
   ];
 
-  const NOTE_KEYS = ["notes.training", "notes.meeting", "notes.noMaterial"];
   function tt(key, params) { return (window.i18n && window.i18n.t) ? window.i18n.t(key, params) : key; }
   function getLocale() { return (window.i18n && window.i18n.locale) ? window.i18n.locale() : "es-MX"; }
 
@@ -57,7 +58,24 @@
   }
 
   const DEFAULT_OPERATORS = [
-    { id: "OP-0847", name: "Operador Demo" },
+    { id: "00847", name: "Operador Demo" },
+  ];
+
+  // Reason lists for the new capture form's downtime and scrap sections.
+  // Editable in Admin → Catálogos. Synced cross-device via the config table.
+  const DEFAULT_DOWNTIME_REASONS = [
+    "Junta de producción",
+    "Capacitación",
+    "Cambio de material",
+    "Limpieza",
+    "Falta de material",
+    "Otro",
+  ];
+  const DEFAULT_SCRAP_REASONS = [
+    "Pistón roto",
+    "Empaque defectuoso",
+    "Calidad fuera de spec",
+    "Otro",
   ];
 
   function statusLabel(code) {
@@ -98,23 +116,42 @@
   // switched over, and push the new defaults to Supabase so peers see
   // them on their next pull.
   const CONFIG_MIGRATION_KEY = "prod.config.migration.v1";
-  const CONFIG_MIGRATION_VERSION = 1;
-  (function migrateLegacyLines() {
-    if (Number(load(CONFIG_MIGRATION_KEY, 0)) >= CONFIG_MIGRATION_VERSION) return;
-    const cur = load(STORAGE.LINES, null);
-    const legacyIds = ["L-01", "L-02", "L-03"];
-    const isLegacy = !cur || (Array.isArray(cur) && cur.length === 3
-      && cur.every((l, i) => l && l.id === legacyIds[i]));
-    if (isLegacy) {
-      save(STORAGE.LINES, DEFAULT_LINES);
-      // Defer the push until window.sync is ready (it loads before app.js,
-      // but pushConfig requires queue/save chain that's set up at module
-      // init — that's already done by the time this IIFE runs).
-      try {
-        if (window.sync && window.sync.pushConfig) {
-          window.sync.pushConfig("lines", DEFAULT_LINES);
+  const CONFIG_MIGRATION_VERSION = 2;
+  (function migrateConfig() {
+    const cur = Number(load(CONFIG_MIGRATION_KEY, 0));
+    if (cur >= CONFIG_MIGRATION_VERSION) return;
+    // v1: replace legacy demo lines (L-01..L-03) with the production defaults.
+    if (cur < 1) {
+      const curLines = load(STORAGE.LINES, null);
+      const legacyIds = ["L-01", "L-02", "L-03"];
+      const isLegacy = !curLines || (Array.isArray(curLines) && curLines.length === 3
+        && curLines.every((l, i) => l && l.id === legacyIds[i]));
+      if (isLegacy) {
+        save(STORAGE.LINES, DEFAULT_LINES);
+        try { if (window.sync && window.sync.pushConfig) window.sync.pushConfig("lines", DEFAULT_LINES); }
+        catch (_) {}
+      }
+    }
+    // v2: migrate operator IDs from "OP-XYZW" to 5-digit zero-padded
+    // numeric (e.g., OP-0847 → 00847). Skip operators already in the new
+    // format. Push the migrated list so peers receive it.
+    if (cur < 2) {
+      const curOps = load(STORAGE.OPERATORS, null);
+      if (Array.isArray(curOps) && curOps.length) {
+        let touched = false;
+        const migrated = curOps.map((o) => {
+          if (!o || typeof o.id !== "string") return o;
+          const m = o.id.match(/^OP-(\d{1,5})$/);
+          if (!m) return o;
+          touched = true;
+          return Object.assign({}, o, { id: m[1].padStart(5, "0") });
+        });
+        if (touched) {
+          save(STORAGE.OPERATORS, migrated);
+          try { if (window.sync && window.sync.pushConfig) window.sync.pushConfig("operators", migrated); }
+          catch (_) {}
         }
-      } catch (_) {}
+      }
     }
     save(CONFIG_MIGRATION_KEY, CONFIG_MIGRATION_VERSION);
   })();
@@ -124,6 +161,8 @@
   let lines = load(STORAGE.LINES, DEFAULT_LINES);
   let shifts = load(STORAGE.SHIFTS, DEFAULT_SHIFTS);
   let operators = load(STORAGE.OPERATORS, DEFAULT_OPERATORS);
+  let downtimeReasons = load(STORAGE.DOWNTIME_REASONS, DEFAULT_DOWNTIME_REASONS.slice());
+  let scrapReasons    = load(STORAGE.SCRAP_REASONS,    DEFAULT_SCRAP_REASONS.slice());
   let device = load(STORAGE.DEVICE, { lineId: lines[0] && lines[0].id, operatorId: operators[0] && operators[0].id });
   let current = null;
   let snoozeUntil = load(STORAGE.SNOOZE, 0);
@@ -1470,11 +1509,14 @@
   function showForm() {
     $("form-time").textContent = activeAlertTime ? fmt12FromHHMM(activeAlertTime) : fmt12(new Date());
     $("f-count").value = "";
-    $("f-scrap").value = "";
     const last = getLastUserCapture(getSession());
     $("f-operator").value = last ? last.employeeId : "";
-    selectedNotes = [];
-    renderNoteChips();
+    clearEmployeeError();
+    // Reset the optional sections + their dynamic rows.
+    setSectionEnabled("downtime", false);
+    setSectionEnabled("scrap", false);
+    $("f-downtime-rows").innerHTML = "";
+    $("f-scrap-rows").innerHTML = "";
     populateHoraSelect();
     $("form-overlay").classList.remove("hidden");
     $("form-overlay").setAttribute("aria-hidden", "false");
@@ -1482,6 +1524,73 @@
       if (last) $("f-count").focus();
       else $("f-operator").focus();
     }, 50);
+  }
+
+  // ---- Capture form: section toggle + dynamic rows ----
+  function setSectionEnabled(which, on) {
+    const enableEl = $("f-" + which + "-enable");
+    const rowsEl   = $("f-" + which + "-rows");
+    const addBtn   = $("btn-add-" + which);
+    if (!enableEl || !rowsEl || !addBtn) return;
+    enableEl.checked = !!on;
+    rowsEl.classList.toggle("hidden", !on);
+    addBtn.classList.toggle("hidden", !on);
+    if (on && rowsEl.children.length === 0) {
+      // First-time enable: seed one empty row so the operator sees the inputs.
+      addReasonRow(which);
+    }
+  }
+
+  function reasonsFor(which) {
+    return which === "downtime" ? (downtimeReasons || []) : (scrapReasons || []);
+  }
+  function unitLabelFor(which) {
+    return which === "downtime" ? tt("form.minutes") : tt("form.units");
+  }
+
+  function addReasonRow(which) {
+    const rowsEl = $("f-" + which + "-rows");
+    if (!rowsEl) return;
+    const row = document.createElement("div");
+    row.className = "form-row";
+    row.dataset.kind = which;
+    row.innerHTML =
+      '<input type="text" class="numpad-input row-qty" autocomplete="off" inputmode="numeric" readonly placeholder="' +
+        escapeHtml(unitLabelFor(which)) + '" />' +
+      '<select class="row-reason"></select>' +
+      '<button type="button" class="row-del" aria-label="' + escapeHtml(tt("form.removeRow")) + '">&times;</button>';
+    const sel = row.querySelector(".row-reason");
+    const opts = ['<option value="" disabled selected>' + escapeHtml(tt("form.pickReason")) + '</option>']
+      .concat(reasonsFor(which).map((r) => '<option value="' + escapeHtml(r) + '">' + escapeHtml(r) + '</option>'));
+    sel.innerHTML = opts.join("");
+    row.querySelector(".row-del").addEventListener("click", () => {
+      row.remove();
+    });
+    // Wire the numpad for the new qty input (wireNumpad's initial pass only
+    // covers inputs present at boot).
+    const qtyInp = row.querySelector(".row-qty");
+    if (qtyInp) {
+      const open = (e) => { e.preventDefault(); qtyInp.blur(); openNumpad(qtyInp); };
+      qtyInp.addEventListener("click", open);
+      qtyInp.addEventListener("focus", open);
+    }
+    rowsEl.appendChild(row);
+  }
+
+  function clearEmployeeError() {
+    const inp = $("f-operator");
+    const err = $("f-operator-error");
+    if (inp) inp.classList.remove("invalid");
+    if (err) err.classList.add("hidden");
+  }
+  function setEmployeeError() {
+    const inp = $("f-operator");
+    const err = $("f-operator-error");
+    if (inp) inp.classList.add("invalid");
+    if (err) err.classList.remove("hidden");
+  }
+  function isValidEmployee(id) {
+    return typeof id === "string" && /^\d{5}$/.test(id);
   }
 
   function populateHoraSelect() {
@@ -1516,7 +1625,14 @@
   }
 
   async function hideForm(force) {
-    const hasValues = !force && (($("f-count") && $("f-count").value) || ($("f-scrap") && $("f-scrap").value) || ($("f-operator") && $("f-operator").value) || (selectedNotes && selectedNotes.length));
+    const opEl = $("f-operator"); const countEl = $("f-count");
+    const dEnable = $("f-downtime-enable"); const sEnable = $("f-scrap-enable");
+    const hasValues = !force && (
+      (opEl && opEl.value) ||
+      (countEl && countEl.value) ||
+      (dEnable && dEnable.checked) ||
+      (sEnable && sEnable.checked)
+    );
     if (hasValues) {
       if (!(await appConfirm(tt("form.confirmCancel")))) return;
     }
@@ -1716,28 +1832,6 @@
   }
 
   // ---- Notes chips ----
-  let selectedNotes = [];
-
-  function renderNoteChips() {
-    const container = $("f-notes");
-    if (!container) return;
-    container.innerHTML = "";
-    NOTE_KEYS.forEach((key) => {
-      const label = tt(key);
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "note-chip" + (selectedNotes.indexOf(key) !== -1 ? " active" : "");
-      btn.textContent = label;
-      btn.addEventListener("click", () => {
-        const i = selectedNotes.indexOf(key);
-        if (i === -1) selectedNotes.push(key);
-        else selectedNotes.splice(i, 1);
-        renderNoteChips();
-      });
-      container.appendChild(btn);
-    });
-  }
-
   // ---- Captures (good + scrap) with undo ----
   async function addCapture(qty, kind) {
     const sess = getSession();
@@ -1827,41 +1921,123 @@
   }
 
   // ---- Submissions ----
+  function collectRows(which) {
+    const rowsEl = $("f-" + which + "-rows");
+    const enableEl = $("f-" + which + "-enable");
+    if (!rowsEl || !enableEl || !enableEl.checked) return [];
+    const out = [];
+    rowsEl.querySelectorAll(".form-row").forEach((row) => {
+      const qty = Number((row.querySelector(".row-qty") || {}).value);
+      const reason = (row.querySelector(".row-reason") || {}).value || "";
+      if (Number.isFinite(qty) && qty > 0 && reason) out.push({ qty, reason });
+    });
+    return out;
+  }
+
   async function submitForm(e) {
     e.preventDefault();
     const s = getSession();
     if (!s) { await hideForm(); return; }
     const employeeId = ($("f-operator").value || "").trim();
     const qty = Number($("f-count").value);
-    const scrap = Number($("f-scrap").value) || 0;
-    if (!employeeId) { $("f-operator").focus(); return; }
+    if (!isValidEmployee(employeeId)) { setEmployeeError(); $("f-operator").focus(); return; }
+    clearEmployeeError();
     if (!Number.isFinite(qty) || qty <= 0) { $("f-count").focus(); return; }
-    if (!Number.isFinite(scrap) || scrap < 0) { $("f-scrap").focus(); return; }
-    const notes = selectedNotes.slice();
+
+    const downtimeRows = collectRows("downtime");
+    const scrapRows    = collectRows("scrap");
+
+    // If a section's checkbox is on but no valid rows: focus the first
+    // incomplete input so the operator knows what's missing.
+    if ($("f-downtime-enable").checked && downtimeRows.length === 0) {
+      const firstRow = $("f-downtime-rows").querySelector(".form-row");
+      if (firstRow) { const inp = firstRow.querySelector(".row-qty"); inp && inp.focus(); }
+      return;
+    }
+    if ($("f-scrap-enable").checked && scrapRows.length === 0) {
+      const firstRow = $("f-scrap-rows").querySelector(".form-row");
+      if (firstRow) { const inp = firstRow.querySelector(".row-qty"); inp && inp.focus(); }
+      return;
+    }
+
     const now = new Date();
     const ts = now.toISOString();
     if (!isWithinShift(now, s)) {
       if (!(await appConfirm(tt("form.outOfShiftSimple")))) return;
     }
-    const goodId = "c" + Date.now() + "g" + Math.random().toString(36).slice(2, 5);
-    const scrapId = "c" + Date.now() + "s" + Math.random().toString(36).slice(2, 5);
     const forHour = ($("f-forhour") && $("f-forhour").value) || computeForHour(ts);
+
+    const goodId = "c" + Date.now() + "g" + Math.random().toString(36).slice(2, 5);
+    const scrapIds = scrapRows.map((_, i) =>
+      "c" + Date.now() + "s" + i + Math.random().toString(36).slice(2, 4));
+    // downtime.id is a UUID column in Supabase; captures.id is text. Don't
+    // mix the formats.
+    const newUuid = () => (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : "u-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+    const downtimeIds = downtimeRows.map(() => newUuid());
+
     updateSession((s2) => {
-      s2.captures.push({ id: goodId, ts, qty, kind: "good", employeeId, notes, forHour });
-      if (scrap > 0) s2.captures.push({ id: scrapId, ts, qty: scrap, kind: "scrap", employeeId, notes, forHour });
+      s2.captures.push({ id: goodId, ts, qty, kind: "good", employeeId, forHour });
+      scrapRows.forEach((r, i) => {
+        s2.captures.push({
+          id: scrapIds[i], ts, qty: r.qty, kind: "scrap",
+          employeeId, notes: [r.reason], forHour,
+        });
+      });
+      downtimeRows.forEach((r, i) => {
+        const durationMs = r.qty * 60000;
+        const startTs = new Date(now.getTime() - durationMs).toISOString();
+        s2.downtime.push({
+          id: downtimeIds[i],
+          start: startTs,
+          end: ts,
+          status: "Manual",
+          reason: r.reason,
+          durationMs,
+        });
+      });
+      const totalScrap = scrapRows.reduce((sum, r) => sum + r.qty, 0);
       s2.submissions.push({
         timestamp: ts, alertTime: activeAlertTime, shiftId: s.shiftId, lineId: s.lineId,
-        employeeId, productionCount: qty, scrapCount: scrap, notes, forHour,
+        employeeId, productionCount: qty, scrapCount: totalScrap,
+        scrapRows, downtimeRows, forHour,
       });
     });
+
     if (window.sync && window.sync.pushCapture) {
-      window.sync.pushCapture({ id: goodId, ts, qty, kind: "good", employeeId, notes, forHour }, current);
-      if (scrap > 0) window.sync.pushCapture({ id: scrapId, ts, qty: scrap, kind: "scrap", employeeId, notes, forHour }, current);
+      window.sync.pushCapture({ id: goodId, ts, qty, kind: "good", employeeId, forHour }, current);
+      scrapRows.forEach((r, i) => {
+        window.sync.pushCapture({
+          id: scrapIds[i], ts, qty: r.qty, kind: "scrap",
+          employeeId, notes: [r.reason], forHour,
+        }, current);
+      });
     }
-    const noteLabels = notes.map((n) => /^notes\./.test(n) ? tt(n) : n);
-    const noteStr = noteLabels.length ? tt("log.captureNotePart", { notes: noteLabels.join(", ") }) : "";
-    const scrapStr = scrap ? tt("log.captureScrapPart", { n: scrap }) : "";
-    logEvent("capture", tt("log.captureFull", { emp: employeeId, qty, scrap: scrapStr, notes: noteStr }));
+    if (window.sync && window.sync.pushDowntime) {
+      downtimeRows.forEach((r, i) => {
+        const durationMs = r.qty * 60000;
+        const startTs = new Date(now.getTime() - durationMs).toISOString();
+        window.sync.pushDowntime({
+          id: downtimeIds[i],
+          start: startTs,
+          end: ts,
+          status: "Manual",
+          reason: r.reason,
+          durationMs,
+        }, current);
+      });
+    }
+
+    // Log a single human-readable summary.
+    const totalScrap = scrapRows.reduce((sum, r) => sum + r.qty, 0);
+    const totalDown  = downtimeRows.reduce((sum, r) => sum + r.qty, 0);
+    const summaryParts = [];
+    if (totalScrap > 0) summaryParts.push(totalScrap + " " + tt("form.units") + " rechazo");
+    if (totalDown > 0)  summaryParts.push(totalDown  + " " + tt("form.minutes") + " paro");
+    const extras = summaryParts.length ? " · " + summaryParts.join(" · ") : "";
+    logEvent("capture", tt("log.captureFullV2", { emp: employeeId, qty, extras }));
+
     activeAlertTime = null;
     await hideForm(true);
     renderAll();
@@ -2148,6 +2324,24 @@
       logEvent("snooze", tt("log.snoozed", { n: config.snoozeMinutes }));
     });
     $("entry-form").addEventListener("submit", submitForm);
+
+    // Section toggles + add-row buttons (new capture form).
+    const dEnable = $("f-downtime-enable");
+    const sEnable = $("f-scrap-enable");
+    if (dEnable) dEnable.addEventListener("change", () => setSectionEnabled("downtime", dEnable.checked));
+    if (sEnable) sEnable.addEventListener("change", () => setSectionEnabled("scrap",    sEnable.checked));
+    const addD = $("btn-add-downtime");
+    const addS = $("btn-add-scrap");
+    if (addD) addD.addEventListener("click", () => addReasonRow("downtime"));
+    if (addS) addS.addEventListener("click", () => addReasonRow("scrap"));
+
+    // Live employee-# validation: clear error as soon as it reaches 5 digits.
+    const opEl = $("f-operator");
+    if (opEl) {
+      opEl.addEventListener("input", () => {
+        if (isValidEmployee(opEl.value.trim())) clearEmployeeError();
+      });
+    }
 
     window.addEventListener("online", flushPending);
     window.addEventListener("storage", (e) => {
@@ -2454,10 +2648,12 @@
 
   // Map of config row "key" to local storage key.
   const CONFIG_KEY_TO_LOCAL = {
-    lines:     STORAGE.LINES,
-    shifts:    STORAGE.SHIFTS,
-    operators: STORAGE.OPERATORS,
-    settings:  STORAGE.CONFIG,
+    lines:             STORAGE.LINES,
+    shifts:            STORAGE.SHIFTS,
+    operators:         STORAGE.OPERATORS,
+    settings:          STORAGE.CONFIG,
+    downtime_reasons:  STORAGE.DOWNTIME_REASONS,
+    scrap_reasons:     STORAGE.SCRAP_REASONS,
   };
   const CONFIG_LAST_APPLIED_KEY = "prod.sync.configLastApplied.v1";
 
@@ -2482,10 +2678,12 @@
       try { localStorage.setItem(CONFIG_LAST_APPLIED_KEY, JSON.stringify(lastApplied)); } catch (_) {}
       // Reload module-level variables so renderAll / ensureAutoSession see
       // the new config without a page reload.
-      config    = Object.assign({}, DEFAULT_CONFIG, load(STORAGE.CONFIG, {}));
-      lines     = load(STORAGE.LINES,     DEFAULT_LINES);
-      shifts    = load(STORAGE.SHIFTS,    DEFAULT_SHIFTS);
-      operators = load(STORAGE.OPERATORS, DEFAULT_OPERATORS);
+      config           = Object.assign({}, DEFAULT_CONFIG, load(STORAGE.CONFIG, {}));
+      lines            = load(STORAGE.LINES,            DEFAULT_LINES);
+      shifts           = load(STORAGE.SHIFTS,           DEFAULT_SHIFTS);
+      operators        = load(STORAGE.OPERATORS,        DEFAULT_OPERATORS);
+      downtimeReasons  = load(STORAGE.DOWNTIME_REASONS, DEFAULT_DOWNTIME_REASONS.slice());
+      scrapReasons     = load(STORAGE.SCRAP_REASONS,    DEFAULT_SCRAP_REASONS.slice());
     }
     return changed;
   }
@@ -2709,7 +2907,6 @@
       window.addEventListener("languagechange", () => {
         renderAll();
         renderLog();
-        renderNoteChips();
         updateSnoozeButton();
         renderSyncStatus();
         const ch = $("view-charts");
