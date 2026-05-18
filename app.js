@@ -268,9 +268,13 @@
     let good = 0, scrap = 0;
     for (const c of s.captures || []) {
       if (c.undone) continue;
-      const hk = captureForHour(c);
-      const bucketDate = new Date(hk + ":00:00Z");
-      if (bucketDate < start || bucketDate >= end) continue;
+      // Use the capture's actual timestamp for the in-shift check, not the
+      // forHour bucket. The bucket rounds down to the start of the hour,
+      // which is wrong for shifts that begin on a half-hour boundary
+      // (e.g., Turno 2 18:30 — an 18:31 capture buckets to 18:00, which
+      // would be < start and incorrectly filtered out).
+      const ts = new Date(c.ts);
+      if (ts < start || ts >= end) continue;
       if (c.kind === "scrap") scrap += c.qty; else good += c.qty;
     }
     return { good, scrap };
@@ -296,10 +300,11 @@
     const buckets = {};
     for (const c of s.captures || []) {
       if (c.undone || c.kind === "scrap") continue;
+      // Use the capture's actual timestamp; the bucket start can land
+      // outside the shift window for half-hour-boundary shifts.
+      const ts = new Date(c.ts);
+      if (ts < start || ts >= end) continue;
       const hk = captureForHour(c);
-      // bucket date check: convert key to date, must be within shift window
-      const bucketDate = new Date(hk + ":00:00Z");
-      if (bucketDate < start || bucketDate >= end) continue;
       buckets[hk] = (buckets[hk] || 0) + c.qty;
     }
     return buckets;
