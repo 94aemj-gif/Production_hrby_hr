@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n="page.title.admin">Configuración Admin</title>
-  <link rel="stylesheet" href="styles.css?v=44" />
+  <link rel="stylesheet" href="styles.css?v=45" />
 </head>
 <body>
   <!-- Lock screen -->
@@ -161,6 +161,26 @@
         <button type="button" id="btn-add-op" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
       </div>
     </section>
+
+    <section class="admin-card">
+      <h2 data-i18n="admin.downtimeReasons">Motivos de Tiempo Muerto</h2>
+      <p class="muted" style="font-size:13px;margin-top:0" data-i18n="admin.downtimeReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
+      <ul id="downtime-reasons-list" class="reason-list"></ul>
+      <div class="entity-add">
+        <input type="text" id="new-downtime-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo (ej. Junta producción)" />
+        <button type="button" id="btn-add-downtime-reason" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2 data-i18n="admin.scrapReasons">Motivos de Rechazo</h2>
+      <p class="muted" style="font-size:13px;margin-top:0" data-i18n="admin.scrapReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
+      <ul id="scrap-reasons-list" class="reason-list"></ul>
+      <div class="entity-add">
+        <input type="text" id="new-scrap-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo (ej. Pistón roto)" />
+        <button type="button" id="btn-add-scrap-reason" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
+      </div>
+    </section>
     </div><!-- /catalogos panel -->
 
     <div class="admin-panel" data-panel="resumen" role="tabpanel">
@@ -264,10 +284,10 @@
     </div>
   </div>
 
-  <script src="i18n.js?v=44"></script>
-  <script src="supabase-config.js?v=44"></script>
-  <script src="sync.js?v=44"></script>
-  <script src="app.js?v=44"></script>
-  <script src="admin.js?v=44"></script>
+  <script src="i18n.js?v=45"></script>
+  <script src="supabase-config.js?v=45"></script>
+  <script src="sync.js?v=45"></script>
+  <script src="app.js?v=45"></script>
+  <script src="admin.js?v=45"></script>
 </body>
 </html>

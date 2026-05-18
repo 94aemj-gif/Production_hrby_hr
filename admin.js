@@ -105,6 +105,8 @@
   SAVE_TO_CONFIG[STORAGE.SHIFTS]    = "shifts";
   SAVE_TO_CONFIG[STORAGE.OPERATORS] = "operators";
   SAVE_TO_CONFIG[STORAGE.CONFIG]    = "settings";
+  SAVE_TO_CONFIG["prod.downtime.reasons.v1"] = "downtime_reasons";
+  SAVE_TO_CONFIG["prod.scrap.reasons.v1"]    = "scrap_reasons";
   const save = (key, val) => {
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {}
     const ck = SAVE_TO_CONFIG[key];
@@ -228,7 +230,70 @@
     renderLines();
     renderShifts();
     renderOperators();
+    renderReasonList("downtime");
+    renderReasonList("scrap");
   }
+
+  // ---- Reason lists (downtime / scrap motivos) ----
+  const REASON_DEFAULTS = {
+    downtime: ["Junta de producción", "Capacitación", "Cambio de material",
+               "Limpieza", "Falta de material", "Otro"],
+    scrap:    ["Pistón roto", "Empaque defectuoso", "Calidad fuera de spec", "Otro"],
+  };
+  const REASON_STORAGE = {
+    downtime: "prod.downtime.reasons.v1",
+    scrap:    "prod.scrap.reasons.v1",
+  };
+  function loadReasons(which) {
+    return load(REASON_STORAGE[which], REASON_DEFAULTS[which].slice());
+  }
+  function saveReasons(which, list) {
+    save(REASON_STORAGE[which], list);
+  }
+  function renderReasonList(which) {
+    const ul = document.getElementById(which + "-reasons-list");
+    if (!ul) return;
+    const list = loadReasons(which);
+    ul.innerHTML = list.map((r, i) =>
+      '<li class="reason-item">' +
+        '<span class="reason-text">' + escapeHtml(r) + '</span>' +
+        '<button type="button" class="btn btn-ghost btn-small" data-idx="' + i + '">' + escapeHtml(tt("admin.btn.delete")) + '</button>' +
+      '</li>'
+    ).join("");
+    ul.querySelectorAll("button[data-idx]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const idx = Number(btn.dataset.idx);
+        const cur = loadReasons(which);
+        const removed = cur[idx];
+        if (!(await window.appConfirm(tt("admin.confirmDelReason", { name: removed }), { danger: true }))) return;
+        cur.splice(idx, 1);
+        saveReasons(which, cur);
+        renderReasonList(which);
+        logEvent("config", tt("admin.log.reasonRemoved", { which, name: removed }));
+      });
+    });
+  }
+  function wireReasonAdd(which) {
+    const inp = document.getElementById("new-" + which + "-reason");
+    const btn = document.getElementById("btn-add-" + which + "-reason");
+    if (!inp || !btn) return;
+    btn.addEventListener("click", () => {
+      const v = (inp.value || "").trim();
+      if (!v) return;
+      const cur = loadReasons(which);
+      if (cur.indexOf(v) !== -1) { inp.value = ""; return; }
+      cur.push(v);
+      saveReasons(which, cur);
+      inp.value = "";
+      renderReasonList(which);
+      logEvent("config", tt("admin.log.reasonAdded", { which, name: v }));
+    });
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); btn.click(); }
+    });
+  }
+  wireReasonAdd("downtime");
+  wireReasonAdd("scrap");
 
   let editingLineIdx = -1;
   function renderLines() {

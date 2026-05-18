@@ -6,7 +6,7 @@
   <title data-i18n="page.title.capture">Registro de Producción</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f5f7fb" />
-  <link rel="stylesheet" href="styles.css?v=44" />
+  <link rel="stylesheet" href="styles.css?v=45" />
 </head>
 <body class="screen with-sidebar">
   <aside class="sidebar">
@@ -214,30 +214,57 @@
 
   <!-- Capture form -->
   <div id="form-overlay" class="overlay hidden" aria-hidden="true">
-    <div class="popup popup-form" role="dialog" aria-labelledby="form-title">
+    <div class="popup popup-form popup-form-v2" role="dialog" aria-labelledby="form-title">
       <h2 id="form-title" class="popup-title-left"><span id="form-time">--:--</span> <span id="form-title-text" data-i18n="form.title">Capturar Producción</span></h2>
       <p class="popup-subtle" data-i18n="form.subtle">Escanee su número de empleado y registre la cantidad.</p>
-      <form id="entry-form" class="entry-form" autocomplete="off">
-        <label class="field">
-          <span class="field-label" data-i18n="form.empNum"># de Empleado</span>
-          <input type="text" id="f-operator" name="operator" class="numpad-input" autocomplete="off" readonly required />
-        </label>
-        <label class="field">
-          <span class="field-label" data-i18n="form.capturedHour">Hora Capturada</span>
-          <select id="f-forhour" class="hora-select"></select>
-        </label>
-        <label class="field">
-          <span class="field-label" data-i18n="form.qty">Cantidad Producida (Piezas) *</span>
-          <input type="text" id="f-count" name="count" class="numpad-input" autocomplete="off" readonly required />
-        </label>
-        <label class="field">
-          <span class="field-label" data-i18n="form.scrap">Rechazos (opcional)</span>
-          <input type="text" id="f-scrap" name="scrap" class="numpad-input" autocomplete="off" readonly />
-        </label>
-        <div class="field">
-          <span class="field-label" data-i18n="form.notes">Notas</span>
-          <div id="f-notes" class="note-chips"></div>
+      <form id="entry-form" class="entry-form entry-form-v2" autocomplete="off">
+
+        <div class="form-header-grid">
+          <label class="field">
+            <span class="field-label" data-i18n="form.empNum"># de Empleado (5 dígitos)</span>
+            <input type="text" id="f-operator" name="operator" class="numpad-input" autocomplete="off" inputmode="numeric" pattern="\d{5}" maxlength="5" readonly required />
+            <div id="f-operator-error" class="field-error hidden" data-i18n="form.empNumErr">Debe tener exactamente 5 dígitos.</div>
+          </label>
+          <label class="field">
+            <span class="field-label" data-i18n="form.capturedHour">Hora Capturada</span>
+            <select id="f-forhour" class="hora-select"></select>
+          </label>
         </div>
+
+        <!-- A: Units produced (required) -->
+        <section class="form-section form-section-required">
+          <div class="form-section-head">
+            <span class="form-section-letter">A</span>
+            <span class="form-section-title" data-i18n="form.qtyTitle">Unidades producidas (piezas)</span>
+            <span class="form-section-req" data-i18n="form.required">requerido</span>
+          </div>
+          <input type="text" id="f-count" name="count" class="numpad-input" autocomplete="off" readonly required />
+        </section>
+
+        <!-- B: Downtime (optional, multi-row) -->
+        <section class="form-section">
+          <label class="form-section-head form-section-toggle">
+            <input type="checkbox" id="f-downtime-enable" class="form-section-checkbox" />
+            <span class="form-section-letter">B</span>
+            <span class="form-section-title" data-i18n="form.downtimeTitle">Tiempo muerto (minutos)</span>
+            <span class="form-section-opt" data-i18n="form.optional">opcional</span>
+          </label>
+          <div id="f-downtime-rows" class="form-rows hidden"></div>
+          <button type="button" id="btn-add-downtime" class="btn btn-ghost btn-small form-add-row hidden" data-i18n="form.addDowntime">+ Agregar tiempo muerto</button>
+        </section>
+
+        <!-- C: Scrap (optional, multi-row) -->
+        <section class="form-section">
+          <label class="form-section-head form-section-toggle">
+            <input type="checkbox" id="f-scrap-enable" class="form-section-checkbox" />
+            <span class="form-section-letter">C</span>
+            <span class="form-section-title" data-i18n="form.scrapTitle">Rechazos (piezas)</span>
+            <span class="form-section-opt" data-i18n="form.optional">opcional</span>
+          </label>
+          <div id="f-scrap-rows" class="form-rows hidden"></div>
+          <button type="button" id="btn-add-scrap" class="btn btn-ghost btn-small form-add-row hidden" data-i18n="form.addScrap">+ Agregar rechazo</button>
+        </section>
+
         <div class="form-actions-row">
           <button type="button" id="btn-form-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
           <button type="submit" class="btn btn-success btn-block" data-i18n="btn.capture">Capturar</button>
@@ -322,9 +349,9 @@
 
   <audio id="alert-sound" preload="auto"></audio>
 
-  <script src="i18n.js?v=44"></script>
-  <script src="supabase-config.js?v=44"></script>
-  <script src="sync.js?v=44"></script>
-  <script src="app.js?v=44"></script>
+  <script src="i18n.js?v=45"></script>
+  <script src="supabase-config.js?v=45"></script>
+  <script src="sync.js?v=45"></script>
+  <script src="app.js?v=45"></script>
 </body>
 </html>

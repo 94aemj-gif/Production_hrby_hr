@@ -308,7 +308,10 @@
   function pushDowntime(d, ctx) {
     if (!ENABLED || !ctx) return;
     queue("downtime", {
-      id: newId(),
+      // Allow the caller to provide a stable id (matches the local row's id
+      // so the capture form's manual downtime entries don't double-insert
+      // on retry). Falls back to a fresh id for the topbar status flow.
+      id: d.id || newId(),
       device_id: deviceId,
       session_date: ctx.date,
       line_id: ctx.lineId,
@@ -316,6 +319,7 @@
       start_ts: d.start,
       end_ts: d.end || null,
       status: d.status || null,
+      reason: d.reason || null,
       duration_ms: d.durationMs || null,
     });
   }
