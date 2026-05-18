@@ -3220,3 +3220,340 @@ body.app-shell .with-sidebar { display: none; }
 }
 
 ::selection { background: var(--accent-soft); color: var(--accent); }
+
+/* ============================================================
+   ===  RESPONSIVE v3 — Direction B (bottom tab bar)  =========
+   Unified breakpoints: 480 / 768 / 1024 / 1280
+   Type scale via clamp(). 44px+ tap targets. Container max 1320px.
+   Mobile/tablet: brandbar controls hide → kebab toggle slide-down.
+   Mobile/tablet: bottom-tabbar fixed nav. Mobile: capture FAB.
+   ============================================================ */
+
+/* --- Global guards: no horizontal overflow, all flex/grid children allowed to shrink --- */
+html, body.app-shell { overflow-x: hidden; max-width: 100%; width: 100%; }
+body.app-shell { width: 100vw; max-width: 100vw; }
+body.app-shell .page-title-row > *,
+body.app-shell .capture-grid > *,
+body.app-shell .col > *,
+body.app-shell .metrics > *,
+body.app-shell .kpi-grid > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
+/* Nav pills MUST preserve content width — never shrink */
+body.app-shell .brandbar > .nav-pills { flex-shrink: 0; min-width: max-content; }
+body.app-shell .brandbar > .brand { min-width: 0; }
+body.app-shell .brandbar > .brandbar-right { min-width: 0; }
+body.app-shell .page,
+body.app-shell .page > section,
+body.app-shell .page > div,
+body.app-shell .capture-grid,
+body.app-shell .col,
+body.app-shell .card,
+body.app-shell .counter-card,
+body.app-shell .chart-card,
+body.app-shell .metric,
+body.app-shell .kpi-tile,
+body.app-shell .log { max-width: 100%; box-sizing: border-box; }
+body.app-shell .page * { max-width: 100%; }
+body.app-shell .page canvas { max-width: 100%; height: auto; }
+
+/* --- Container + grid --- */
+body.app-shell .page { max-width: 1320px; padding: clamp(14px, 2vw, 24px) clamp(14px, 3vw, 32px) clamp(32px, 4vw, 56px); }
+body.app-shell .brandbar { padding: 14px clamp(14px, 3vw, 32px); }
+body.app-shell .brand-text { min-width: 0; flex: 1 1 auto; overflow: hidden; }
+body.app-shell .brand-text b,
+body.app-shell .brand-text span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+body.app-shell .page-title-row { flex-wrap: wrap; }
+body.app-shell .clock-block { min-width: 0; max-width: 100%; }
+body.app-shell .page .clock { word-break: keep-all; }
+
+/* --- Type scale (clamp everywhere) --- */
+body.app-shell .page-title { font-size: clamp(22px, 4vw, 32px); }
+body.app-shell .page-subtitle { font-size: clamp(13px, 1.6vw, 15px); }
+body.app-shell .page .clock { font-size: clamp(22px, 3vw, 32px); }
+body.app-shell .page .counter { font-size: clamp(80px, 16vw, 200px); }
+body.app-shell .page .metric-value { font-size: clamp(28px, 4vw, 44px); }
+body.app-shell .page .kpi-value { font-size: clamp(28px, 4vw, 44px); }
+
+/* --- Counter card hero — adaptive height --- */
+body.app-shell .page .counter-card {
+  min-height: clamp(300px, 46vw, 460px);
+  padding: clamp(28px, 5vw, 48px) clamp(20px, 4vw, 36px) clamp(24px, 4vw, 40px);
+  gap: clamp(18px, 3vw, 26px);
+}
+
+/* --- Capture button — adaptive width --- */
+body.app-shell .btn.btn-capture,
+body.app-shell .page .btn-capture {
+  min-width: 0;
+  width: min(100%, 360px);
+  padding: 0 32px;
+  height: 56px;
+  font-size: 16px;
+  border-radius: 14px;
+}
+
+/* --- Kebab button base (CSS-shown <1024px) --- */
+body.app-shell .kebab-btn {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  border: none;
+  box-shadow: 0 0 0 1px var(--line);
+  font: 700 22px/1 'Geist',sans-serif;
+  cursor: pointer;
+  flex-shrink: 0;
+  letter-spacing: 0;
+  padding-bottom: 8px;
+}
+body.app-shell .kebab-btn:hover { background: var(--paper-3); }
+
+/* --- Bottom tab bar base (CSS-shown <1024px) --- */
+body.app-shell .bottom-tabbar {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.95);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-top: 1px solid var(--line);
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  z-index: 80;
+  justify-content: space-around;
+  gap: 4px;
+}
+body.app-shell .bottab-item {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  text-decoration: none;
+  font: 600 11px/1.1 'Geist',sans-serif;
+  letter-spacing: -0.005em;
+  padding: 8px 4px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 52px;
+  transition: color 180ms var(--ease-out), background 180ms var(--ease-out);
+}
+body.app-shell .bottab-item:hover { background: var(--paper-3); color: var(--ink); }
+body.app-shell .bottab-item.active { color: var(--accent); }
+body.app-shell .bottab-item.active .bottab-ic { color: var(--accent); }
+body.app-shell .bottab-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+/* ============================================================
+   BREAKPOINT: <= 1024px (tablet + mobile)
+   - Hide all brandbar-right controls + nav-pills
+   - Show kebab button + bottom tab bar
+   - Brandbar collapses to: brand + kebab
+   ============================================================ */
+@media (max-width: 1024px) {
+  body.app-shell .brandbar {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto;
+    gap: 12px;
+    position: relative;
+  }
+  body.app-shell .brandbar > .brand { grid-column: 1; grid-row: 1; min-width: 0; }
+  body.app-shell .brandbar > .kebab-btn { grid-column: 2; grid-row: 1; }
+  body.app-shell .brandbar .nav-pills { display: none; }
+  body.app-shell .brandbar .brandbar-right {
+    display: none;
+    position: absolute;
+    top: calc(100% - 4px);
+    right: 12px;
+    left: 12px;
+    background: var(--paper);
+    border-radius: 14px;
+    box-shadow: 0 0 0 1px var(--line), 0 24px 56px -20px rgba(15,15,20,0.25);
+    padding: 12px;
+    gap: 8px;
+    flex-direction: column;
+    align-items: stretch;
+    z-index: 70;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right {
+    display: flex;
+    animation: kebabIn 220ms var(--ease-spring);
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right > * {
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 44px;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .shift-info {
+    background: var(--paper-3);
+    padding: 10px 14px;
+    border-radius: 10px;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .status-select {
+    padding: 6px 6px 6px 14px;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .next-alert {
+    padding: 12px 14px;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .admin-link,
+  body.app-shell .brandbar.menu-open .brandbar-right .sync-status,
+  body.app-shell .brandbar.menu-open .brandbar-right .lang-toggle {
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  body.app-shell .kebab-btn { display: inline-flex; align-items: center; justify-content: center; }
+
+  body.app-shell .bottom-tabbar { display: flex; }
+  /* Pad page bottom so content isn't hidden behind tabbar */
+  body.app-shell .page { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+
+  /* Collapse capture-grid to single column (already in earlier CSS, reinforce) */
+  body.app-shell .page .capture-grid { grid-template-columns: 1fr; }
+
+  /* Shorter chart canvas on stacked layout */
+  body.app-shell .page .col-side .chart-card.collapsible canvas { min-height: 220px; }
+
+  /* Tighter page-head */
+  body.app-shell .page .page-title-row { gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+  body.app-shell .page .clock-block { align-items: flex-end; }
+}
+
+@keyframes kebabIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   BREAKPOINT: <= 768px (mobile)
+   - Counter-card capture button → fixed FAB above bottom tab bar
+   - Smaller card padding, tighter metrics stack
+   ============================================================ */
+@media (max-width: 768px) {
+  body.app-shell .page { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); gap: 14px; }
+  body.app-shell .brandbar { padding: 12px 14px; }
+  body.app-shell .brand-mark { width: 40px; height: 40px; font-size: 13px; border-radius: 11px; }
+  body.app-shell .brand-text b { font-size: 14px; }
+  body.app-shell .brand-text span { font-size: 11px; }
+
+  body.app-shell .page .page-title { font-size: 24px; }
+  body.app-shell .page .page-subtitle { font-size: 13px; max-width: 100%; }
+  body.app-shell .page .clock { font-size: 22px; }
+  body.app-shell .page .page-title-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  body.app-shell .page .clock-block { align-items: flex-start; flex-direction: row; gap: 10px; }
+  body.app-shell .page .date-label { display: inline; }
+
+  body.app-shell .page .metrics { grid-template-columns: 1fr 1fr; gap: 10px; }
+  body.app-shell .page .metric { padding: 16px 18px; }
+  body.app-shell .page .metric-value { font-size: 28px; }
+
+  /* Counter card — relax min-height; FAB takes over the action */
+  body.app-shell .page .counter-card {
+    min-height: 320px;
+    padding: 32px 22px 28px;
+  }
+  body.app-shell .page .counter-actions { display: none; }
+
+  /* Capture button → fixed FAB */
+  body.app-shell #btn-capture.btn.btn-capture {
+    position: fixed;
+    left: 14px;
+    right: 14px;
+    bottom: calc(72px + env(safe-area-inset-bottom) + 12px);
+    width: auto;
+    max-width: none;
+    height: 56px;
+    border-radius: 16px;
+    z-index: 75;
+    display: inline-flex;
+    box-shadow: 0 16px 36px -8px rgba(13,148,136,0.6), inset 0 1px 0 rgba(255,255,255,0.25);
+  }
+  body.app-shell #btn-capture.btn.btn-capture:hover { transform: translateY(-1px); }
+
+  body.app-shell #btn-undo { display: none !important; }
+
+  /* KPI grid → 2 cols */
+  body.app-shell .page .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  body.app-shell .page .kpi-tile { padding: 18px 20px; }
+
+  /* Bottom tab bar tighter */
+  body.app-shell .bottom-tabbar { padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); }
+  body.app-shell .bottab-item { font-size: 10px; min-height: 48px; padding: 6px 2px; }
+  body.app-shell .bottab-ic { font-size: 16px; }
+}
+
+/* ============================================================
+   BREAKPOINT: <= 480px (small mobile)
+   - Even tighter; metric tiles stack to single column if needed
+   ============================================================ */
+@media (max-width: 480px) {
+  body.app-shell .page .metrics { grid-template-columns: 1fr; }
+  body.app-shell .brand-text span { display: none; }
+  body.app-shell .page .clock-block { align-items: flex-start; }
+  body.app-shell .page .page-title-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+  body.app-shell .page .counter { font-size: clamp(72px, 22vw, 120px); }
+}
+
+/* ============================================================
+   DESKTOP (>=1025px) — clean single-row brandbar
+   ============================================================ */
+@media (min-width: 1025px) {
+  body.app-shell .bottom-tabbar { display: none !important; }
+  body.app-shell .kebab-btn { display: none !important; }
+  body.app-shell .brandbar {
+    grid-template-columns: minmax(0, max-content) 1fr minmax(0, max-content);
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+  body.app-shell .brandbar > .brand {
+    grid-column: 1;
+    flex-shrink: 0;
+    max-width: clamp(180px, 22vw, 320px);
+  }
+  body.app-shell .brandbar > .nav-pills {
+    grid-column: 2;
+    justify-self: center;
+  }
+  body.app-shell .brandbar > .brandbar-right {
+    grid-column: 3;
+    position: static;
+    display: flex !important;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    border-radius: 0;
+    flex-direction: row;
+    gap: 8px;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    align-items: center;
+    z-index: auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+  body.app-shell .brandbar > .brandbar-right > * { flex-shrink: 0; }
+  /* Long shift name truncates so it never pushes other controls */
+  body.app-shell .brandbar > .brandbar-right > .shift-info { min-width: 0; flex-shrink: 1; }
+  body.app-shell .brandbar > .brandbar-right > .shift-info > #shift-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: clamp(120px, 14vw, 220px);
+    display: inline-block;
+  }
+}
+
+/* Below 1280: drop the next-alert label, then Tablero text, then EN — graceful degradation */
+@media (min-width: 1025px) and (max-width: 1199px) {
+  body.app-shell .brandbar > .brandbar-right > .next-alert > .next-alert-sub { display: none; }
+  body.app-shell .brandbar > .brandbar-right > .status-select > span { display: none; }
+}
