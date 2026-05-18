@@ -3557,3 +3557,145 @@ body.app-shell .bottab-ic {
   body.app-shell .brandbar > .brandbar-right > .next-alert > .next-alert-sub { display: none; }
   body.app-shell .brandbar > .brandbar-right > .status-select > span { display: none; }
 }
+
+/* ============================================================
+   ===  Mobile Real-Device Fixes (after v58)  ================
+   1. FAB capture button — counter-actions was display:none which
+      removed #btn-capture from render. Use display:contents instead
+      so child position:fixed works.
+   2. Clock smaller at mobile so it doesn't dwarf the title.
+   3. Drawer (kebab-open brandbar-right): label each row.
+   4. Admin page: truncate back link, horizontal-scroll admin-tabs.
+   ============================================================ */
+
+/* (1) FAB rescue — counter-actions display:contents + show child */
+@media (max-width: 768px) {
+  body.app-shell .page .counter-actions { display: contents !important; }
+  body.app-shell #btn-undo { display: none !important; }
+  body.app-shell #btn-capture.btn.btn-capture {
+    display: inline-flex !important;
+  }
+}
+
+/* (2) Clock + date scale down further on small phones */
+@media (max-width: 540px) {
+  body.app-shell .page .page-title { font-size: 22px; }
+  body.app-shell .page .clock { font-size: 18px; }
+  body.app-shell .page .date-label { font-size: 11px; }
+  body.app-shell .page .clock-block {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+}
+
+/* (3) Drawer — give next-alert + status-select clean row labels */
+@media (max-width: 1024px) {
+  body.app-shell .brandbar.menu-open .brandbar-right .next-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .next-alert > span:first-child {
+    flex: 1 0 auto;
+    color: var(--muted);
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .next-alert #next-alert-time {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .status-select {
+    justify-content: space-between;
+    width: 100%;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .status-select select {
+    flex: 1;
+    text-align: right;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .sync-status,
+  body.app-shell .brandbar.menu-open .brandbar-right .lang-toggle {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 12px 14px;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .sync-status::before { content: "Sync "; opacity: 0.6; font-weight: 500; }
+  body.app-shell .brandbar.menu-open .brandbar-right .lang-toggle::before { content: "Idioma "; opacity: 0.6; font-weight: 500; }
+}
+
+/* (4) Admin page — mobile polish (admin.html has its own .admin shell) */
+@media (max-width: 768px) {
+  .admin .actions-row-between {
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .admin .back-link {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    flex: 1;
+    min-width: 0;
+  }
+  .admin .actions-inline {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .admin .actions-inline .admin-link,
+  .admin .actions-inline .lang-toggle,
+  .admin .actions-inline .btn-small {
+    padding: 6px 12px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .admin h1 { font-size: 22px; }
+  .admin .admin-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+    gap: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin .admin-tabs::-webkit-scrollbar { display: none; }
+  .admin .admin-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+  .admin .admin-card { padding: 18px 16px; }
+  .admin .admin-grid { grid-template-columns: 1fr; }
+  .admin .admin-actions { flex-wrap: wrap; gap: 8px; }
+  .admin .admin-actions .btn { width: auto; }
+}
+
+/* ============================================================
+   ===  FAB Polish (after v59)  ===============================
+   FAB was overlapping the hour-card / tendencia card. Increase
+   page padding-bottom enough to clear FAB + tab-bar + safe-area.
+   Center the FAB text properly.
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Reserve space at end of scroll for FAB (56) + gap (16) + tab-bar (~64) + safe-area */
+  body.app-shell .page {
+    padding-bottom: calc(150px + env(safe-area-inset-bottom));
+  }
+  /* FAB — symmetric padding, perfectly centered text */
+  body.app-shell #btn-capture.btn.btn-capture {
+    padding: 0 24px !important;
+    text-align: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  /* FAB sits above tab-bar with breathing room */
+  body.app-shell #btn-capture.btn.btn-capture {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
