@@ -1970,8 +1970,12 @@
     const goodId = "c" + Date.now() + "g" + Math.random().toString(36).slice(2, 5);
     const scrapIds = scrapRows.map((_, i) =>
       "c" + Date.now() + "s" + i + Math.random().toString(36).slice(2, 4));
-    const downtimeIds = downtimeRows.map((_, i) =>
-      "d" + Date.now() + "m" + i + Math.random().toString(36).slice(2, 4));
+    // downtime.id is a UUID column in Supabase; captures.id is text. Don't
+    // mix the formats.
+    const newUuid = () => (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : "u-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+    const downtimeIds = downtimeRows.map(() => newUuid());
 
     updateSession((s2) => {
       s2.captures.push({ id: goodId, ts, qty, kind: "good", employeeId, forHour });
