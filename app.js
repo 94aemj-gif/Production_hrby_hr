@@ -32,9 +32,8 @@
   };
 
   const DEFAULT_LINES = [
-    { id: "L-01", label: "Línea 01" },
-    { id: "L-02", label: "Línea 02" },
-    { id: "L-03", label: "Línea 03" },
+    { id: "L-60ML", label: "#1 60ml Neomed Syringe" },
+    { id: "L-35ML", label: "#2 35ml Neomed Syringe" },
   ];
 
   // days: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
@@ -93,6 +92,32 @@
       return false;
     }
   };
+
+  // ---- One-shot migration: replace the legacy demo lines with the
+  // production defaults so tablets that still have L-01/L-02/L-03 get
+  // switched over, and push the new defaults to Supabase so peers see
+  // them on their next pull.
+  const CONFIG_MIGRATION_KEY = "prod.config.migration.v1";
+  const CONFIG_MIGRATION_VERSION = 1;
+  (function migrateLegacyLines() {
+    if (Number(load(CONFIG_MIGRATION_KEY, 0)) >= CONFIG_MIGRATION_VERSION) return;
+    const cur = load(STORAGE.LINES, null);
+    const legacyIds = ["L-01", "L-02", "L-03"];
+    const isLegacy = !cur || (Array.isArray(cur) && cur.length === 3
+      && cur.every((l, i) => l && l.id === legacyIds[i]));
+    if (isLegacy) {
+      save(STORAGE.LINES, DEFAULT_LINES);
+      // Defer the push until window.sync is ready (it loads before app.js,
+      // but pushConfig requires queue/save chain that's set up at module
+      // init — that's already done by the time this IIFE runs).
+      try {
+        if (window.sync && window.sync.pushConfig) {
+          window.sync.pushConfig("lines", DEFAULT_LINES);
+        }
+      } catch (_) {}
+    }
+    save(CONFIG_MIGRATION_KEY, CONFIG_MIGRATION_VERSION);
+  })();
 
   // ---- State ----
   let config = Object.assign({}, DEFAULT_CONFIG, load(STORAGE.CONFIG, {}));
@@ -2427,11 +2452,50 @@
     try { localStorage.setItem(APPLIED_RESETS_KEY, JSON.stringify(m)); } catch (_) {}
   }
 
+  // Map of config row "key" to local storage key.
+  const CONFIG_KEY_TO_LOCAL = {
+    lines:     STORAGE.LINES,
+    shifts:    STORAGE.SHIFTS,
+    operators: STORAGE.OPERATORS,
+    settings:  STORAGE.CONFIG,
+  };
+  const CONFIG_LAST_APPLIED_KEY = "prod.sync.configLastApplied.v1";
+
+  function applyConfigRows(rows) {
+    if (!rows || !rows.length) return false;
+    let lastApplied = {};
+    try { lastApplied = JSON.parse(localStorage.getItem(CONFIG_LAST_APPLIED_KEY) || "{}"); }
+    catch (_) {}
+    let changed = false;
+    for (const r of rows) {
+      if (!r || !r.key || r.value == null) continue;
+      const localKey = CONFIG_KEY_TO_LOCAL[r.key];
+      if (!localKey) continue;
+      const incomingTs = r.updated_at || "";
+      const lastTs = lastApplied[r.key] || "";
+      if (lastTs && incomingTs && incomingTs <= lastTs) continue;
+      save(localKey, r.value);
+      lastApplied[r.key] = incomingTs;
+      changed = true;
+    }
+    if (changed) {
+      try { localStorage.setItem(CONFIG_LAST_APPLIED_KEY, JSON.stringify(lastApplied)); } catch (_) {}
+      // Reload module-level variables so renderAll / ensureAutoSession see
+      // the new config without a page reload.
+      config    = Object.assign({}, DEFAULT_CONFIG, load(STORAGE.CONFIG, {}));
+      lines     = load(STORAGE.LINES,     DEFAULT_LINES);
+      shifts    = load(STORAGE.SHIFTS,    DEFAULT_SHIFTS);
+      operators = load(STORAGE.OPERATORS, DEFAULT_OPERATORS);
+    }
+    return changed;
+  }
+
   function applyRemote(payload) {
     if (!payload) return;
+    const configChanged = applyConfigRows(payload.config);
     const all = loadSessions();
     const tombstones = loadPendingTombstones();
-    let changed = false;
+    let changed = configChanged;
     let tombstonesChanged = false;
 
     function findOrCreate(date, lineId, shiftId, operatorId) {

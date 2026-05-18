@@ -97,7 +97,8 @@
   let pending  = load(STORAGE.PENDING, []);
   let lastSync = load(STORAGE.LAST_SYNC, null);
   let lastError = load(STORAGE.LAST_ERR, null);
-  let pullWm   = load(STORAGE.PULL_WM, { captures: null, downtime: null, events: null });
+  let pullWm   = load(STORAGE.PULL_WM, { captures: null, downtime: null, events: null, config: null });
+  if (pullWm && pullWm.config === undefined) pullWm.config = null;
   let lastPull = load(STORAGE.LAST_PULL, null);
 
   // One-shot migration: earlier versions advanced the watermark before the
@@ -331,6 +332,20 @@
     });
   }
 
+  // Push a single config row to Supabase (UPSERT by key). Used to sync
+  // line / shift / operator / settings catalogs across devices. Requires
+  // table public.config with anon SELECT + INSERT + UPDATE policies.
+  function pushConfig(key, value) {
+    if (!ENABLED) return;
+    if (!key) return;
+    queue("config", {
+      key: key,
+      value: value,
+      updated_at: new Date().toISOString(),
+      updated_by: deviceId || null,
+    });
+  }
+
   function pushCaptureUndone(captureId) {
     pushEvent({ type: "capture_undone", message: "Operator undo", captureId });
   }
@@ -412,6 +427,17 @@
     if (!acquireTabLock()) return;
     pulling = true;
     try {
+      // Config pulls separately because failures there (e.g. table missing
+      // before the user runs the migration SQL) shouldn't break the rest.
+      let config = [];
+      try {
+        config = await pullTable("config", "updated_at");
+      } catch (e) {
+        // Surface but don't stop the main pull.
+        lastError = { ts: new Date().toISOString(),
+          message: "config pull: " + String((e && e.message) || e).slice(0, 200) };
+        save(STORAGE.LAST_ERR, lastError);
+      }
       const [captures, downtime, events] = await Promise.all([
         pullTable("captures", "ts"),
         pullTable("downtime", "start_ts"),
@@ -422,7 +448,7 @@
       save(STORAGE.LAST_PULL, lastPull);
       if (window.app && typeof window.app.applyRemote === "function") {
         try {
-          window.app.applyRemote({ captures, downtime, events, ownDeviceId: deviceId });
+          window.app.applyRemote({ captures, downtime, events, config, ownDeviceId: deviceId });
         } catch (e) {
           // Surface renderer errors so they aren't silently lost.
           lastError = { ts: new Date().toISOString(),
@@ -552,6 +578,7 @@
   window.sync = {
     registerDevice, pushCapture, pushDowntime, pushEvent,
     pushCaptureUndone, pushCaptureDeleted,
+    pushConfig,
     getStatus, flush, pull,
     getDeadLetter, clearDeadLetter,
     deleteDate, purgePendingForDate,

@@ -77,9 +77,8 @@
   };
 
   const DEFAULT_LINES = [
-    { id: "L-01", label: "Línea 01" },
-    { id: "L-02", label: "Línea 02" },
-    { id: "L-03", label: "Línea 03" },
+    { id: "L-60ML", label: "#1 60ml Neomed Syringe" },
+    { id: "L-35ML", label: "#2 35ml Neomed Syringe" },
   ];
   const DEFAULT_SHIFTS = [
     { id: "S1", label: "Turno 1", startTime: "06:00", endTime: "18:00", days: [0, 1, 2, 3, 4, 5, 6],
@@ -98,7 +97,21 @@
     try { const raw = localStorage.getItem(key); return raw == null ? fb : JSON.parse(raw); }
     catch (_) { return fb; }
   };
-  const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {} };
+  // Map of localStorage keys that mirror shared catalogs / settings in the
+  // Supabase config table. save() automatically pushes these so admin edits
+  // propagate to peer tablets on their next pull.
+  const SAVE_TO_CONFIG = {};
+  SAVE_TO_CONFIG[STORAGE.LINES]     = "lines";
+  SAVE_TO_CONFIG[STORAGE.SHIFTS]    = "shifts";
+  SAVE_TO_CONFIG[STORAGE.OPERATORS] = "operators";
+  SAVE_TO_CONFIG[STORAGE.CONFIG]    = "settings";
+  const save = (key, val) => {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {}
+    const ck = SAVE_TO_CONFIG[key];
+    if (ck && window.sync && typeof window.sync.pushConfig === "function") {
+      try { window.sync.pushConfig(ck, val); } catch (_) {}
+    }
+  };
 
   function logEvent(type, message) {
     const entries = load(STORAGE.LOG, []);
