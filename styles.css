@@ -2301,3 +2301,82 @@ input.invalid {
   .line-card-count { font-size: 36px; }
   .line-card-pace { font-size: 15px; }
 }
+
+/* ============ Charts view layout (v=49) ============
+ * Bigger page header, tighter KPI tiles, and a multi-column grid on
+ * laptop / desktop so the charts breathe horizontally instead of
+ * stretching one bar across the whole width.
+ */
+
+/* Page header — bigger eyebrow + h1 so it dominates the section
+ * titles below (which used to be the same uppercase 12px style). */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.page-header-eyebrow {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+}
+.page-header-title {
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.15;
+}
+
+/* Chart card title — slightly smaller + tighter spacing so the page
+ * header above clearly outranks it visually. */
+.chart-card-title {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0 0 14px;
+  text-transform: uppercase;
+}
+
+/* Tighter KPI tiles for this view — current value (36px) was dwarfing
+ * the page title. */
+#charts-kpi-grid .kpi-tile { padding: 16px 18px; }
+#charts-kpi-grid .kpi-label { font-size: 10px; margin-bottom: 6px; letter-spacing: 0.14em; }
+#charts-kpi-grid .kpi-value { font-size: clamp(20px, 2.4vw, 30px); font-weight: 700; }
+
+/* Multi-column layout on laptop (≥1024px) — 2 cols.
+ * Header / weekstrip / KPI / scrap / heatmap span all columns; the two
+ * "important" charts (hourly + cumulative) share a row. */
+@media (min-width: 1024px) {
+  #view-charts {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+    row-gap: 18px;
+    align-items: start;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  #view-charts > .page-header,
+  #view-charts > #charts-weekstrip-card,
+  #view-charts > .kpi-grid,
+  #view-charts > #chart-scrap-card,
+  #view-charts > #heatmap-card {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Desktop wide (≥1400px) — 3 cols so the three KPI/operating charts
+ * sit on a single row. Scrap moves into the row too; heatmap stays
+ * full-width below. */
+@media (min-width: 1400px) {
+  #view-charts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #view-charts > #chart-scrap-card { grid-column: span 1; }
+  #view-charts > .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Mobile (default): keep flex column from .main; just normalize spacing
+ * via the page-header so it doesn't look like a section subtitle. */
