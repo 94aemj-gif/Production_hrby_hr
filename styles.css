@@ -4145,3 +4145,45 @@ body.app-shell .page .counter-card .counter {
   .popup-numpad .quickkey { min-height: 40px !important; font-size: 13px !important; }
   .popup-numpad .numpad-display { font-size: 30px !important; min-height: 56px !important; }
 }
+
+/* ============================================================
+   ===  Cross-page nav unification (v65)  ====================
+   - Icon-only back arrow button used on Tablero + Admin
+   - Bottom tabbar now shows on Tablero (.dashboard-body) and
+     Admin (.admin) too — both bodies have .app-shell class now
+   - Pages reserve bottom padding so content clears the tabbar
+   - Hide tabbar over admin lock-screen overlay
+   ============================================================ */
+
+/* Back arrow button — 40x40 icon, used on Tablero + Admin */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--paper, #fff);
+  box-shadow: 0 0 0 1px var(--line, #dbe5ec);
+  color: var(--ink, #0c1a26);
+  text-decoration: none;
+  font: 600 22px/1 'Geist', ui-sans-serif, system-ui, sans-serif;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 180ms var(--ease-out, ease), transform 120ms var(--ease-out, ease);
+}
+.back-btn:hover {
+  background: var(--paper-3, #eaf0f3);
+}
+.back-btn:active { transform: translateY(1px) scale(0.97); }
+
+/* Tablero (dashboard.html) + Admin (admin.html): clear bottom tabbar */
+@media (max-width: 1024px) {
+  body.app-shell .dashboard-main,
+  body.app-shell .admin {
+    padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Hide bottom tabbar when admin lock-screen is showing */
+body.app-shell:has(#admin-lock:not(.hidden)) .bottom-tabbar { display: none !important; }
