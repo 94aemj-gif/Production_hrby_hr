@@ -696,13 +696,13 @@
     const cd    = $("hour-progress-countdown");
     const label = $("hour-progress-label");
     if (!fill || !cd || !label) return;
-    if (!s) { fill.style.width = "0%"; cd.textContent = "—"; label.textContent = "—"; return; }
+    if (!s) { fill.style.transform = "scaleX(0)"; cd.textContent = "—"; label.textContent = "—"; return; }
     const now = new Date();
     const { start: shStart, end: shEnd } = getShiftWindow(s);
     if (now < shStart || now >= shEnd) {
       label.textContent = tt("counter.outOfShift");
       cd.textContent = "—";
-      fill.style.width = "0%";
+      fill.style.transform = "scaleX(0)";
       return;
     }
     const hourStart = new Date(now); hourStart.setMinutes(0, 0, 0);
@@ -717,7 +717,7 @@
     lh2 = lh2 % 12 || 12;
     label.textContent = tt("counter.hourRange", { h1: lh, ap1: ap, h2: lh2, ap2: ap2 });
     cd.textContent    = tt("counter.minToCapture", { n: minsLeft });
-    fill.style.width  = pct + "%";
+    fill.style.transform = "scaleX(" + (pct / 100) + ")";
     fill.style.background = pct >= 85 ? "var(--accent)" : "var(--blue)";
   }
 

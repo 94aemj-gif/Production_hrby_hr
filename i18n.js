@@ -13,14 +13,14 @@
       // Page titles
       "page.title.capture": "Registro de Producción",
       "page.title.admin": "Configuración Admin",
-      "page.title.dashboard": "Tablero — Producción",
+      "page.title.dashboard": "Tablero · Producción",
       "dashboard.title": "Tablero",
       "dashboard.nav.capture": "Captura",
       "dashboard.totalProduction": "Producción total",
       "dashboard.totalScrap": "Rechazos",
       "dashboard.linesActive": "Líneas activas",
       "dashboard.avgPace": "Ritmo promedio",
-      "dashboard.empty": "Aún no hay líneas configuradas.",
+      "dashboard.empty": "No hay líneas configuradas. Agregue una en Admin → Líneas.",
       "dashboard.noActivity": "Sin actividad",
       "dashboard.noActivityHint": "Sin captura registrada hoy en esta línea.",
       "dashboard.lastCapture": "Última: +{qty} · {time}",
@@ -80,7 +80,7 @@
       "confirm.title": "Confirmar",
       "btn.save": "Guardar",
       "btn.enter": "Entrar",
-      "btn.register": "Registrar Datos",
+      "btn.register": "Registrar Producción",
       "btn.snooze": "Posponer {n} min",
 
       // Metrics
@@ -108,10 +108,10 @@
 
       // Log section
       "log.title": "Bitácora de Capturas",
-      "log.empty": "Sin movimientos registrados.",
+      "log.empty": "Sin capturas todavía. Toque Capturar para empezar.",
       "log.noMatches": "Sin coincidencias.",
       "log.delTitle": "Eliminar captura",
-      "log.delConfirm": "¿Eliminar?\n\n{time} — {msg}",
+      "log.delConfirm": "¿Eliminar?\n\n{time} · {msg}",
 
       // Log tag labels
       "logTag.capture": "Captura",
@@ -130,13 +130,13 @@
 
       // Alert popup
       "alert.title": "Registro de Producción",
-      "alert.body": "Por favor registre sus datos de producción antes de continuar. Esto asegura registros precisos del turno.",
+      "alert.body": "Registre sus piezas antes de continuar para mantener el turno preciso.",
 
       // Capture form
       "form.title": "Capturar Producción",
       "form.subtle": "Escanee su número de empleado y registre la cantidad.",
       "form.empNum": "# de Empleado (5 dígitos)",
-      "form.empNumErr": "Debe tener exactamente 5 dígitos.",
+      "form.empNumErr": "Ingrese 5 dígitos.",
       "form.capturedHour": "Hora Capturada",
       "form.qty": "Cantidad Producida (Piezas) *",
       "form.qtyTitle": "Unidades producidas (piezas)",
@@ -185,15 +185,15 @@
       "eos.closeShift": "Cerrar Turno",
 
       // Toasts / dynamic
-      "toast.registered": "✓ Registrado +{qty} piezas — Emp {emp}",
+      "toast.registered": "✓ Registrado +{qty} piezas · Emp {emp}",
       "log.captureMsg": "Captura: +{qty} piezas (total {total})",
       "log.scrapMsg": "Rechazos: +{qty} (total {total})",
       "charts.noSession": "Sin sesión para esa fecha.",
-      "charts.heatmap": "Mapa de Calor — Producción por Hora (14 días)",
+      "charts.heatmap": "Mapa de Calor: Producción por Hora (14 días)",
       "charts.heatmapLegendLess": "menos",
       "charts.heatmapLegendMore": "más",
       "eos.bannerWin": "¡Meta cumplida!  Bien hecho.",
-      "eos.bannerClose": "Casi — muy cerca de la meta",
+      "eos.bannerClose": "Casi: muy cerca de la meta",
       "eos.bannerMiss": "Turno cerrado",
       "log.captureRemote": "Captura (otra tablet): +{qty} piezas",
       "log.scrapRemote": "Rechazos (otra tablet): +{qty}",
@@ -387,14 +387,14 @@
     en: {
       "page.title.capture": "Production Logging",
       "page.title.admin": "Admin Settings",
-      "page.title.dashboard": "Dashboard — Production",
+      "page.title.dashboard": "Dashboard · Production",
       "dashboard.title": "Dashboard",
       "dashboard.nav.capture": "Capture",
       "dashboard.totalProduction": "Total production",
       "dashboard.totalScrap": "Scrap",
       "dashboard.linesActive": "Active lines",
       "dashboard.avgPace": "Avg. pace",
-      "dashboard.empty": "No lines configured yet.",
+      "dashboard.empty": "No lines configured. Add one in Admin → Lines.",
       "dashboard.noActivity": "No activity",
       "dashboard.noActivityHint": "No captures recorded today on this line.",
       "dashboard.lastCapture": "Last: +{qty} · {time}",
@@ -449,7 +449,7 @@
       "confirm.title": "Confirm",
       "btn.save": "Save",
       "btn.enter": "Enter",
-      "btn.register": "Register Data",
+      "btn.register": "Log Production",
       "btn.snooze": "Snooze {n} min",
 
       "metric.lastHour": "Last Hour",
@@ -473,10 +473,10 @@
       "kpi.quality": "Quality",
 
       "log.title": "Capture Log",
-      "log.empty": "No movements recorded.",
+      "log.empty": "No captures yet. Tap Capture to start.",
       "log.noMatches": "No matches.",
       "log.delTitle": "Delete capture",
-      "log.delConfirm": "Delete?\n\n{time} — {msg}",
+      "log.delConfirm": "Delete?\n\n{time} · {msg}",
 
       "logTag.capture": "Capture",
       "logTag.scrap": "Scrap",
@@ -493,12 +493,12 @@
       "logTag.undo": "Undo",
 
       "alert.title": "Production Logging",
-      "alert.body": "Please record your production data before continuing. This ensures accurate shift records.",
+      "alert.body": "Log your pieces before continuing to keep the shift accurate.",
 
       "form.title": "Capture Production",
       "form.subtle": "Scan your employee number and record the quantity.",
       "form.empNum": "Employee # (5 digits)",
-      "form.empNumErr": "Must be exactly 5 digits.",
+      "form.empNumErr": "Enter 5 digits.",
       "form.capturedHour": "Captured Hour",
       "form.qty": "Pieces Produced *",
       "form.qtyTitle": "Units produced (eaches)",
@@ -542,15 +542,15 @@
       "eos.exportCsv": "Export CSV",
       "eos.closeShift": "Close Shift",
 
-      "toast.registered": "✓ Logged +{qty} pieces — Emp {emp}",
+      "toast.registered": "✓ Logged +{qty} pieces · Emp {emp}",
       "log.captureMsg": "Capture: +{qty} pieces (total {total})",
       "log.scrapMsg": "Scrap: +{qty} (total {total})",
       "charts.noSession": "No session for that date.",
-      "charts.heatmap": "Heatmap — Hourly Production (14 days)",
+      "charts.heatmap": "Heatmap: Hourly Production (14 days)",
       "charts.heatmapLegendLess": "less",
       "charts.heatmapLegendMore": "more",
       "eos.bannerWin": "Target hit!  Well done.",
-      "eos.bannerClose": "Close — almost there",
+      "eos.bannerClose": "Close: almost there",
       "eos.bannerMiss": "Shift closed",
       "log.captureRemote": "Capture (other tablet): +{qty} pieces",
       "log.scrapRemote": "Scrap (other tablet): +{qty}",

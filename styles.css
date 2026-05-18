@@ -1,16 +1,6 @@
 :root {
-  --bg: #f5f7fb;
-  --panel: #ffffff;
-  --panel-2: #eef1f7;
-  --border: #d8dee9;
-  --text: #1a1f2c;
-  --muted: #5c6678;
-  --accent: #e07a2b;
-  --green: #1aa05a;
-  --blue: #1f7ee0;
-  --red: #d23b4d;
-
   /* ===== Design tokens (v=50) ===== */
+  /* Palette tokens are defined in the TEAL-BENTO :root block below. */
   /* Spacing — 4px base, numeric scale */
   --space-1:  4px;
   --space-2:  8px;
@@ -22,6 +12,13 @@
   --space-10: 40px;
   --space-12: 48px;
 
+  /* Touch target minimum (WCAG 2.5.5 / Material) */
+  --touch-min: 44px;
+
+  /* Type families — system stack only, honest about what's actually loaded */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+
   /* Typography */
   --text-xs:   11px;
   --text-sm:   13px;
@@ -30,7 +27,6 @@
   --text-lg:   22px;
   --text-xl:   32px;
   --text-2xl:  56px;
-  --counter-size: clamp(56px, 14vw, 156px);
 
   --weight-regular:  400;
   --weight-medium:   500;
@@ -59,7 +55,7 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
 }
@@ -546,7 +542,7 @@ button { font-family: inherit; cursor: pointer; }
 
 .btn-warn {
   background: var(--accent);
-  color: #ffffff;
+  color: var(--paper);
   border-color: var(--accent);
   font-weight: 600;
 }
@@ -596,7 +592,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .log-chip.active {
   background: var(--blue);
-  color: #ffffff;
+  color: var(--paper);
   border-color: var(--blue);
 }
 
@@ -691,13 +687,13 @@ button { font-family: inherit; cursor: pointer; }
   transition: transform 0.04s ease, background 0.15s ease, border-color 0.15s ease;
 }
 .btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--blue); border-color: var(--blue); color: #ffffff; }
+.btn-primary { background: var(--blue); border-color: var(--blue); color: var(--paper); }
 .btn-primary:hover { background: #1668c2; border-color: #1668c2; }
 .btn-ghost { background: transparent; }
 .btn-ghost:hover { background: var(--panel-2); }
 .btn-success {
   background: var(--green);
-  color: #ffffff;
+  color: var(--paper);
   border-color: var(--green);
   font-weight: 700;
 }
@@ -786,9 +782,11 @@ button { font-family: inherit; cursor: pointer; }
 }
 .hour-progress-fill {
   height: 100%;
-  width: 0%;
+  width: 100%;
   background: var(--blue);
-  transition: width 0.4s ease, background 0.2s ease;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.4s var(--ease-out, ease), background 0.2s ease;
 }
 
 .counter-card.behind {
@@ -797,12 +795,11 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 .btn-capture.pulse {
-  animation: capturePulse 1.4s ease-in-out infinite;
-  box-shadow: 0 0 0 0 rgba(26, 160, 90, 0.5);
+  animation: capturePulse 1.8s var(--ease-out, ease-in-out) infinite;
 }
 @keyframes capturePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(26, 160, 90, 0.5); transform: scale(1); }
-  50% { box-shadow: 0 0 0 14px rgba(26, 160, 90, 0); transform: scale(1.02); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 40%, transparent); transform: scale(1); }
+  50%      { box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent); transform: scale(1.005); }
 }
 
 .eos-stats {
@@ -827,7 +824,7 @@ button { font-family: inherit; cursor: pointer; }
   left: 50%;
   transform: translateX(-50%);
   background: var(--green);
-  color: #ffffff;
+  color: var(--paper);
   padding: 14px 24px;
   border-radius: 10px;
   font-size: 16px;
@@ -933,7 +930,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .note-chip.active {
   background: var(--blue);
-  color: #ffffff;
+  color: var(--paper);
   border-color: var(--blue);
 }
 .form-actions-row { display: flex; gap: 10px; }
@@ -1222,9 +1219,9 @@ button { font-family: inherit; cursor: pointer; }
 .weekstrip-month:hover { background: var(--panel-2); }
 .weekstrip-nav { display: flex; gap: 4px; align-items: center; }
 .weekstrip-icon {
-  width: 32px; height: 32px;
+  width: var(--touch-min); height: var(--touch-min);
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: transparent;
   color: var(--muted);
   font-size: 18px;
@@ -1277,7 +1274,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .weekstrip-day.is-selected {
   background: #0c2440;
-  color: #fff;
+  color: var(--paper);
   font-weight: 600;
 }
 .weekstrip-day.is-selected.is-today { outline-color: var(--blue); }
@@ -1505,7 +1502,7 @@ button { font-family: inherit; cursor: pointer; }
     border-bottom: 1px solid var(--border-soft);
     justify-content: center;
   }
-  .nav-item { flex: 0 1 auto; padding: 8px 14px; min-width: 0; border-radius: 999px; }
+  .nav-item { flex: 0 1 auto; padding: 10px 16px; min-width: 0; min-height: var(--touch-min); border-radius: 999px; }
   .nav-label { display: inline; font-size: 13px; margin-left: 8px; }
   .nav-icon { font-size: 18px; }
 
@@ -1745,6 +1742,12 @@ button { font-family: inherit; cursor: pointer; }
 }
 .admin .entity-table td:last-child .btn:first-child { margin-left: 0; }
 /* Allow row wrap only if the viewport is very narrow */
+@media (max-width: 1024px) {
+  .admin .entity-table td:last-child .btn {
+    min-height: var(--touch-min);
+    padding: 8px 14px;
+  }
+}
 @media (max-width: 720px) {
   .admin .entity-table td:last-child { white-space: normal; }
   .admin .entity-table td:last-child .btn { margin-top: 4px; }
@@ -1755,7 +1758,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* Tighten the "Agregar" row */
 .entity-add { align-items: stretch; }
-.entity-add .btn { padding: 9px 16px; font-size: 13px; min-height: 0; }
+.entity-add .btn { padding: 9px 16px; font-size: 13px; min-height: var(--touch-min); }
 .entity-add-shift { gap: 8px; }
 
 /* Form labels: spacing tightened */
@@ -1815,7 +1818,7 @@ button { font-family: inherit; cursor: pointer; }
 .popup-login .popup-subtle { margin-bottom: 18px; }
 
 /* Lang toggle inside admin header sits flush with Cerrar Admin */
-.admin > div:first-child .lang-toggle { padding: 7px 14px; min-width: 42px; }
+.admin > div:first-child .lang-toggle { padding: 10px 14px; min-width: var(--touch-min); min-height: var(--touch-min); }
 
 /* Saved-flash inline next to action buttons */
 .admin-actions .saved-flash { margin-left: 4px; }
@@ -1860,7 +1863,7 @@ button { font-family: inherit; cursor: pointer; }
 .admin .entity-table th { padding: 8px 10px; }
 .admin .entity-table td { padding: 9px 10px; }
 .admin .entity-add { padding-top: 12px; margin-top: 4px; }
-.admin .entity-add .btn { padding: 8px 16px; font-size: 13px; }
+.admin .entity-add .btn { padding: 8px 16px; font-size: 13px; min-height: var(--touch-min); }
 .admin .entity-add input { padding: 8px 12px; font-size: 13.5px; }
 
 /* Header row */
@@ -1884,7 +1887,7 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 14px;
   font-weight: 600;
   border-radius: 10px;
-  min-height: 0;
+  min-height: var(--touch-min);
 }
 .admin .history-filter-actions { gap: 10px; }
 
@@ -1992,7 +1995,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .admin-tab:hover { color: var(--text); background: var(--panel-2); }
 .admin-tab.active {
-  color: #fff;
+  color: var(--paper);
   background: var(--blue);
   box-shadow: 0 2px 8px rgba(31,126,224,0.25);
 }
@@ -2095,7 +2098,7 @@ input.invalid {
   height: 22px;
   border-radius: 6px;
   background: var(--blue);
-  color: #fff;
+  color: var(--paper);
   font-weight: 700;
   font-size: 12px;
   letter-spacing: 0;
@@ -2200,6 +2203,8 @@ input.invalid {
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.2;
 }
 #dashboard-date {
   font-size: 13px;
@@ -2486,18 +2491,6 @@ input.invalid {
   color: var(--blue);
 }
 
-/* ----- Capture button — bolder gradient + glow ----- */
-.btn-capture {
-  background: linear-gradient(160deg, var(--green) 0%, #138148 100%);
-  border-color: transparent;
-  color: #ffffff;
-  box-shadow: 0 8px 20px rgba(26, 160, 90, 0.28), 0 1px 2px rgba(15, 23, 42, 0.06);
-}
-.btn-capture:hover {
-  background: linear-gradient(160deg, #1aa05a 0%, #0d6c3c 100%);
-  box-shadow: 0 12px 28px rgba(26, 160, 90, 0.34), 0 2px 4px rgba(15, 23, 42, 0.08);
-}
-
 /* ----- Active admin tab — slight bottom accent ----- */
 .admin-tab.active {
   position: relative;
@@ -2568,10 +2561,10 @@ input.invalid {
   /* Ocean Teal palette — wins over earlier :root */
   --bg:       #f0f5f7;
   --bg-2:     #e2ebef;
-  --paper:    #ffffff;
+  --paper:    #fbfdfd;        /* tinted toward teal hue, satisfies no-pure-white */
   --paper-2:  #f8fafb;
   --paper-3:  #eaf0f3;
-  --panel:    #ffffff;
+  --panel:    var(--paper);
   --panel-2:  #eaf0f3;
 
   --ink:    #0c1a26;
@@ -2616,8 +2609,11 @@ input.invalid {
 html, body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
   letter-spacing: -0.005em;
+  font-feature-settings: "ss01", "cv11";
   min-height: 100dvh;
 }
 
@@ -2640,8 +2636,6 @@ body.app-shell .with-sidebar { display: none; }
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
 }
 
 .brand { display: flex; align-items: center; gap: 14px; }
@@ -2654,7 +2648,7 @@ body.app-shell .with-sidebar { display: none; }
   align-items: center;
   justify-content: center;
   color: var(--paper);
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
   font-size: 14px;
   letter-spacing: -0.04em;
@@ -2670,7 +2664,7 @@ body.app-shell .with-sidebar { display: none; }
 .brand-text span {
   font-size: 12px;
   color: var(--muted);
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
 }
 
 .nav-pills {
@@ -2779,7 +2773,7 @@ body.app-shell .with-sidebar { display: none; }
   border: none;
 }
 .brandbar .status-select > span {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -2807,7 +2801,7 @@ body.app-shell .with-sidebar { display: none; }
   border: none;
 }
 .brandbar .next-alert > span:first-child {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -2815,7 +2809,7 @@ body.app-shell .with-sidebar { display: none; }
   font-weight: 600;
 }
 .brandbar #next-alert-time {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
   color: var(--ink);
   font-weight: 600;
@@ -2827,6 +2821,9 @@ body.app-shell .with-sidebar { display: none; }
   text-decoration: none;
   background: var(--ink);
   padding: 10px 18px;
+  min-height: var(--touch-min);
+  display: inline-flex;
+  align-items: center;
   border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
@@ -2843,7 +2840,8 @@ body.app-shell .with-sidebar { display: none; }
   border: 1px solid var(--line);
   color: var(--ink);
   border-radius: 12px;
-  padding: 8px 14px;
+  padding: 10px 14px;
+  min-height: var(--touch-min);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -2901,11 +2899,11 @@ body.app-shell .with-sidebar { display: none; }
   color: var(--muted);
   font-size: 12px;
   font-weight: 500;
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   letter-spacing: 0;
 }
 .page .clock {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 32px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -2987,21 +2985,10 @@ body.app-shell .with-sidebar { display: none; }
   background: radial-gradient(ellipse 70% 50% at 50% 0%, var(--accent-soft), transparent 70%);
   pointer-events: none;
 }
-.page .counter-card::after {
-  content: "";
-  position: absolute;
-  width: 320px;
-  height: 320px;
-  top: -80px;
-  right: -80px;
-  background: radial-gradient(circle, rgba(13,148,136,0.10), transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
 .page .counter-card > * { position: relative; }
 
 .page .counter-card .card-label {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   color: var(--accent);
   font-size: 11px;
   text-transform: uppercase;
@@ -3011,23 +2998,19 @@ body.app-shell .with-sidebar { display: none; }
   background: var(--accent-soft);
   padding: 7px 16px;
   border-radius: 999px;
-  align-self: center;
+  align-self: flex-start;
   width: max-content;
-  margin: 0;
+  margin: 0 0 auto;
 }
 
 .page .counter {
-  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: clamp(120px, 16vw, 220px);
   line-height: 0.92;
   font-weight: 600;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.06em;
-  background: linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
   margin: 0;
 }
 
@@ -3057,7 +3040,7 @@ body.app-shell .with-sidebar { display: none; }
   letter-spacing: -0.01em;
 }
 .page .hour-progress-cd {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   color: var(--accent);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -3073,11 +3056,13 @@ body.app-shell .with-sidebar { display: none; }
 }
 .page .hour-progress-fill {
   height: 100%;
-  width: 0%;
+  width: 100%;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  transition: width 600ms var(--ease-out), background 220ms var(--ease-out);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 600ms var(--ease-out), background 220ms var(--ease-out);
   border-radius: 999px;
-  box-shadow: 0 0 14px rgba(13,148,136,0.4);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .page .counter-card.behind::before {
   background: radial-gradient(ellipse 70% 50% at 50% 0%, var(--danger-soft), transparent 70%);
@@ -3090,9 +3075,10 @@ body.app-shell .with-sidebar { display: none; }
 /* Metric tiles */
 .page .metrics {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 2fr 1fr 1fr;
   gap: 14px;
 }
+.page .metrics .metric:first-child .metric-value { font-size: var(--text-2xl); }
 .page .metric {
   padding: 24px 26px;
   text-align: left;
@@ -3106,7 +3092,7 @@ body.app-shell .with-sidebar { display: none; }
   box-shadow: 0 0 0 1px var(--line-2), 0 20px 40px -16px rgba(15,15,20,0.14);
 }
 .page .metric-label {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   color: var(--muted);
   font-size: 11px;
   text-transform: uppercase;
@@ -3114,7 +3100,7 @@ body.app-shell .with-sidebar { display: none; }
   font-weight: 600;
 }
 .page .metric-value {
-  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 44px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -3124,7 +3110,7 @@ body.app-shell .with-sidebar { display: none; }
 }
 .page .metric-hour { color: var(--accent); }
 .page .metric-sub {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--muted);
   font-weight: 500;
@@ -3143,7 +3129,7 @@ body.app-shell .with-sidebar { display: none; }
 /* KPI tiles polish */
 .page .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
   gap: 14px;
 }
 .page .kpi-tile {
@@ -3151,9 +3137,10 @@ body.app-shell .with-sidebar { display: none; }
   text-align: left;
   transition: transform 240ms var(--ease-spring), box-shadow 240ms var(--ease-out);
 }
+.page .kpi-tile:first-child .kpi-value { font-size: var(--text-2xl); }
 .page .kpi-tile:hover { transform: translateY(-2px); }
 .page .kpi-label {
-  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -3162,7 +3149,7 @@ body.app-shell .with-sidebar { display: none; }
   font-weight: 600;
 }
 .page .kpi-value {
-  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 44px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -3172,7 +3159,9 @@ body.app-shell .with-sidebar { display: none; }
 }
 @media (max-width: 720px) {
   .page .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .page .kpi-tile:first-child .kpi-value { font-size: 44px; }
   .page .metrics { grid-template-columns: 1fr; }
+  .page .metrics .metric:first-child .metric-value { font-size: 44px; }
   .page .counter { font-size: 96px; }
   .page .counter-card { padding: 32px 22px 24px; min-height: 380px; }
 }
@@ -3188,22 +3177,18 @@ body.app-shell .with-sidebar { display: none; }
   min-width: 280px;
   letter-spacing: 0.01em;
   text-transform: none;
-  background: linear-gradient(160deg, var(--accent) 0%, var(--accent-2) 100%);
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--paper);
   border: none;
   border-radius: 18px;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    0 12px 28px -10px rgba(13,148,136,0.55);
+  box-shadow: 0 6px 18px -8px rgba(15, 23, 42, 0.18);
   transition: transform 140ms var(--ease-spring), box-shadow 220ms var(--ease-out), background 180ms var(--ease-out);
 }
 .page .btn-capture:hover,
 .btn.btn-capture:hover {
-  background: linear-gradient(160deg, #0a7c72 0%, var(--accent) 100%);
+  background: color-mix(in srgb, var(--accent) 88%, var(--ink));
   transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.3),
-    0 16px 36px -10px rgba(13,148,136,0.7);
+  box-shadow: 0 10px 24px -10px rgba(15, 23, 42, 0.22);
 }
 .page .btn-capture:active,
 .btn.btn-capture:active { transform: translateY(1px) scale(0.99); }
@@ -3212,7 +3197,7 @@ body.app-shell .with-sidebar { display: none; }
 .btn.btn-primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #ffffff;
+  color: var(--paper);
 }
 .btn.btn-primary:hover {
   background: #0a7c72;
@@ -3301,7 +3286,7 @@ body.app-shell .kebab-btn {
   color: var(--ink);
   border: none;
   box-shadow: 0 0 0 1px var(--line);
-  font: 700 22px/1 'Geist',sans-serif;
+  font: 700 22px/1 var(--font-sans);
   cursor: pointer;
   flex-shrink: 0;
   letter-spacing: 0;
@@ -3314,9 +3299,7 @@ body.app-shell .bottom-tabbar {
   display: none;
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  background: rgba(255,255,255,0.95);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  backdrop-filter: blur(14px) saturate(140%);
+  background: var(--paper);
   border-top: 1px solid var(--line);
   padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
   z-index: 80;
@@ -3329,7 +3312,7 @@ body.app-shell .bottab-item {
   border: none;
   color: var(--muted);
   text-decoration: none;
-  font: 600 11px/1.1 'Geist',sans-serif;
+  font: 600 11px/1.1 var(--font-sans);
   letter-spacing: -0.005em;
   padding: 8px 4px;
   border-radius: 10px;
@@ -3475,7 +3458,7 @@ body.app-shell .bottab-ic {
     border-radius: 16px;
     z-index: 75;
     display: inline-flex;
-    box-shadow: 0 16px 36px -8px rgba(13,148,136,0.6), inset 0 1px 0 rgba(255,255,255,0.25);
+    box-shadow: 0 10px 24px -10px rgba(15, 23, 42, 0.22);
   }
   body.app-shell #btn-capture.btn.btn-capture:hover { transform: translateY(-1px); }
 
@@ -3600,7 +3583,7 @@ body.app-shell .bottab-ic {
   body.app-shell .brandbar.menu-open .brandbar-right .next-alert > span:first-child {
     flex: 1 0 auto;
     color: var(--muted);
-    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -3729,9 +3712,7 @@ body.app-shell .bottab-ic {
     text-align: center;
     justify-content: center;
     line-height: 1;
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.25),
-      0 8px 20px -6px rgba(13,148,136,0.45);
+    box-shadow: 0 6px 16px -8px rgba(15, 23, 42, 0.18);
   }
   body.app-shell #btn-capture.btn.btn-capture:hover { transform: translateY(-1px); }
   body.app-shell #btn-undo { display: none !important; }
@@ -3800,7 +3781,7 @@ body.app-shell .page .counter-card .counter {
     top: 50%;
     transform: translateY(-50%);
     color: var(--muted);
-    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
@@ -3825,7 +3806,7 @@ body.app-shell .page .counter-card .counter {
     top: 50%;
     transform: translateY(-50%);
     color: var(--muted);
-    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
@@ -3852,7 +3833,7 @@ body.app-shell .page .counter-card .counter {
     top: 50%;
     transform: translateY(-50%);
     color: var(--muted);
-    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
@@ -3892,20 +3873,20 @@ body.app-shell .page .counter-card .counter {
     top: 50%;
     transform: translateY(-50%);
     color: var(--muted);
-    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
   }
   body.app-shell .brandbar.menu-open .brandbar-right #next-alert-time {
-    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 14px;
     color: var(--ink);
     font-weight: 700;
   }
   body.app-shell .brandbar.menu-open .brandbar-right .next-alert-sub {
-    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     color: var(--muted);
   }
@@ -3966,7 +3947,7 @@ body.app-shell .page .counter-card .counter {
   body.dashboard-body #dashboard-date {
     flex: 1 1 100%;
     font-size: 12px;
-    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-family: var(--font-mono);
     color: var(--muted);
     order: 3;
   }
@@ -4014,9 +3995,7 @@ body.app-shell .page .counter-card .counter {
     justify-content: center;
     display: inline-flex !important;
     align-items: center;
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.25),
-      0 12px 28px -10px rgba(13,148,136,0.5) !important;
+    box-shadow: 0 8px 20px -10px rgba(15, 23, 42, 0.20) !important;
   }
 }
 
@@ -4141,8 +4120,8 @@ body.app-shell .page .counter-card .counter {
 
 /* Very small phones — even tighter numpad */
 @media (max-width: 380px) {
-  .popup-numpad .numkey { min-height: 46px !important; font-size: 20px !important; }
-  .popup-numpad .quickkey { min-height: 40px !important; font-size: 13px !important; }
+  .popup-numpad .numkey { min-height: var(--touch-min) !important; font-size: 20px !important; }
+  .popup-numpad .quickkey { min-height: var(--touch-min) !important; font-size: 13px !important; }
   .popup-numpad .numpad-display { font-size: 30px !important; min-height: 56px !important; }
 }
 
@@ -4167,7 +4146,7 @@ body.app-shell .page .counter-card .counter {
   box-shadow: 0 0 0 1px var(--line, #dbe5ec);
   color: var(--ink, #0c1a26);
   text-decoration: none;
-  font: 600 22px/1 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font: 600 22px/1 var(--font-sans);
   cursor: pointer;
   flex-shrink: 0;
   transition: background 180ms var(--ease-out, ease), transform 120ms var(--ease-out, ease);
@@ -4187,3 +4166,36 @@ body.app-shell .page .counter-card .counter {
 
 /* Hide bottom tabbar when admin lock-screen is showing */
 body.app-shell:has(#admin-lock:not(.hidden)) .bottom-tabbar { display: none !important; }
+
+/* ============================================================
+   A11y polish: focus-visible ring + reduced-motion
+   ============================================================ */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.btn:focus-visible,
+.nav-item:focus-visible,
+.bottab-item:focus-visible {
+  outline-offset: 3px;
+}
+.numpad-input:focus-visible,
+.entry-form input:focus-visible,
+.entry-form select:focus-visible,
+.admin input:focus-visible,
+.admin select:focus-visible {
+  outline-offset: 0;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .eos-confetti { display: none !important; }
+}
