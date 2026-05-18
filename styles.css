@@ -3740,3 +3740,250 @@ body.app-shell .bottab-ic {
     padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* ============================================================
+   ===  More fixes (after v61 PR #27 in flight)  =============
+   1. Capture button — wider inside counter-card on mobile
+   2. Counter — guarantee dead-center horizontal alignment
+   3. Drawer labels — replace mashed "Sync✓ Sync" / "IdiomaEN"
+      with clean labeled rows
+   4. Drawer next-alert — always show label + time, never just "—"
+   5. Tablero (dashboard.html) — mobile header polish
+   ============================================================ */
+
+/* (1) Capture button wider on mobile — fill nearly the whole card */
+@media (max-width: 768px) {
+  body.app-shell .page .counter-actions {
+    width: 100%;
+  }
+  body.app-shell #btn-capture.btn.btn-capture {
+    width: 100% !important;
+    max-width: 420px !important;
+    height: 60px !important;
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* (2) Counter — explicit centering */
+body.app-shell .page .counter-card .counter {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* (3 + 4) Drawer rows — clean labeled layout */
+@media (max-width: 1024px) {
+  /* Reset earlier ::before that mashed text */
+  body.app-shell .brandbar.menu-open .brandbar-right .sync-status::before,
+  body.app-shell .brandbar.menu-open .brandbar-right .lang-toggle::before {
+    content: none !important;
+  }
+
+  /* Sync button — full-width row with explicit label */
+  body.app-shell .brandbar.menu-open .brandbar-right #sync-status {
+    position: relative;
+    width: 100%;
+    text-align: left;
+    padding: 14px 16px 14px 110px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right #sync-status::before {
+    content: "Sincronización" !important;
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 1 !important;
+  }
+
+  /* Language toggle — same pattern */
+  body.app-shell .brandbar.menu-open .brandbar-right #lang-toggle {
+    position: relative;
+    width: 100%;
+    text-align: left;
+    padding: 14px 16px 14px 110px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right #lang-toggle::before {
+    content: "Idioma" !important;
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 1 !important;
+  }
+
+  /* Status select — full-width row with explicit label */
+  body.app-shell .brandbar.menu-open .brandbar-right .status-select {
+    position: relative;
+    width: 100%;
+    padding: 0 0 0 110px;
+    background: var(--paper-3);
+    border-radius: 10px;
+    min-height: 48px;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .status-select > span {
+    display: none;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .status-select::before {
+    content: "Estado";
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .status-select select {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    font-size: 13px;
+    background: transparent;
+    text-align: right;
+    appearance: none;
+  }
+
+  /* Next-alert — labeled row with time + countdown stacked */
+  body.app-shell .brandbar.menu-open .brandbar-right .next-alert {
+    position: relative;
+    width: 100%;
+    padding: 14px 16px 14px 110px;
+    background: var(--paper-3);
+    border-radius: 10px;
+    box-shadow: none;
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 8px;
+    min-height: 48px;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .next-alert > span:first-child {
+    display: none;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .next-alert::before {
+    content: "Próxima alerta";
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right #next-alert-time {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 700;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right .next-alert-sub {
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Shift-info chip — clear label + truncate */
+  body.app-shell .brandbar.menu-open .brandbar-right .shift-info {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--paper-3);
+    border-radius: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  body.app-shell .brandbar.menu-open .brandbar-right #shift-label {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+}
+
+/* (5) Tablero (dashboard.html) — mobile header polish */
+@media (max-width: 768px) {
+  body.dashboard-body .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+  body.dashboard-body .topbar .shift-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  body.dashboard-body .dashboard-title {
+    font-size: 20px;
+    font-weight: 700;
+    flex: 0 0 auto;
+  }
+  body.dashboard-body .dashboard-back {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--paper-3);
+    text-decoration: none;
+    color: var(--ink);
+    font-size: 18px;
+  }
+  body.dashboard-body #dashboard-date {
+    flex: 1 1 100%;
+    font-size: 12px;
+    font-family: 'Geist Mono', ui-monospace, monospace;
+    color: var(--muted);
+    order: 3;
+  }
+  body.dashboard-body .topbar-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
+  }
+  body.dashboard-body .topbar-right .sync-status,
+  body.dashboard-body .topbar-right .lang-toggle,
+  body.dashboard-body .topbar-right .admin-link {
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
