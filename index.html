@@ -5,36 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n="page.title.capture">Registro de Producción</title>
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#f5f7fb" />
-  <link rel="stylesheet" href="styles.css?v=51" />
+  <meta name="theme-color" content="#f0f5f7" />
+  <link rel="stylesheet" href="styles.css?v=53" />
 </head>
-<body class="screen with-sidebar">
-  <aside class="sidebar">
-    <button type="button" class="nav-item active" data-view="capture">
-      <span class="nav-icon" aria-hidden="true">⊕</span>
-      <span class="nav-label" data-i18n="nav.capture">Captura</span>
-    </button>
-    <button type="button" class="nav-item" data-view="charts">
-      <span class="nav-icon" aria-hidden="true">📊</span>
-      <span class="nav-label" data-i18n="nav.charts">Gráficas</span>
-    </button>
-  </aside>
+<body class="app-shell">
 
-  <div class="app-area">
-
-  <header class="topbar">
-    <div class="shift-info">
-      <span id="shift-label">—</span>
-      <span id="shift-status" class="status-pill status-active">Activo</span>
-      <div class="oee-donut" id="oee-donut" title="OEE">
-        <svg viewBox="0 0 56 56" aria-hidden="true">
-          <circle cx="28" cy="28" r="24" class="donut-bg"></circle>
-          <circle cx="28" cy="28" r="24" id="oee-arc" class="donut-arc"></circle>
-        </svg>
-        <div id="oee-pct" class="oee-donut-text">—</div>
+  <!-- ================= TOP BRAND BAR ================= -->
+  <header class="brandbar">
+    <div class="brand">
+      <div class="brand-mark">pc</div>
+      <div class="brand-text">
+        <b id="brand-title">Producción</b>
+        <span id="brand-sub">L-02 · Turno actual</span>
       </div>
     </div>
-    <div class="topbar-right">
+
+    <nav class="nav-pills">
+      <button type="button" class="nav-item active" data-view="capture" data-i18n="nav.capture">Captura</button>
+      <button type="button" class="nav-item" data-view="charts" data-i18n="nav.charts">Gráficas</button>
+    </nav>
+
+    <div class="brandbar-right">
+      <div class="shift-info">
+        <span id="shift-label">—</span>
+        <span id="shift-status" class="status-pill status-active">activo</span>
+        <div class="oee-donut" id="oee-donut" title="OEE">
+          <svg viewBox="0 0 56 56" aria-hidden="true">
+            <circle cx="28" cy="28" r="24" class="donut-bg"></circle>
+            <circle cx="28" cy="28" r="24" id="oee-arc" class="donut-arc"></circle>
+          </svg>
+          <div id="oee-pct" class="oee-donut-text">—</div>
+        </div>
+      </div>
       <div class="status-select">
         <span class="muted" data-i18n="top.status">Estado</span>
         <select id="equip-status">
@@ -56,44 +58,62 @@
     </div>
   </header>
 
-  <main class="main view active" id="view-capture">
-    <div class="clock-row">
-      <div class="clock-stack">
-        <div id="date-label" class="date-label">—</div>
-        <div id="clock" class="clock">--:--</div>
+  <!-- ================= CAPTURE VIEW ================= -->
+  <main class="page view active" id="view-capture">
+
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1 class="page-title">Captura del turno</h1>
+        <div class="clock-block">
+          <span id="date-label" class="date-label">—</span>
+          <span id="clock" class="clock">--:--</span>
+        </div>
+      </div>
+      <p class="page-subtitle">Registra piezas conforme avance la producción. Las alertas se disparan cada hora.</p>
+    </div>
+
+    <div class="capture-grid">
+      <!-- HERO COLUMN -->
+      <div class="col col-hero">
+        <section class="counter-card" id="counter-card">
+          <span class="card-label" data-i18n="counter.cardLabel">Producción del Turno (Piezas)</span>
+          <div id="counter" class="counter">0</div>
+          <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque CAPTURAR para iniciar</div>
+          <div id="last-capture" class="last-capture hidden">
+            <span class="muted" data-i18n="counter.lastShort">Última:</span> <span id="last-capture-text">—</span>
+          </div>
+          <div class="counter-actions">
+            <button id="btn-capture" class="btn btn-capture" data-i18n="btn.capture" data-i18n-aria-label="btn.captureAria" aria-label="Capturar producción">Capturar</button>
+            <button id="btn-undo" class="btn btn-ghost hidden" data-i18n="btn.undo" data-i18n-aria-label="btn.undoAria" aria-label="Deshacer última captura">Deshacer</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- SIDE COLUMN -->
+      <div class="col col-side">
+        <section class="card hour-card">
+          <div id="hour-progress" class="hour-progress">
+            <div class="hour-progress-head">
+              <span id="hour-progress-label" class="muted" data-i18n="counter.currentHourLabel">Hora actual</span>
+              <span id="hour-progress-countdown" class="hour-progress-cd">—</span>
+            </div>
+            <div class="hour-progress-bar">
+              <div id="hour-progress-fill" class="hour-progress-fill"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="chart-card collapsible" id="chart-section" data-collapsed="false">
+          <button type="button" class="collapse-toggle" id="chart-toggle" aria-expanded="true" aria-controls="hour-chart">
+            <span class="section-title" data-i18n="chart.hourlyTrend">Tendencia por Hora</span>
+            <span class="collapse-icon" aria-hidden="true">▾</span>
+          </button>
+          <canvas id="hour-chart" width="600" height="160"></canvas>
+        </section>
       </div>
     </div>
 
-    <section class="chart-card collapsible" id="chart-section" data-collapsed="false">
-      <button type="button" class="collapse-toggle" id="chart-toggle" aria-expanded="true" aria-controls="hour-chart">
-        <span class="section-title" data-i18n="chart.hourlyTrend">Tendencia por Hora</span>
-        <span class="collapse-icon" aria-hidden="true">▾</span>
-      </button>
-      <canvas id="hour-chart" width="600" height="160"></canvas>
-    </section>
-
-    <section class="counter-card" id="counter-card">
-      <div class="card-label" data-i18n="counter.cardLabel">Producción del Turno (Piezas)</div>
-      <div id="counter" class="counter">0</div>
-      <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque CAPTURAR para iniciar</div>
-      <div id="last-capture" class="last-capture hidden">
-        <span class="muted" data-i18n="counter.lastShort">Última:</span> <span id="last-capture-text">—</span>
-      </div>
-      <div id="hour-progress" class="hour-progress">
-        <div class="hour-progress-head">
-          <span id="hour-progress-label" class="muted" data-i18n="counter.currentHourLabel">Hora actual</span>
-          <span id="hour-progress-countdown" class="hour-progress-cd">—</span>
-        </div>
-        <div class="hour-progress-bar">
-          <div id="hour-progress-fill" class="hour-progress-fill"></div>
-        </div>
-      </div>
-      <div class="counter-actions">
-        <button id="btn-capture" class="btn btn-success btn-capture" data-i18n="btn.capture" data-i18n-aria-label="btn.captureAria" aria-label="Capturar producción">Capturar</button>
-        <button id="btn-undo" class="btn btn-ghost hidden" data-i18n="btn.undo" data-i18n-aria-label="btn.undoAria" aria-label="Deshacer última captura">Deshacer</button>
-      </div>
-    </section>
-
+    <!-- METRIC TILES ROW -->
     <section class="metrics">
       <div class="metric">
         <div class="metric-label" data-i18n="metric.lastHour">Última Hora</div>
@@ -110,7 +130,8 @@
       </div>
     </section>
 
-    <section class="log collapsible" id="log-section" data-collapsed="true">
+    <!-- ACTIVITY LOG -->
+    <section class="card log collapsible" id="log-section" data-collapsed="true">
       <button type="button" class="collapse-toggle" id="log-toggle" aria-expanded="false" aria-controls="log-list">
         <span class="section-title" data-i18n="log.title">Bitácora de Capturas</span>
         <span class="collapse-icon" aria-hidden="true">▾</span>
@@ -119,15 +140,19 @@
     </section>
   </main>
 
-  <main class="main view" id="view-charts" hidden>
-    <div class="clock-row">
-      <div class="clock-stack">
-        <div id="date-label-2" class="date-label">—</div>
-        <div class="section-title no-margin" data-i18n="charts.title">Gráficas en Vivo</div>
+  <!-- ================= CHARTS VIEW ================= -->
+  <main class="page view" id="view-charts" hidden>
+
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1 class="page-title" data-i18n="charts.title">Gráficas en Vivo</h1>
+        <div class="clock-block">
+          <span id="date-label-2" class="date-label">—</span>
+        </div>
       </div>
     </div>
 
-    <section class="admin-card">
+    <section class="card">
       <div class="weekstrip" id="charts-weekstrip" role="group" aria-label="Selector de fecha">
         <div class="weekstrip-head">
           <button type="button" class="weekstrip-month" id="charts-weekstrip-month">—</button>
@@ -194,7 +219,8 @@
     </section>
 
   </main>
-  </div>
+
+  <!-- ================= OVERLAYS ================= -->
 
   <!-- Alert popup -->
   <div id="alert-overlay" class="overlay hidden" aria-hidden="true">
@@ -268,7 +294,7 @@
 
         <div class="form-actions-row">
           <button type="button" id="btn-form-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
-          <button type="submit" class="btn btn-success btn-block" data-i18n="btn.capture">Capturar</button>
+          <button type="submit" class="btn btn-primary btn-block" data-i18n="btn.capture">Capturar</button>
         </div>
       </form>
     </div>
@@ -302,7 +328,7 @@
       </div>
       <div class="form-actions-row">
         <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
-        <button type="button" id="btn-numpad-ok" class="btn btn-success btn-block" data-i18n="btn.done">Listo</button>
+        <button type="button" id="btn-numpad-ok" class="btn btn-primary btn-block" data-i18n="btn.done">Listo</button>
       </div>
     </div>
   </div>
@@ -320,7 +346,7 @@
         <div id="admin-gate-error" class="form-error hidden" data-i18n="gate.wrong">Contraseña incorrecta.</div>
         <div class="form-actions-row">
           <button type="button" id="btn-admin-gate-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
-          <button type="submit" class="btn btn-success btn-block" data-i18n="btn.enter">Entrar</button>
+          <button type="submit" class="btn btn-primary btn-block" data-i18n="btn.enter">Entrar</button>
         </div>
       </form>
     </div>
@@ -340,8 +366,8 @@
         <div class="eos-stat"><div class="eos-label" data-i18n="eos.totalDown">Paro Total</div><div id="eos-down" class="eos-val">0 min</div></div>
       </div>
       <div class="form-actions-row spacer-top-3">
-        <button type="button" id="btn-eos-export" class="btn btn-primary btn-block" data-i18n="eos.exportCsv">Exportar CSV</button>
-        <button type="button" id="btn-eos-close" class="btn btn-success btn-block" data-i18n="eos.closeShift">Cerrar Turno</button>
+        <button type="button" id="btn-eos-export" class="btn btn-ghost btn-block" data-i18n="eos.exportCsv">Exportar CSV</button>
+        <button type="button" id="btn-eos-close" class="btn btn-primary btn-block" data-i18n="eos.closeShift">Cerrar Turno</button>
       </div>
     </div>
   </div>
@@ -350,9 +376,9 @@
 
   <audio id="alert-sound" preload="auto"></audio>
 
-  <script src="i18n.js?v=51"></script>
-  <script src="supabase-config.js?v=51"></script>
-  <script src="sync.js?v=51"></script>
-  <script src="app.js?v=51"></script>
+  <script src="i18n.js?v=53"></script>
+  <script src="supabase-config.js?v=53"></script>
+  <script src="sync.js?v=53"></script>
+  <script src="app.js?v=53"></script>
 </body>
 </html>
