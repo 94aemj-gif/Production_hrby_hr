@@ -3675,3 +3675,27 @@ body.app-shell .bottab-ic {
   .admin .admin-actions { flex-wrap: wrap; gap: 8px; }
   .admin .admin-actions .btn { width: auto; }
 }
+
+/* ============================================================
+   ===  FAB Polish (after v59)  ===============================
+   FAB was overlapping the hour-card / tendencia card. Increase
+   page padding-bottom enough to clear FAB + tab-bar + safe-area.
+   Center the FAB text properly.
+   ============================================================ */
+@media (max-width: 768px) {
+  /* Reserve space at end of scroll for FAB (56) + gap (16) + tab-bar (~64) + safe-area */
+  body.app-shell .page {
+    padding-bottom: calc(150px + env(safe-area-inset-bottom));
+  }
+  /* FAB — symmetric padding, perfectly centered text */
+  body.app-shell #btn-capture.btn.btn-capture {
+    padding: 0 24px !important;
+    text-align: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  /* FAB sits above tab-bar with breathing room */
+  body.app-shell #btn-capture.btn.btn-capture {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
