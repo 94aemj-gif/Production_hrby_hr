@@ -2203,8 +2203,10 @@ input.invalid {
 }
 #dashboard-date {
   font-size: 13px;
-  text-transform: capitalize;
+  /* Locale already title-cases Spanish dates; capitalize was making
+   * prepositions ("de") uppercase too. Only uppercase the first letter. */
 }
+#dashboard-date::first-letter { text-transform: uppercase; }
 
 .dashboard-main {
   max-width: 1600px;
@@ -2522,4 +2524,35 @@ input.invalid {
   .admin h1::before {
     width: var(--space-8);
   }
+}
+
+/* ============ Dashboard back link + mobile card head (v=51) ============ */
+
+/* Back arrow in the dashboard topbar. Reuses .back-link's muted color
+ * and adds a pill-style tap target sized for thumb taps on mobile. */
+.dashboard-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-8);
+  height: var(--space-8);
+  font-size: var(--text-md);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  text-decoration: none;
+  transition: background var(--t-fast) ease, color var(--t-fast) ease;
+}
+.dashboard-back:hover { background: var(--panel-2); color: var(--text); }
+.dashboard-body .shift-info { gap: var(--space-3); }
+
+/* Allow line-card header to wrap on narrow phones so a long line label
+ * doesn't collide with the status pill. Also shrink title + pill so the
+ * card has enough breathing room when both still fit on one row. */
+@media (max-width: 600px) {
+  .line-card-head {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+  }
+  .line-card-name { font-size: var(--text-base); }
+  .dashboard-body .status-pill { padding: 3px 10px; font-size: 10px; }
 }
