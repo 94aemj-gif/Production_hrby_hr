@@ -802,7 +802,7 @@
       ctx.fillText(Math.round(maxY * p).toLocaleString(), 4, y + 3);
     });
     // target line
-    ctx.strokeStyle = getCss("--accent");
+    ctx.strokeStyle = getCss("--warning") || "#f59e0b";
     ctx.setLineDash([4, 3]);
     ctx.beginPath();
     points.forEach((p, i) => {
@@ -813,7 +813,7 @@
     ctx.stroke();
     ctx.setLineDash([]);
     // actual line
-    ctx.strokeStyle = getCss("--blue"); ctx.lineWidth = 3;
+    ctx.strokeStyle = getCss("--accent") || "#3b82f6"; ctx.lineWidth = 3;
     ctx.beginPath();
     points.forEach((p, i) => {
       const x = padL + (p.x / maxX) * cw;
@@ -825,7 +825,7 @@
     const last = points[points.length - 1];
     const lx = padL + (last.x / maxX) * cw;
     const ly = padT + ch * (1 - last.val / maxY);
-    ctx.fillStyle = getCss("--blue");
+    ctx.fillStyle = getCss("--accent") || "#3b82f6";
     ctx.beginPath(); ctx.arc(lx, ly, 5, 0, Math.PI * 2); ctx.fill();
     // legend
     ctx.fillStyle = getCss("--muted"); ctx.fillText("─ real  · · · meta", padL, h - 4);
@@ -860,7 +860,7 @@
       ctx.fillText(Math.round(max * p), 4, y + 3);
     });
     const bw = cw / Math.max(1, bars.length);
-    ctx.fillStyle = getCss("--red");
+    ctx.fillStyle = getCss("--danger") || "#ef4444";
     bars.forEach((b, i) => {
       const bh = (b.value / max) * ch;
       ctx.fillRect(padL + i * bw + 2, padT + ch - bh, Math.max(2, bw - 4), bh);
@@ -897,7 +897,7 @@
       const y = padT + i * rowH + 4;
       const bh = rowH - 8;
       const bw2 = (row.qty / max) * cw;
-      ctx.fillStyle = getCss("--blue");
+      ctx.fillStyle = getCss("--accent") || "#3b82f6";
       ctx.fillRect(padL, y, bw2, bh);
       ctx.fillStyle = getCss("--text");
       ctx.fillText("Emp " + row.emp, 6, y + bh / 2 + 4);
@@ -990,8 +990,8 @@
     const bw = cw / buckets.length;
 
     // grid
-    const text = getCss("--muted") || "#5c6678";
-    const border = getCss("--border") || "#d8dee9";
+    const text = getCss("--muted") || "#8a8a93";
+    const border = getCss("--border") || "#232329";
     ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = text;
     [0, 0.5, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
@@ -1001,16 +1001,16 @@
 
     // target line
     const targetY = padT + ch * (1 - target / max);
-    ctx.strokeStyle = getCss("--accent") || "#e07a2b";
+    ctx.strokeStyle = getCss("--warning") || "#f59e0b";
     ctx.setLineDash([4, 3]);
     ctx.beginPath(); ctx.moveTo(padL, targetY); ctx.lineTo(padL + cw, targetY); ctx.stroke();
     ctx.setLineDash([]);
 
     // bars
-    const cGreen = getCss("--green") || "#1aa05a";
-    const cAccent = getCss("--accent") || "#e07a2b";
-    const cRed = getCss("--red") || "#d23b4d";
-    const cBlue = getCss("--blue") || "#1f7ee0";
+    const cGreen = getCss("--success") || "#10b981";
+    const cAccent = getCss("--warning") || "#f59e0b";
+    const cRed = getCss("--danger") || "#ef4444";
+    const cBlue = getCss("--accent") || "#3b82f6";
     function barColorFor(b) {
       const t = b.effTarget != null ? b.effTarget : target;
       if (t <= 0) return cBlue;
