@@ -3987,3 +3987,35 @@ body.app-shell .page .counter-card .counter {
     align-items: center;
   }
 }
+
+/* ============================================================
+   ===  Capture button — match desktop pill on mobile  =======
+   Target screenshot: narrow pill ~280px wide, ~64px tall,
+   large border-radius, soft shadow, centered. NOT a wide bar.
+   ============================================================ */
+@media (max-width: 768px) {
+  body.app-shell .page .counter-actions {
+    width: 100% !important;
+    justify-content: center !important;
+    display: flex !important;
+  }
+  body.app-shell #btn-capture.btn.btn-capture {
+    width: auto !important;
+    max-width: 100% !important;
+    min-width: 240px !important;
+    height: 64px !important;
+    padding: 0 56px !important;
+    border-radius: 32px !important;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    text-align: center;
+    justify-content: center;
+    display: inline-flex !important;
+    align-items: center;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.25),
+      0 12px 28px -10px rgba(13,148,136,0.5) !important;
+  }
+}
