@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n="page.title.admin">Configuración Admin</title>
-  <link rel="stylesheet" href="styles.css?v=48" />
+  <link rel="stylesheet" href="styles.css?v=50" />
 </head>
 <body>
   <!-- Lock screen -->
@@ -19,7 +19,7 @@
         </label>
         <div id="lock-error" class="form-error hidden" data-i18n="gate.wrong">Contraseña incorrecta.</div>
         <div class="form-actions-row">
-          <a class="btn btn-ghost btn-block" href="index.html" style="text-decoration:none;text-align:center" data-i18n="btn.cancel">Cancelar</a>
+          <a class="btn btn-ghost btn-block btn-link" href="index.html" data-i18n="btn.cancel">Cancelar</a>
           <button type="submit" class="btn btn-success btn-block" data-i18n="btn.enter">Entrar</button>
         </div>
       </form>
@@ -27,9 +27,9 @@
   </div>
 
   <main class="admin" id="admin-main">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+    <div class="actions-row-between">
       <a class="back-link" href="index.html" data-i18n="admin.back">&larr; Volver a Pantalla de Producción</a>
-      <div style="display:flex; gap:8px; align-items:center;">
+      <div class="actions-inline">
         <a class="admin-link" href="dashboard.html" data-i18n="nav.dashboard">Tablero</a>
         <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
         <button type="button" id="btn-admin-lock" class="btn btn-ghost btn-small" data-i18n="admin.lock">Cerrar Admin</button>
@@ -61,7 +61,7 @@
 
     <section class="admin-card">
       <h2 data-i18n="admin.device">Dispositivo</h2>
-      <p class="muted" style="font-size:13px;margin-top:0" data-i18n="admin.device.note">Línea y operador asignados a este dispositivo. El turno se detecta automáticamente por la hora.</p>
+      <p class="text-helper" data-i18n="admin.device.note">Línea y operador asignados a este dispositivo. El turno se detecta automáticamente por la hora.</p>
       <div class="admin-grid">
         <label class="field">
           <span class="field-label" data-i18n="admin.device.line">Línea Predeterminada</span>
@@ -81,7 +81,7 @@
     <form id="admin-form" autocomplete="off">
       <section class="admin-card">
         <h2 data-i18n="admin.params">Parámetros de Producción</h2>
-        <p class="muted" style="font-size:13px;margin-top:0" data-i18n="admin.params.note">Las alertas se disparan cada hora dentro del rango del turno automáticamente.</p>
+        <p class="text-helper" data-i18n="admin.params.note">Las alertas se disparan cada hora dentro del rango del turno automáticamente.</p>
         <div class="admin-grid">
           <label class="field">
             <span class="field-label" data-i18n="admin.snoozeDur">Duración de Posponer (minutos)</span>
@@ -134,7 +134,7 @@
 
     <section class="admin-card" data-wide="1">
       <h2 data-i18n="admin.shifts">Turnos</h2>
-      <p class="muted" style="font-size:13px;margin-top:0" data-i18n="admin.shifts.note">El sistema genera alertas cada hora dentro del rango del turno. Hora fin menor que hora inicio = cruza medianoche.</p>
+      <p class="text-helper" data-i18n="admin.shifts.note">El sistema genera alertas cada hora dentro del rango del turno. Hora fin menor que hora inicio = cruza medianoche.</p>
       <table class="entity-table">
         <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.label">Etiqueta</th><th data-i18n="admin.col.start">Inicio</th><th data-i18n="admin.col.end">Fin</th><th data-i18n="admin.col.days">Días</th><th data-i18n="admin.col.breaks">Recesos</th><th></th></tr></thead>
         <tbody id="shifts-tbody"></tbody>
@@ -147,7 +147,7 @@
         <input type="text" id="new-shift-days" data-i18n-placeholder="admin.ph.shiftDays" placeholder="Días (ej. 1,2,3,4)" />
         <button type="button" id="btn-add-shift" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
       </div>
-      <p class="muted" style="font-size:12px;margin:6px 0 0" data-i18n="admin.shifts.daysLegend">Días: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb</p>
+      <p class="text-helper-tight spacer-top-2" data-i18n="admin.shifts.daysLegend">Días: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb</p>
     </section>
 
     <section class="admin-card">
@@ -165,7 +165,7 @@
 
     <section class="admin-card">
       <h2 data-i18n="admin.downtimeReasons">Motivos de Tiempo Muerto</h2>
-      <p class="muted" style="font-size:13px;margin-top:0" data-i18n="admin.downtimeReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
+      <p class="text-helper" data-i18n="admin.downtimeReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
       <ul id="downtime-reasons-list" class="reason-list"></ul>
       <div class="entity-add">
         <input type="text" id="new-downtime-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo (ej. Junta producción)" />
@@ -175,7 +175,7 @@
 
     <section class="admin-card">
       <h2 data-i18n="admin.scrapReasons">Motivos de Rechazo</h2>
-      <p class="muted" style="font-size:13px;margin-top:0" data-i18n="admin.scrapReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
+      <p class="text-helper" data-i18n="admin.scrapReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
       <ul id="scrap-reasons-list" class="reason-list"></ul>
       <div class="entity-add">
         <input type="text" id="new-scrap-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo (ej. Pistón roto)" />
@@ -227,7 +227,7 @@
         </div>
       </div>
       <ul id="log-list" class="log-list"></ul>
-      <div class="admin-actions" style="margin-top:10px">
+      <div class="admin-actions spacer-top-2">
         <button id="btn-log-clear" class="btn btn-ghost btn-small" type="button" data-i18n="admin.clearLog">Limpiar Bitácora</button>
       </div>
     </section>
@@ -277,18 +277,18 @@
       <h2 class="popup-title-left" data-i18n="breaks.title">Recesos del Turno</h2>
       <p class="popup-subtle" id="breaks-shift-label">—</p>
       <div id="breaks-list" class="breaks-list"></div>
-      <button type="button" id="btn-break-add" class="btn btn-ghost btn-block" style="margin-top:10px" data-i18n="breaks.add">+ Agregar Receso</button>
-      <div class="form-actions-row" style="margin-top:14px">
+      <button type="button" id="btn-break-add" class="btn btn-ghost btn-block spacer-top-2" data-i18n="breaks.add">+ Agregar Receso</button>
+      <div class="form-actions-row spacer-top-3">
         <button type="button" id="btn-breaks-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
         <button type="button" id="btn-breaks-save" class="btn btn-success btn-block" data-i18n="btn.save">Guardar</button>
       </div>
     </div>
   </div>
 
-  <script src="i18n.js?v=48"></script>
-  <script src="supabase-config.js?v=48"></script>
-  <script src="sync.js?v=48"></script>
-  <script src="app.js?v=48"></script>
-  <script src="admin.js?v=48"></script>
+  <script src="i18n.js?v=50"></script>
+  <script src="supabase-config.js?v=50"></script>
+  <script src="sync.js?v=50"></script>
+  <script src="app.js?v=50"></script>
+  <script src="admin.js?v=50"></script>
 </body>
 </html>
