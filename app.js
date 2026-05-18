@@ -1131,7 +1131,7 @@
     ctx.closePath();
     ctx.fill();
     // target line
-    ctx.strokeStyle = getCss("--warning") || "#f59e0b";
+    ctx.strokeStyle = getCss("--accent");
     ctx.setLineDash([4, 3]);
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -1143,7 +1143,6 @@
     ctx.stroke();
     ctx.setLineDash([]);
     // actual line
-    ctx.strokeStyle = getCss("--accent") || "#3b82f6"; ctx.lineWidth = 3;
     ctx.strokeStyle = blue;
     ctx.lineWidth = 3;
     ctx.lineJoin = "round";
@@ -1158,7 +1157,6 @@
     const last = points[points.length - 1];
     const lx = padL + (last.x / maxX) * cw;
     const ly = padT + ch * (1 - last.val / maxY);
-    ctx.fillStyle = getCss("--accent") || "#3b82f6";
     ctx.fillStyle = hexWithAlpha(blue, 0.2);
     ctx.beginPath(); ctx.arc(lx, ly, 10, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = blue;
@@ -1198,7 +1196,7 @@
       ctx.fillText(Math.round(max * p), 4, y + 3);
     });
     const bw = cw / Math.max(1, bars.length);
-    ctx.fillStyle = getCss("--danger") || "#ef4444";
+    ctx.fillStyle = getCss("--red");
     bars.forEach((b, i) => {
       const bh = (b.value / max) * ch;
       const bwInner = Math.max(2, bw - 6);
@@ -1236,7 +1234,7 @@
       const y = padT + i * rowH + 4;
       const bh = rowH - 8;
       const bw2 = (row.qty / max) * cw;
-      ctx.fillStyle = getCss("--accent") || "#3b82f6";
+      ctx.fillStyle = getCss("--blue");
       ctx.fillRect(padL, y, bw2, bh);
       ctx.fillStyle = getCss("--text");
       ctx.fillText("Emp " + row.emp, 6, y + bh / 2 + 4);
@@ -1365,10 +1363,6 @@
     const ch = h - padT - padB;
     const bw = cw / buckets.length;
 
-    // grid
-    const text = getCss("--muted") || "#8a8a93";
-    const border = getCss("--border") || "#232329";
-    ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = text;
     // grid (soft dashed)
     const text = getCss("--muted") || "#5c6678";
     ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = text;
@@ -1380,17 +1374,17 @@
 
     // target line
     const targetY = padT + ch * (1 - target / max);
-    ctx.strokeStyle = getCss("--warning") || "#f59e0b";
+    ctx.strokeStyle = getCss("--accent") || "#e07a2b";
     ctx.setLineDash([4, 3]);
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(padL, targetY); ctx.lineTo(padL + cw, targetY); ctx.stroke();
     ctx.setLineDash([]);
 
     // bars
-    const cGreen = getCss("--success") || "#10b981";
-    const cAccent = getCss("--warning") || "#f59e0b";
-    const cRed = getCss("--danger") || "#ef4444";
-    const cBlue = getCss("--accent") || "#3b82f6";
+    const cGreen = getCss("--green") || "#1aa05a";
+    const cAccent = getCss("--accent") || "#e07a2b";
+    const cRed = getCss("--red") || "#d23b4d";
+    const cBlue = getCss("--blue") || "#1f7ee0";
     function barColorFor(b) {
       const t = b.effTarget != null ? b.effTarget : target;
       if (t <= 0) return cBlue;
