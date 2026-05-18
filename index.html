@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registro de Producción</title>
+  <title data-i18n="page.title.capture">Registro de Producción</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f4f4f5" />
   <link rel="stylesheet" href="styles.css?v=26" />
@@ -17,6 +17,33 @@
       <div class="brand-text">
         <b id="brand-title">Producción</b>
         <span id="brand-sub">L-02 · Turno actual</span>
+  <meta name="theme-color" content="#f5f7fb" />
+  <link rel="stylesheet" href="styles.css?v=51" />
+</head>
+<body class="screen with-sidebar">
+  <aside class="sidebar">
+    <button type="button" class="nav-item active" data-view="capture">
+      <span class="nav-icon" aria-hidden="true">⊕</span>
+      <span class="nav-label" data-i18n="nav.capture">Captura</span>
+    </button>
+    <button type="button" class="nav-item" data-view="charts">
+      <span class="nav-icon" aria-hidden="true">📊</span>
+      <span class="nav-label" data-i18n="nav.charts">Gráficas</span>
+    </button>
+  </aside>
+
+  <div class="app-area">
+
+  <header class="topbar">
+    <div class="shift-info">
+      <span id="shift-label">—</span>
+      <span id="shift-status" class="status-pill status-active">Activo</span>
+      <div class="oee-donut" id="oee-donut" title="OEE">
+        <svg viewBox="0 0 56 56" aria-hidden="true">
+          <circle cx="28" cy="28" r="24" class="donut-bg"></circle>
+          <circle cx="28" cy="28" r="24" id="oee-arc" class="donut-arc"></circle>
+        </svg>
+        <div id="oee-pct" class="oee-donut-text">—</div>
       </div>
     </div>
 
@@ -31,20 +58,24 @@
         <span id="shift-status" class="status-pill status-active">activo</span>
       </div>
       <div class="status-select">
-        <span class="muted">Estado</span>
+        <span class="muted" data-i18n="top.status">Estado</span>
         <select id="equip-status">
-          <option value="Running">En operación</option>
-          <option value="Idle">Inactivo</option>
-          <option value="Maintenance">Mantenimiento</option>
-          <option value="Breakdown">Avería</option>
+          <option value="Running" data-i18n="top.statusOpt.running">En operación</option>
+          <option value="Idle" data-i18n="top.statusOpt.idle">Inactivo</option>
+          <option value="Maintenance" data-i18n="top.statusOpt.maintenance">Mantenimiento</option>
+          <option value="Breakdown" data-i18n="top.statusOpt.breakdown">Avería</option>
         </select>
       </div>
       <div class="next-alert">
         <span class="muted">Próxima</span>
+        <span class="muted" data-i18n="top.nextAlert">Próxima alerta</span>
         <span id="next-alert-time">--:--</span>
         <span id="next-alert-countdown" class="next-alert-sub muted">—</span>
       </div>
-      <a class="admin-link" id="admin-link" href="admin.html" title="Configuración admin">Admin</a>
+      <button type="button" id="sync-status" class="sync-status sync-off" title="">—</button>
+      <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
+      <a class="admin-link" href="dashboard.html" data-i18n="nav.dashboard">Tablero</a>
+      <a class="admin-link" id="admin-link" href="admin.html" data-i18n-title="top.admin" data-i18n="top.admin" title="Configuración admin">Admin</a>
     </div>
   </header>
 
@@ -102,6 +133,33 @@
           </button>
           <canvas id="hour-chart" width="600" height="160"></canvas>
         </section>
+    <section class="chart-card collapsible" id="chart-section" data-collapsed="false">
+      <button type="button" class="collapse-toggle" id="chart-toggle" aria-expanded="true" aria-controls="hour-chart">
+        <span class="section-title" data-i18n="chart.hourlyTrend">Tendencia por Hora</span>
+        <span class="collapse-icon" aria-hidden="true">▾</span>
+      </button>
+      <canvas id="hour-chart" width="600" height="160"></canvas>
+    </section>
+
+    <section class="counter-card" id="counter-card">
+      <div class="card-label" data-i18n="counter.cardLabel">Producción del Turno (Piezas)</div>
+      <div id="counter" class="counter">0</div>
+      <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque CAPTURAR para iniciar</div>
+      <div id="last-capture" class="last-capture hidden">
+        <span class="muted" data-i18n="counter.lastShort">Última:</span> <span id="last-capture-text">—</span>
+      </div>
+      <div id="hour-progress" class="hour-progress">
+        <div class="hour-progress-head">
+          <span id="hour-progress-label" class="muted" data-i18n="counter.currentHourLabel">Hora actual</span>
+          <span id="hour-progress-countdown" class="hour-progress-cd">—</span>
+        </div>
+        <div class="hour-progress-bar">
+          <div id="hour-progress-fill" class="hour-progress-fill"></div>
+        </div>
+      </div>
+      <div class="counter-actions">
+        <button id="btn-capture" class="btn btn-success btn-capture" data-i18n="btn.capture" data-i18n-aria-label="btn.captureAria" aria-label="Capturar producción">Capturar</button>
+        <button id="btn-undo" class="btn btn-ghost hidden" data-i18n="btn.undo" data-i18n-aria-label="btn.undoAria" aria-label="Deshacer última captura">Deshacer</button>
       </div>
     </div>
 
@@ -109,16 +167,19 @@
     <section class="metrics">
       <div class="metric">
         <div class="metric-label">Última hora</div>
+        <div class="metric-label" data-i18n="metric.lastHour">Última Hora</div>
         <div id="metric-hour" class="metric-value metric-hour">0</div>
         <div id="metric-hour-range" class="metric-sub muted">—</div>
       </div>
       <div class="metric">
         <div class="metric-label">Meta por hora</div>
+        <div class="metric-label" data-i18n="metric.targetHour">Meta por Hora</div>
         <div id="metric-target" class="metric-value metric-target">0</div>
         <div class="metric-sub muted">basado en turno</div>
       </div>
       <div class="metric">
         <div class="metric-label">Rechazos del turno</div>
+        <div class="metric-label" data-i18n="metric.shiftScrap">Rechazos del Turno</div>
         <div id="scrap-count" class="metric-value metric-target">0</div>
         <div class="metric-sub muted">piezas no conformes</div>
       </div>
@@ -128,6 +189,7 @@
     <section class="card log collapsible" id="log-section" data-collapsed="true">
       <button type="button" class="collapse-toggle" id="log-toggle" aria-expanded="false" aria-controls="log-list">
         <span class="section-title">Actividad reciente</span>
+        <span class="section-title" data-i18n="log.title">Bitácora de Capturas</span>
         <span class="collapse-icon" aria-hidden="true">▾</span>
       </button>
       <ul id="log-list" class="log-list"></ul>
@@ -143,42 +205,82 @@
         <div class="clock-block">
           <span id="date-label-2" class="date-label">—</span>
         </div>
+  <main class="main view" id="view-charts" hidden>
+    <div class="clock-row">
+      <div class="clock-stack">
+        <div id="date-label-2" class="date-label">—</div>
+        <div class="section-title no-margin" data-i18n="charts.title">Gráficas en Vivo</div>
       </div>
       <p class="page-subtitle">Indicadores y tendencias del turno actual.</p>
     </div>
 
+    <section class="admin-card">
+      <div class="weekstrip" id="charts-weekstrip" role="group" aria-label="Selector de fecha">
+        <div class="weekstrip-head">
+          <button type="button" class="weekstrip-month" id="charts-weekstrip-month">—</button>
+          <div class="weekstrip-nav">
+            <button type="button" class="weekstrip-icon" id="charts-weekstrip-today" title="Hoy" aria-label="Hoy">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+            </button>
+            <button type="button" class="weekstrip-icon" id="charts-weekstrip-prev" aria-label="Semana anterior">‹</button>
+            <button type="button" class="weekstrip-icon" id="charts-weekstrip-next" aria-label="Semana siguiente">›</button>
+          </div>
+        </div>
+        <div class="weekstrip-dows" id="charts-weekstrip-dows"></div>
+        <div class="weekstrip-days" id="charts-weekstrip-days"></div>
+      </div>
+      <div id="charts-empty" class="muted hidden spacer-top-2" data-i18n="charts.noSession">Sin sesión para esa fecha.</div>
+    </section>
+
     <section class="kpi-grid">
       <div class="kpi-tile">
-        <div class="kpi-label">OEE</div>
+        <div class="kpi-label" data-i18n="kpi.oee">OEE</div>
         <div id="kpi-oee" class="kpi-value">—</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-label">Disponibilidad</div>
+        <div class="kpi-label" data-i18n="kpi.availability">Disponibilidad</div>
         <div id="kpi-avail" class="kpi-value">—</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-label">Rendimiento</div>
+        <div class="kpi-label" data-i18n="kpi.performance">Rendimiento</div>
         <div id="kpi-perf" class="kpi-value">—</div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-label">Calidad</div>
+        <div class="kpi-label" data-i18n="kpi.quality">Calidad</div>
         <div id="kpi-qual" class="kpi-value">—</div>
       </div>
     </section>
 
     <section class="chart-card">
       <div class="section-title">Producción por hora vs meta</div>
+      <div class="section-title" data-i18n="charts.hourlyVsTarget">Producción por Hora vs Meta</div>
       <canvas id="chart-hourly" width="600" height="170"></canvas>
     </section>
 
     <section class="chart-card">
       <div class="section-title">Acumulado del turno vs meta acumulada</div>
+      <div class="section-title" data-i18n="charts.cumulativeVsTarget">Acumulado del Turno vs Meta Acumulada</div>
       <canvas id="chart-cumulative" width="600" height="170"></canvas>
     </section>
 
     <section class="chart-card">
       <div class="section-title">Rechazos por hora</div>
+      <div class="section-title" data-i18n="charts.scrapByHour">Rechazos por Hora</div>
       <canvas id="chart-scrap" width="600" height="140"></canvas>
+    </section>
+
+    <section class="chart-card" id="heatmap-card">
+      <div class="section-title" data-i18n="charts.heatmap">Mapa de Calor — Producción por Hora (14 días)</div>
+      <div id="heatmap" class="heatmap" aria-hidden="true"></div>
+      <div class="heatmap-legend">
+        <span class="muted" data-i18n="charts.heatmapLegendLess">menos</span>
+        <span class="heatmap-swatch" data-level="0"></span>
+        <span class="heatmap-swatch" data-level="1"></span>
+        <span class="heatmap-swatch" data-level="2"></span>
+        <span class="heatmap-swatch" data-level="3"></span>
+        <span class="heatmap-swatch" data-level="4"></span>
+        <span class="muted" data-i18n="charts.heatmapLegendMore">más</span>
+      </div>
     </section>
 
   </main>
@@ -190,13 +292,14 @@
     <div id="alert-popup" class="popup popup-alert" role="alertdialog" aria-labelledby="alert-title">
       <div class="bell" aria-hidden="true">&#x1F514;</div>
       <h2 id="alert-title" class="popup-title">Registro de producción</h2>
+      <h2 id="alert-title" class="popup-title" data-i18n="alert.title">Registro de Producción</h2>
       <div id="alert-time" class="popup-time">--:--</div>
-      <p class="popup-body">
+      <p class="popup-body" data-i18n="alert.body">
         Por favor registre sus datos de producción antes de continuar.
         Esto asegura registros precisos del turno.
       </p>
       <div class="popup-actions">
-        <button id="btn-register" class="btn btn-primary btn-block">Registrar Datos</button>
+        <button id="btn-register" class="btn btn-primary btn-block" data-i18n="btn.register">Registrar Datos</button>
         <button id="btn-snooze" class="btn btn-ghost btn-block">Posponer <span id="snooze-label">5</span> min</button>
       </div>
     </div>
@@ -227,10 +330,62 @@
         <div class="field">
           <span class="field-label">Notas</span>
           <div id="f-notes" class="note-chips"></div>
+    <div class="popup popup-form popup-form-v2" role="dialog" aria-labelledby="form-title">
+      <h2 id="form-title" class="popup-title-left"><span id="form-time">--:--</span> <span id="form-title-text" data-i18n="form.title">Capturar Producción</span></h2>
+      <p class="popup-subtle" data-i18n="form.subtle">Escanee su número de empleado y registre la cantidad.</p>
+      <form id="entry-form" class="entry-form entry-form-v2" autocomplete="off">
+
+        <div class="form-header-grid">
+          <label class="field">
+            <span class="field-label" data-i18n="form.empNum"># de Empleado (5 dígitos)</span>
+            <input type="text" id="f-operator" name="operator" class="numpad-input" autocomplete="off" inputmode="numeric" pattern="\d{5}" maxlength="5" readonly required />
+            <div id="f-operator-error" class="field-error hidden" data-i18n="form.empNumErr">Debe tener exactamente 5 dígitos.</div>
+          </label>
+          <label class="field">
+            <span class="field-label" data-i18n="form.capturedHour">Hora Capturada</span>
+            <select id="f-forhour" class="hora-select"></select>
+          </label>
         </div>
+
+        <!-- A: Units produced (required) -->
+        <section class="form-section form-section-required">
+          <div class="form-section-head">
+            <span class="form-section-letter">A</span>
+            <span class="form-section-title" data-i18n="form.qtyTitle">Unidades producidas (piezas)</span>
+            <span class="form-section-req" data-i18n="form.required">requerido</span>
+          </div>
+          <input type="text" id="f-count" name="count" class="numpad-input" autocomplete="off" readonly required />
+        </section>
+
+        <!-- B: Downtime (optional, multi-row) -->
+        <section class="form-section">
+          <label class="form-section-head form-section-toggle">
+            <input type="checkbox" id="f-downtime-enable" class="form-section-checkbox" />
+            <span class="form-section-letter">B</span>
+            <span class="form-section-title" data-i18n="form.downtimeTitle">Tiempo muerto (minutos)</span>
+            <span class="form-section-opt" data-i18n="form.optional">opcional</span>
+          </label>
+          <div id="f-downtime-rows" class="form-rows hidden"></div>
+          <button type="button" id="btn-add-downtime" class="btn btn-ghost btn-small form-add-row hidden" data-i18n="form.addDowntime">+ Agregar tiempo muerto</button>
+        </section>
+
+        <!-- C: Scrap (optional, multi-row) -->
+        <section class="form-section">
+          <label class="form-section-head form-section-toggle">
+            <input type="checkbox" id="f-scrap-enable" class="form-section-checkbox" />
+            <span class="form-section-letter">C</span>
+            <span class="form-section-title" data-i18n="form.scrapTitle">Rechazos (piezas)</span>
+            <span class="form-section-opt" data-i18n="form.optional">opcional</span>
+          </label>
+          <div id="f-scrap-rows" class="form-rows hidden"></div>
+          <button type="button" id="btn-add-scrap" class="btn btn-ghost btn-small form-add-row hidden" data-i18n="form.addScrap">+ Agregar rechazo</button>
+        </section>
+
         <div class="form-actions-row">
           <button type="button" id="btn-form-cancel" class="btn btn-ghost btn-block">Cancelar</button>
           <button type="submit" class="btn btn-primary btn-block">Capturar</button>
+          <button type="button" id="btn-form-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
+          <button type="submit" class="btn btn-success btn-block" data-i18n="btn.capture">Capturar</button>
         </div>
       </form>
     </div>
@@ -260,11 +415,13 @@
         <button type="button" class="numkey" data-key="9">9</button>
         <button type="button" class="numkey numkey-secondary" data-key="clear">C</button>
         <button type="button" class="numkey" data-key="0">0</button>
-        <button type="button" class="numkey numkey-secondary" data-key="back" aria-label="Retroceso">⌫</button>
+        <button type="button" class="numkey numkey-secondary" data-key="back" data-i18n-aria-label="numpad.backAria" aria-label="Retroceso">⌫</button>
       </div>
       <div class="form-actions-row">
         <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block">Cancelar</button>
         <button type="button" id="btn-numpad-ok" class="btn btn-primary btn-block">Listo</button>
+        <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
+        <button type="button" id="btn-numpad-ok" class="btn btn-success btn-block" data-i18n="btn.done">Listo</button>
       </div>
     </div>
   </div>
@@ -272,17 +429,19 @@
   <!-- Admin password prompt -->
   <div id="admin-gate-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-login">
-      <h2 class="popup-title-left">Acceso Admin</h2>
-      <p class="popup-subtle">Ingrese contraseña para continuar.</p>
+      <h2 class="popup-title-left" data-i18n="gate.title">Acceso Admin</h2>
+      <p class="popup-subtle" data-i18n="gate.subtle">Ingrese contraseña para continuar.</p>
       <form id="admin-gate-form" class="entry-form" autocomplete="off">
         <label class="field">
-          <span class="field-label">Contraseña</span>
+          <span class="field-label" data-i18n="gate.password">Contraseña</span>
           <input type="password" id="admin-gate-pwd" class="numpad-input" autocomplete="off" readonly required />
         </label>
-        <div id="admin-gate-error" class="form-error hidden">Contraseña incorrecta.</div>
+        <div id="admin-gate-error" class="form-error hidden" data-i18n="gate.wrong">Contraseña incorrecta.</div>
         <div class="form-actions-row">
           <button type="button" id="btn-admin-gate-cancel" class="btn btn-ghost btn-block">Cancelar</button>
           <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+          <button type="button" id="btn-admin-gate-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
+          <button type="submit" class="btn btn-success btn-block" data-i18n="btn.enter">Entrar</button>
         </div>
       </form>
     </div>
@@ -290,18 +449,23 @@
 
   <!-- End-of-shift summary -->
   <div id="eos-overlay" class="overlay hidden" aria-hidden="true">
-    <div class="popup popup-form">
-      <h2 class="popup-title-left">Resumen de Turno</h2>
+    <canvas id="eos-confetti" class="eos-confetti" aria-hidden="true"></canvas>
+    <div class="popup popup-form popup-eos">
+      <div id="eos-banner" class="eos-banner hidden"></div>
+      <h2 class="popup-title-left" data-i18n="eos.title">Resumen de Turno</h2>
       <p class="popup-subtle" id="eos-shift">—</p>
       <div class="eos-stats">
-        <div class="eos-stat"><div class="eos-label">Producción</div><div id="eos-good" class="eos-val">0</div></div>
-        <div class="eos-stat"><div class="eos-label">Rechazos</div><div id="eos-scrap" class="eos-val">0</div></div>
-        <div class="eos-stat"><div class="eos-label">OEE</div><div id="eos-oee" class="eos-val">0%</div></div>
-        <div class="eos-stat"><div class="eos-label">Paro Total</div><div id="eos-down" class="eos-val">0 min</div></div>
+        <div class="eos-stat"><div class="eos-label" data-i18n="eos.production">Producción</div><div id="eos-good" class="eos-val">0</div></div>
+        <div class="eos-stat"><div class="eos-label" data-i18n="eos.scrap">Rechazos</div><div id="eos-scrap" class="eos-val">0</div></div>
+        <div class="eos-stat"><div class="eos-label" data-i18n="eos.oee">OEE</div><div id="eos-oee" class="eos-val">0%</div></div>
+        <div class="eos-stat"><div class="eos-label" data-i18n="eos.totalDown">Paro Total</div><div id="eos-down" class="eos-val">0 min</div></div>
       </div>
       <div class="form-actions-row" style="margin-top:14px">
         <button type="button" id="btn-eos-export" class="btn btn-ghost btn-block">Exportar CSV</button>
         <button type="button" id="btn-eos-close" class="btn btn-primary btn-block">Cerrar Turno</button>
+      <div class="form-actions-row spacer-top-3">
+        <button type="button" id="btn-eos-export" class="btn btn-primary btn-block" data-i18n="eos.exportCsv">Exportar CSV</button>
+        <button type="button" id="btn-eos-close" class="btn btn-success btn-block" data-i18n="eos.closeShift">Cerrar Turno</button>
       </div>
     </div>
   </div>
@@ -311,5 +475,9 @@
   <audio id="alert-sound" preload="auto"></audio>
 
   <script src="app.js?v=26"></script>
+  <script src="i18n.js?v=51"></script>
+  <script src="supabase-config.js?v=51"></script>
+  <script src="sync.js?v=51"></script>
+  <script src="app.js?v=51"></script>
 </body>
 </html>

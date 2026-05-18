@@ -15,6 +15,8 @@
   };
   const SESSION_UNLOCK = "prod.admin.unlocked.v1";
 
+  function tt(key, params) { return (window.i18n && window.i18n.t) ? window.i18n.t(key, params) : key; }
+
   function adminPwd() { try { return JSON.parse(localStorage.getItem(STORAGE.ADMIN_PWD)) || "1234"; } catch (_) { return "1234"; } }
   function isUnlocked() { return sessionStorage.getItem(SESSION_UNLOCK) === "1"; }
   function setUnlocked(v) { if (v) sessionStorage.setItem(SESSION_UNLOCK, "1"); else sessionStorage.removeItem(SESSION_UNLOCK); }
@@ -53,13 +55,13 @@
     });
     document.getElementById("btn-change-pwd").addEventListener("click", () => {
       const v = document.getElementById("new-admin-pwd").value;
-      if (!v || v.length < 3) return alert("Contraseña debe tener al menos 3 caracteres");
+      if (!v || v.length < 3) return alert(tt("admin.pwdTooShort"));
       localStorage.setItem(STORAGE.ADMIN_PWD, JSON.stringify(v));
       document.getElementById("new-admin-pwd").value = "";
       const f = document.getElementById("pwd-flash");
       f.classList.add("show");
       setTimeout(() => f.classList.remove("show"), 1600);
-      logEvent("config", "Contraseña admin cambiada");
+      logEvent("config", tt("admin.log.pwdChanged"));
     });
   }
   let onAdminUnlocked = null;
@@ -75,9 +77,8 @@
   };
 
   const DEFAULT_LINES = [
-    { id: "L-01", label: "Línea 01" },
-    { id: "L-02", label: "Línea 02" },
-    { id: "L-03", label: "Línea 03" },
+    { id: "L-60ML", label: "#1 60ml Neomed Syringe" },
+    { id: "L-35ML", label: "#2 35ml Neomed Syringe" },
   ];
   const DEFAULT_SHIFTS = [
     { id: "S1", label: "Turno 1", startTime: "06:00", endTime: "18:00", days: [0, 1, 2, 3, 4, 5, 6],
@@ -96,7 +97,23 @@
     try { const raw = localStorage.getItem(key); return raw == null ? fb : JSON.parse(raw); }
     catch (_) { return fb; }
   };
-  const save = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {} };
+  // Map of localStorage keys that mirror shared catalogs / settings in the
+  // Supabase config table. save() automatically pushes these so admin edits
+  // propagate to peer tablets on their next pull.
+  const SAVE_TO_CONFIG = {};
+  SAVE_TO_CONFIG[STORAGE.LINES]     = "lines";
+  SAVE_TO_CONFIG[STORAGE.SHIFTS]    = "shifts";
+  SAVE_TO_CONFIG[STORAGE.OPERATORS] = "operators";
+  SAVE_TO_CONFIG[STORAGE.CONFIG]    = "settings";
+  SAVE_TO_CONFIG["prod.downtime.reasons.v1"] = "downtime_reasons";
+  SAVE_TO_CONFIG["prod.scrap.reasons.v1"]    = "scrap_reasons";
+  const save = (key, val) => {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (_) {}
+    const ck = SAVE_TO_CONFIG[key];
+    if (ck && window.sync && typeof window.sync.pushConfig === "function") {
+      try { window.sync.pushConfig(ck, val); } catch (_) {}
+    }
+  };
 
   function logEvent(type, message) {
     const entries = load(STORAGE.LOG, []);
@@ -143,29 +160,69 @@
     save(STORAGE.CONFIG, cfg);
     populate(cfg);
     showFlash();
-    logEvent("config", "Configuración guardada (meta " + cfg.hourlyTarget + ")");
+    logEvent("config", tt("admin.log.cfgSaved", { target: cfg.hourlyTarget }));
   });
 
   document.getElementById("btn-reset").addEventListener("click", () => {
     localStorage.removeItem(STORAGE.CONFIG);
     populate(loadCfg());
     showFlash();
-    logEvent("config", "Configuración restablecida a valores por defecto");
+    logEvent("config", tt("admin.log.cfgReset"));
   });
 
-  document.getElementById("btn-clear-data").addEventListener("click", () => {
-    if (!confirm("¿Limpiar envíos de hoy e historial de alertas?")) return;
+  document.getElementById("btn-clear-data").addEventListener("click", async () => {
+    if (!(await window.appConfirm(tt("admin.confirmClearToday"), { danger: true }))) return;
     localStorage.removeItem(STORAGE.SUBMISSIONS);
     localStorage.removeItem(STORAGE.LAST_FIRED);
     showFlash();
-    logEvent("clear", "Envíos de hoy e historial de alertas limpiados");
+    logEvent("clear", tt("admin.log.clearedToday"));
   });
 
-  document.getElementById("btn-clear-sessions").addEventListener("click", () => {
-    if (!confirm("¿Borrar TODAS las sesiones históricas? Acción irreversible.")) return;
+  document.getElementById("btn-clear-sessions").addEventListener("click", async () => {
+    if (!(await window.appConfirm(tt("admin.confirmClearSessions"), { danger: true }))) return;
     localStorage.removeItem(STORAGE.SESSIONS);
     showFlash();
-    logEvent("clear", "Todas las sesiones borradas");
+    logEvent("clear", tt("admin.log.clearedSessions"));
+  });
+
+  const resetTodayBtn = document.getElementById("btn-reset-today-cloud");
+  if (resetTodayBtn) resetTodayBtn.addEventListener("click", async () => {
+    function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+    const d = new Date();
+    const iso = d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+    if (!(await window.appConfirm(tt("admin.confirmResetTodayCloud", { date: iso }), { danger: true }))) return;
+
+    resetTodayBtn.disabled = true;
+    const origText = resetTodayBtn.textContent;
+    resetTodayBtn.textContent = tt("admin.resetTodayCloudBusy");
+
+    let cloud = { ok: true, errors: [] };
+    if (window.sync && typeof window.sync.deleteDate === "function") {
+      cloud = await window.sync.deleteDate(iso);
+    } else {
+      cloud = { ok: false, errors: ["sync no disponible"] };
+    }
+
+    // Local cleanup regardless of cloud result so a partial failure still
+    // leaves the device in a consistent state and the user can retry.
+    const sessions = load(STORAGE.SESSIONS, []);
+    const sessionsKept = sessions.filter((s) => s && s.date !== iso);
+    save(STORAGE.SESSIONS, sessionsKept);
+    const log = load(STORAGE.LOG, []);
+    const logKept = log.filter((e) => !(e && typeof e.ts === "string" && e.ts.slice(0, 10) === iso));
+    save(STORAGE.LOG, logKept);
+    localStorage.removeItem(STORAGE.LAST_FIRED);
+
+    resetTodayBtn.disabled = false;
+    resetTodayBtn.textContent = origText;
+
+    if (cloud.ok) {
+      showFlash();
+      logEvent("clear", tt("admin.log.resetTodayCloud", { date: iso }));
+    } else {
+      logEvent("clear", tt("admin.log.resetTodayCloudPartial", { date: iso }));
+      alert(tt("admin.resetTodayCloudPartial") + "\n\n" + cloud.errors.join("\n\n"));
+    }
   });
 
   // ---- Entity tables ----
@@ -173,7 +230,70 @@
     renderLines();
     renderShifts();
     renderOperators();
+    renderReasonList("downtime");
+    renderReasonList("scrap");
   }
+
+  // ---- Reason lists (downtime / scrap motivos) ----
+  const REASON_DEFAULTS = {
+    downtime: ["Junta de producción", "Capacitación", "Cambio de material",
+               "Limpieza", "Falta de material", "Otro"],
+    scrap:    ["Pistón roto", "Empaque defectuoso", "Calidad fuera de spec", "Otro"],
+  };
+  const REASON_STORAGE = {
+    downtime: "prod.downtime.reasons.v1",
+    scrap:    "prod.scrap.reasons.v1",
+  };
+  function loadReasons(which) {
+    return load(REASON_STORAGE[which], REASON_DEFAULTS[which].slice());
+  }
+  function saveReasons(which, list) {
+    save(REASON_STORAGE[which], list);
+  }
+  function renderReasonList(which) {
+    const ul = document.getElementById(which + "-reasons-list");
+    if (!ul) return;
+    const list = loadReasons(which);
+    ul.innerHTML = list.map((r, i) =>
+      '<li class="reason-item">' +
+        '<span class="reason-text">' + escapeHtml(r) + '</span>' +
+        '<button type="button" class="btn btn-ghost btn-small" data-idx="' + i + '">' + escapeHtml(tt("admin.btn.delete")) + '</button>' +
+      '</li>'
+    ).join("");
+    ul.querySelectorAll("button[data-idx]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const idx = Number(btn.dataset.idx);
+        const cur = loadReasons(which);
+        const removed = cur[idx];
+        if (!(await window.appConfirm(tt("admin.confirmDelReason", { name: removed }), { danger: true }))) return;
+        cur.splice(idx, 1);
+        saveReasons(which, cur);
+        renderReasonList(which);
+        logEvent("config", tt("admin.log.reasonRemoved", { which, name: removed }));
+      });
+    });
+  }
+  function wireReasonAdd(which) {
+    const inp = document.getElementById("new-" + which + "-reason");
+    const btn = document.getElementById("btn-add-" + which + "-reason");
+    if (!inp || !btn) return;
+    btn.addEventListener("click", () => {
+      const v = (inp.value || "").trim();
+      if (!v) return;
+      const cur = loadReasons(which);
+      if (cur.indexOf(v) !== -1) { inp.value = ""; return; }
+      cur.push(v);
+      saveReasons(which, cur);
+      inp.value = "";
+      renderReasonList(which);
+      logEvent("config", tt("admin.log.reasonAdded", { which, name: v }));
+    });
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); btn.click(); }
+    });
+  }
+  wireReasonAdd("downtime");
+  wireReasonAdd("scrap");
 
   let editingLineIdx = -1;
   function renderLines() {
@@ -186,8 +306,8 @@
             <td><input class="cell-edit" data-f="id" value="${escapeHtml(l.id)}"></td>
             <td><input class="cell-edit" data-f="label" value="${escapeHtml(l.label)}"></td>
             <td>
-              <button type="button" class="btn btn-success btn-small" data-act="save-line">Guardar</button>
-              <button type="button" class="btn btn-ghost btn-small" data-act="cancel-line">Cancelar</button>
+              <button type="button" class="btn btn-success btn-small" data-act="save-line">${escapeHtml(tt("btn.save"))}</button>
+              <button type="button" class="btn btn-ghost btn-small" data-act="cancel-line">${escapeHtml(tt("btn.cancel"))}</button>
             </td>
           </tr>`;
       }
@@ -196,8 +316,8 @@
           <td><code>${escapeHtml(l.id)}</code></td>
           <td>${escapeHtml(l.label)}</td>
           <td>
-            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="edit-line">✎ Editar</button>
-            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="del-line">Eliminar</button>
+            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="edit-line">${escapeHtml(tt("admin.btn.edit"))}</button>
+            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="del-line">${escapeHtml(tt("admin.btn.delete"))}</button>
           </td>
         </tr>`;
     }).join("");
@@ -208,18 +328,18 @@
       const row = b.closest("tr");
       const id = row.querySelector('[data-f="id"]').value.trim();
       const label = row.querySelector('[data-f="label"]').value.trim();
-      if (!id || !label) return alert("ID y etiqueta requeridos");
+      if (!id || !label) return alert(tt("admin.alert.idLabel"));
       const all = load(STORAGE.LINES, DEFAULT_LINES);
-      if (id !== all[editingLineIdx].id && all.some((x, j) => j !== editingLineIdx && x.id === id)) return alert("ID duplicado");
+      if (id !== all[editingLineIdx].id && all.some((x, j) => j !== editingLineIdx && x.id === id)) return alert(tt("admin.alert.idDup"));
       all[editingLineIdx] = { id, label };
       save(STORAGE.LINES, all);
-      logEvent("config", "Línea editada: " + id + " " + label);
+      logEvent("config", tt("admin.log.lineEdited", { id, label }));
       editingLineIdx = -1;
       renderLines();
     }));
   }
 
-  const DAY_LABEL = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  function dayLabel(n) { return tt("day." + n); }
   function fmt12FromHHMM(hhmm) {
     if (!hhmm) return "—";
     const [hh, mm] = hhmm.split(":").map(Number);
@@ -233,7 +353,7 @@
     const tbody = document.getElementById("shifts-tbody");
     const list = load(STORAGE.SHIFTS, DEFAULT_SHIFTS);
     tbody.innerHTML = list.map((s, i) => {
-      const days = (s.days || []).map((d) => DAY_LABEL[d]).join(", ") || "—";
+      const days = (s.days || []).map((d) => dayLabel(d)).join(", ") || "—";
       const breaks = (s.breaks || []).map((b) => fmt12FromHHMM(b.start) + "-" + fmt12FromHHMM(b.end)).join(", ") || "—";
       if (i === editingShiftIdx) {
         return `
@@ -245,8 +365,8 @@
             <td><input class="cell-edit" data-f="days" value="${escapeHtml((s.days || []).join(','))}" placeholder="0,1,2,3,4,5,6"></td>
             <td><small>${escapeHtml(breaks)}</small></td>
             <td>
-              <button type="button" class="btn btn-success btn-small" data-act="save-shift">Guardar</button>
-              <button type="button" class="btn btn-ghost btn-small" data-act="cancel-shift">Cancelar</button>
+              <button type="button" class="btn btn-success btn-small" data-act="save-shift">${escapeHtml(tt("btn.save"))}</button>
+              <button type="button" class="btn btn-ghost btn-small" data-act="cancel-shift">${escapeHtml(tt("btn.cancel"))}</button>
             </td>
           </tr>`;
       }
@@ -259,9 +379,9 @@
           <td>${escapeHtml(days)}</td>
           <td><small>${escapeHtml(breaks)}</small></td>
           <td>
-            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="edit-shift">✎ Editar</button>
-            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="edit-breaks">Recesos</button>
-            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="del-shift">Eliminar</button>
+            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="edit-shift">${escapeHtml(tt("admin.btn.edit"))}</button>
+            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="edit-breaks">${escapeHtml(tt("admin.btn.breaks"))}</button>
+            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="del-shift">${escapeHtml(tt("admin.btn.delete"))}</button>
           </td>
         </tr>`;
     }).join("");
@@ -276,15 +396,15 @@
       const startTime = row.querySelector('[data-f="startTime"]').value.trim();
       const endTime = row.querySelector('[data-f="endTime"]').value.trim();
       const daysRaw = row.querySelector('[data-f="days"]').value.trim();
-      if (!id || !label || !startTime || !endTime) return alert("Todos los campos requeridos");
-      if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) return alert("Formato hora inválido (HH:MM)");
+      if (!id || !label || !startTime || !endTime) return alert(tt("admin.alert.allReq"));
+      if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) return alert(tt("admin.alert.timeFmt"));
       const days = daysRaw.split(/[,\s]+/).map((d) => Number(d)).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
       const all = load(STORAGE.SHIFTS, DEFAULT_SHIFTS);
-      if (id !== all[editingShiftIdx].id && all.some((x, j) => j !== editingShiftIdx && x.id === id)) return alert("ID duplicado");
+      if (id !== all[editingShiftIdx].id && all.some((x, j) => j !== editingShiftIdx && x.id === id)) return alert(tt("admin.alert.idDup"));
       const prev = all[editingShiftIdx];
       all[editingShiftIdx] = { id, label, startTime, endTime, days, breaks: prev.breaks || [] };
       save(STORAGE.SHIFTS, all);
-      logEvent("config", "Turno editado: " + id);
+      logEvent("config", tt("admin.log.shiftEdited", { id }));
       editingShiftIdx = -1;
       renderShifts();
     }));
@@ -300,7 +420,7 @@
         <input type="time" data-i="${i}" data-f="start" value="${escapeHtml(b.start || '')}">
         <input type="time" data-i="${i}" data-f="end" value="${escapeHtml(b.end || '')}">
         <button type="button" class="btn btn-ghost btn-small" data-i="${i}" data-act="del-break">✕</button>
-      </div>`).join("") || '<div class="muted" style="font-size:13px">Sin recesos.</div>';
+      </div>`).join("") || '<div class="muted" style="font-size:13px">' + escapeHtml(tt("breaks.empty")) + '</div>';
     wrap.querySelectorAll("input").forEach((inp) => {
       inp.addEventListener("input", () => {
         const i = Number(inp.dataset.i);
@@ -342,11 +462,11 @@
   document.getElementById("btn-breaks-cancel").addEventListener("click", closeBreaks);
   document.getElementById("btn-breaks-save").addEventListener("click", () => {
     const valid = breaksDraft.filter((b) => /^\d{2}:\d{2}$/.test(b.start) && /^\d{2}:\d{2}$/.test(b.end));
-    if (valid.length !== breaksDraft.length) return alert("Llene hora inicio y fin de cada receso");
+    if (valid.length !== breaksDraft.length) return alert(tt("admin.alert.breakReq"));
     const list = load(STORAGE.SHIFTS, DEFAULT_SHIFTS);
     list[breaksEditingIdx].breaks = valid;
     save(STORAGE.SHIFTS, list);
-    logEvent("config", "Recesos actualizados para " + list[breaksEditingIdx].id);
+    logEvent("config", tt("admin.log.breaksUpdated", { id: list[breaksEditingIdx].id }));
     closeBreaks();
     renderShifts();
   });
@@ -362,8 +482,8 @@
             <td><input class="cell-edit" data-f="id" value="${escapeHtml(o.id)}"></td>
             <td><input class="cell-edit" data-f="name" value="${escapeHtml(o.name)}"></td>
             <td>
-              <button type="button" class="btn btn-success btn-small" data-act="save-op">Guardar</button>
-              <button type="button" class="btn btn-ghost btn-small" data-act="cancel-op">Cancelar</button>
+              <button type="button" class="btn btn-success btn-small" data-act="save-op">${escapeHtml(tt("btn.save"))}</button>
+              <button type="button" class="btn btn-ghost btn-small" data-act="cancel-op">${escapeHtml(tt("btn.cancel"))}</button>
             </td>
           </tr>`;
       }
@@ -372,8 +492,8 @@
           <td><code>${escapeHtml(o.id)}</code></td>
           <td>${escapeHtml(o.name)}</td>
           <td>
-            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="edit-op">✎ Editar</button>
-            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="del-op">Eliminar</button>
+            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="edit-op">${escapeHtml(tt("admin.btn.edit"))}</button>
+            <button type="button" class="btn btn-ghost btn-small" data-idx="${i}" data-act="del-op">${escapeHtml(tt("admin.btn.delete"))}</button>
           </td>
         </tr>`;
     }).join("");
@@ -384,12 +504,12 @@
       const row = b.closest("tr");
       const id = row.querySelector('[data-f="id"]').value.trim();
       const name = row.querySelector('[data-f="name"]').value.trim();
-      if (!id || !name) return alert("ID y nombre requeridos");
+      if (!id || !name) return alert(tt("admin.alert.idName"));
       const all = load(STORAGE.OPERATORS, DEFAULT_OPERATORS);
-      if (id !== all[editingOpIdx].id && all.some((x, j) => j !== editingOpIdx && x.id === id)) return alert("ID duplicado");
+      if (id !== all[editingOpIdx].id && all.some((x, j) => j !== editingOpIdx && x.id === id)) return alert(tt("admin.alert.idDup"));
       all[editingOpIdx] = { id, name };
       save(STORAGE.OPERATORS, all);
-      logEvent("config", "Operador editado: " + id + " " + name);
+      logEvent("config", tt("admin.log.opEdited", { id, name }));
       editingOpIdx = -1;
       renderOperators();
     }));
@@ -398,23 +518,23 @@
   function addLine() {
     const id = document.getElementById("new-line-id").value.trim();
     const label = document.getElementById("new-line-label").value.trim();
-    if (!id || !label) return alert("ID y etiqueta requeridos");
+    if (!id || !label) return alert(tt("admin.alert.idLabel"));
     const list = load(STORAGE.LINES, DEFAULT_LINES);
-    if (list.some((x) => x.id === id)) return alert("ID duplicado");
+    if (list.some((x) => x.id === id)) return alert(tt("admin.alert.idDup"));
     list.push({ id, label });
     save(STORAGE.LINES, list);
-    logEvent("config", "Línea agregada: " + id + " " + label);
+    logEvent("config", tt("admin.log.lineAdded", { id, label }));
     document.getElementById("new-line-id").value = "";
     document.getElementById("new-line-label").value = "";
     renderLines();
   }
 
-  function removeLine(idx) {
+  async function removeLine(idx) {
     const list = load(STORAGE.LINES, DEFAULT_LINES);
-    if (!confirm("¿Eliminar línea " + list[idx].id + "?")) return;
+    if (!(await window.appConfirm(tt("admin.confirmDelLine", { id: list[idx].id }), { danger: true }))) return;
     const removed = list.splice(idx, 1)[0];
     save(STORAGE.LINES, list);
-    logEvent("config", "Línea eliminada: " + removed.id);
+    logEvent("config", tt("admin.log.lineRemoved", { id: removed.id }));
     renderLines();
   }
 
@@ -424,49 +544,49 @@
     const startTime = document.getElementById("new-shift-start").value.trim();
     const endTime = document.getElementById("new-shift-end").value.trim();
     const daysRaw = document.getElementById("new-shift-days").value.trim();
-    if (!id || !label || !startTime || !endTime) return alert("ID, etiqueta, inicio y fin requeridos");
-    if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) return alert("Hora debe ser HH:MM");
+    if (!id || !label || !startTime || !endTime) return alert(tt("admin.alert.allShift"));
+    if (!/^\d{2}:\d{2}$/.test(startTime) || !/^\d{2}:\d{2}$/.test(endTime)) return alert(tt("admin.alert.timeHHMM"));
     const days = daysRaw
       ? daysRaw.split(/[,\s]+/).map((d) => Number(d)).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
       : [];
     const list = load(STORAGE.SHIFTS, DEFAULT_SHIFTS);
-    if (list.some((x) => x.id === id)) return alert("ID duplicado");
+    if (list.some((x) => x.id === id)) return alert(tt("admin.alert.idDup"));
     list.push({ id, label, startTime, endTime, days });
     save(STORAGE.SHIFTS, list);
-    logEvent("config", "Turno agregado: " + id + " " + label + " (" + startTime + "–" + endTime + ")");
+    logEvent("config", tt("admin.log.shiftAdded", { id, label, start: startTime, end: endTime }));
     ["new-shift-id", "new-shift-label", "new-shift-start", "new-shift-end", "new-shift-days"].forEach((id) => document.getElementById(id).value = "");
     renderShifts();
   }
 
-  function removeShift(idx) {
+  async function removeShift(idx) {
     const list = load(STORAGE.SHIFTS, DEFAULT_SHIFTS);
-    if (!confirm("¿Eliminar turno " + list[idx].id + "?")) return;
+    if (!(await window.appConfirm(tt("admin.confirmDelShift", { id: list[idx].id }), { danger: true }))) return;
     const removed = list.splice(idx, 1)[0];
     save(STORAGE.SHIFTS, list);
-    logEvent("config", "Turno eliminado: " + removed.id);
+    logEvent("config", tt("admin.log.shiftRemoved", { id: removed.id }));
     renderShifts();
   }
 
   function addOperator() {
     const id = document.getElementById("new-op-id").value.trim();
     const name = document.getElementById("new-op-name").value.trim();
-    if (!id || !name) return alert("ID y nombre requeridos");
+    if (!id || !name) return alert(tt("admin.alert.idName"));
     const list = load(STORAGE.OPERATORS, DEFAULT_OPERATORS);
-    if (list.some((x) => x.id === id)) return alert("ID duplicado");
+    if (list.some((x) => x.id === id)) return alert(tt("admin.alert.idDup"));
     list.push({ id, name });
     save(STORAGE.OPERATORS, list);
-    logEvent("config", "Operador agregado: " + id + " " + name);
+    logEvent("config", tt("admin.log.opAdded", { id, name }));
     document.getElementById("new-op-id").value = "";
     document.getElementById("new-op-name").value = "";
     renderOperators();
   }
 
-  function removeOperator(idx) {
+  async function removeOperator(idx) {
     const list = load(STORAGE.OPERATORS, DEFAULT_OPERATORS);
-    if (!confirm("¿Eliminar operador " + list[idx].id + "?")) return;
+    if (!(await window.appConfirm(tt("admin.confirmDelOp", { id: list[idx].id }), { danger: true }))) return;
     const removed = list.splice(idx, 1)[0];
     save(STORAGE.OPERATORS, list);
-    logEvent("config", "Operador eliminado: " + removed.id);
+    logEvent("config", tt("admin.log.opRemoved", { id: removed.id }));
     renderOperators();
   }
 
@@ -501,7 +621,7 @@
     const lineId = document.getElementById("device-line").value;
     const operatorId = document.getElementById("device-operator").value;
     save(STORAGE.DEVICE, { lineId, operatorId });
-    logEvent("config", "Dispositivo: línea " + lineId + ", operador " + operatorId);
+    logEvent("config", tt("admin.log.device", { line: lineId, op: operatorId }));
     flashDevice();
   });
 
@@ -509,4 +629,71 @@
   renderEntities();
   populateDevice();
   gateInit();
+  initAdminTabs();
+  initCollapsibleSections();
+
+  function initAdminTabs() {
+    const KEY = "prod.admin.activeTab.v1";
+    const DEFAULT_TAB = "resumen";
+    const tabs   = document.querySelectorAll(".admin-tab");
+    const panels = document.querySelectorAll(".admin-panel");
+    if (!tabs.length || !panels.length) return;
+    let active = DEFAULT_TAB;
+    try { active = localStorage.getItem(KEY) || DEFAULT_TAB; } catch (_) {}
+    if (!document.querySelector('[data-panel="' + active + '"]')) active = DEFAULT_TAB;
+
+    function activate(name) {
+      active = name;
+      tabs.forEach((t) => {
+        const on = t.dataset.tab === name;
+        t.classList.toggle("active", on);
+        t.setAttribute("aria-selected", String(on));
+      });
+      panels.forEach((p) => {
+        p.classList.toggle("active", p.dataset.panel === name);
+      });
+      try { localStorage.setItem(KEY, name); } catch (_) {}
+    }
+    tabs.forEach((t) => t.addEventListener("click", () => activate(t.dataset.tab)));
+    activate(active);
+  }
+
+  function initCollapsibleSections() {
+    const KEY = "prod.admin.collapsed.v1";
+    let state = {};
+    try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (_) {}
+    const cards = document.querySelectorAll(".admin .admin-card");
+    cards.forEach((card, idx) => {
+      const h2 = card.querySelector(":scope > h2");
+      if (!h2 || h2.dataset.collapsibleBound === "1") return;
+      h2.dataset.collapsibleBound = "1";
+      const label = h2.textContent.trim();
+      const key = label || ("card-" + idx);
+      const chevron = document.createElement("span");
+      chevron.className = "admin-card-chevron";
+      chevron.setAttribute("aria-hidden", "true");
+      chevron.textContent = "▾";
+      h2.appendChild(chevron);
+      h2.setAttribute("role", "button");
+      h2.setAttribute("tabindex", "0");
+      function set(collapsed) {
+        card.dataset.collapsed = collapsed ? "true" : "false";
+        h2.setAttribute("aria-expanded", String(!collapsed));
+        state[key] = !!collapsed;
+        try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {}
+      }
+      // Default to collapsed for first-time visitors. Per-card persistence
+      // overrides whenever the user has explicitly toggled the section.
+      set(state.hasOwnProperty(key) ? !!state[key] : true);
+      function toggle() { set(card.dataset.collapsed !== "true"); }
+      h2.addEventListener("click", toggle);
+      h2.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+      });
+    });
+  }
+
+  window.addEventListener("languagechange", () => {
+    renderEntities();
+  });
 })();

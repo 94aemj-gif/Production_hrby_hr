@@ -5,192 +5,246 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Configuración Admin</title>
   <link rel="stylesheet" href="styles.css?v=26" />
+  <title data-i18n="page.title.admin">Configuración Admin</title>
+  <link rel="stylesheet" href="styles.css?v=51" />
 </head>
 <body>
   <!-- Lock screen -->
   <div id="admin-lock" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-login">
-      <h2 class="popup-title-left">Acceso Admin</h2>
-      <p class="popup-subtle">Ingrese contraseña para acceder.</p>
+      <h2 class="popup-title-left" data-i18n="admin.lock.title">Acceso Admin</h2>
+      <p class="popup-subtle" data-i18n="admin.lock.subtle">Ingrese contraseña para acceder.</p>
       <form id="lock-form" class="entry-form" autocomplete="off">
         <label class="field">
-          <span class="field-label">Contraseña</span>
+          <span class="field-label" data-i18n="gate.password">Contraseña</span>
           <input type="password" id="lock-pwd" class="numpad-input" autocomplete="off" readonly required />
         </label>
-        <div id="lock-error" class="form-error hidden">Contraseña incorrecta.</div>
+        <div id="lock-error" class="form-error hidden" data-i18n="gate.wrong">Contraseña incorrecta.</div>
         <div class="form-actions-row">
-          <a class="btn btn-ghost btn-block" href="index.html" style="text-decoration:none;text-align:center">Cancelar</a>
-          <button type="submit" class="btn btn-success btn-block">Entrar</button>
+          <a class="btn btn-ghost btn-block btn-link" href="index.html" data-i18n="btn.cancel">Cancelar</a>
+          <button type="submit" class="btn btn-success btn-block" data-i18n="btn.enter">Entrar</button>
         </div>
       </form>
     </div>
   </div>
 
   <main class="admin" id="admin-main">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <a class="back-link" href="index.html">&larr; Volver a Pantalla de Producción</a>
-      <button type="button" id="btn-admin-lock" class="btn btn-ghost btn-small">Cerrar Admin</button>
+    <div class="actions-row-between">
+      <a class="back-link" href="index.html" data-i18n="admin.back">&larr; Volver a Pantalla de Producción</a>
+      <div class="actions-inline">
+        <a class="admin-link" href="dashboard.html" data-i18n="nav.dashboard">Tablero</a>
+        <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
+        <button type="button" id="btn-admin-lock" class="btn btn-ghost btn-small" data-i18n="admin.lock">Cerrar Admin</button>
+      </div>
     </div>
-    <h1>Configuración Admin</h1>
+    <h1 data-i18n="admin.title">Configuración Admin</h1>
 
+    <nav class="admin-tabs" role="tablist" aria-label="Categorías">
+      <button type="button" class="admin-tab" data-tab="resumen"   role="tab" aria-selected="false"><span data-i18n="admin.tab.resumen">Resumen</span></button>
+      <button type="button" class="admin-tab" data-tab="catalogos" role="tab" aria-selected="false"><span data-i18n="admin.tab.catalogos">Catálogos</span></button>
+      <button type="button" class="admin-tab" data-tab="config"    role="tab" aria-selected="false"><span data-i18n="admin.tab.config">Configuración</span></button>
+      <button type="button" class="admin-tab" data-tab="datos"     role="tab" aria-selected="false"><span data-i18n="admin.tab.datos">Datos</span></button>
+    </nav>
+
+    <div class="admin-panel" data-panel="config" role="tabpanel">
     <section class="admin-card">
-      <h2>Seguridad</h2>
+      <h2 data-i18n="admin.security">Seguridad</h2>
       <div class="admin-grid">
         <label class="field">
-          <span class="field-label">Nueva Contraseña Admin</span>
+          <span class="field-label" data-i18n="admin.newPwd">Nueva Contraseña Admin</span>
           <input type="password" id="new-admin-pwd" class="numpad-input" autocomplete="off" readonly />
         </label>
       </div>
       <div class="admin-actions">
-        <button type="button" id="btn-change-pwd" class="btn btn-primary">Cambiar Contraseña</button>
-        <span id="pwd-flash" class="saved-flash">Cambiada.</span>
+        <button type="button" id="btn-change-pwd" class="btn btn-primary" data-i18n="admin.changePwd">Cambiar Contraseña</button>
+        <span id="pwd-flash" class="saved-flash" data-i18n="admin.changed">Cambiada.</span>
       </div>
     </section>
 
     <section class="admin-card">
-      <h2>Dispositivo</h2>
-      <p class="muted" style="font-size:13px;margin-top:0">Línea y operador asignados a este dispositivo. El turno se detecta automáticamente por la hora.</p>
+      <h2 data-i18n="admin.device">Dispositivo</h2>
+      <p class="text-helper" data-i18n="admin.device.note">Línea y operador asignados a este dispositivo. El turno se detecta automáticamente por la hora.</p>
       <div class="admin-grid">
         <label class="field">
-          <span class="field-label">Línea Predeterminada</span>
+          <span class="field-label" data-i18n="admin.device.line">Línea Predeterminada</span>
           <select id="device-line"></select>
         </label>
         <label class="field">
-          <span class="field-label">Operador Predeterminado</span>
+          <span class="field-label" data-i18n="admin.device.op">Operador Predeterminado</span>
           <select id="device-operator"></select>
         </label>
       </div>
       <div class="admin-actions">
-        <button type="button" id="btn-device-save" class="btn btn-success">Guardar Dispositivo</button>
-        <span id="device-flash" class="saved-flash">Guardado.</span>
+        <button type="button" id="btn-device-save" class="btn btn-success" data-i18n="admin.device.save">Guardar Dispositivo</button>
+        <span id="device-flash" class="saved-flash" data-i18n="admin.device.saved">Guardado.</span>
       </div>
     </section>
 
     <form id="admin-form" autocomplete="off">
       <section class="admin-card">
-        <h2>Parámetros de Producción</h2>
-        <p class="muted" style="font-size:13px;margin-top:0">Las alertas se disparan cada hora dentro del rango del turno automáticamente.</p>
+        <h2 data-i18n="admin.params">Parámetros de Producción</h2>
+        <p class="text-helper" data-i18n="admin.params.note">Las alertas se disparan cada hora dentro del rango del turno automáticamente.</p>
         <div class="admin-grid">
           <label class="field">
-            <span class="field-label">Duración de Posponer (minutos)</span>
+            <span class="field-label" data-i18n="admin.snoozeDur">Duración de Posponer (minutos)</span>
             <input type="number" name="snoozeMinutes" min="1" max="60" inputmode="numeric" pattern="[0-9]*" />
           </label>
           <label class="field">
-            <span class="field-label">Meta por Hora (piezas)</span>
+            <span class="field-label" data-i18n="admin.hourlyTarget">Meta por Hora (piezas)</span>
             <input type="number" name="hourlyTarget" min="0" inputmode="numeric" pattern="[0-9]*" />
           </label>
         </div>
       </section>
 
       <section class="admin-card">
-        <h2>Alerta de Audio</h2>
+        <h2 data-i18n="admin.audio">Alerta de Audio</h2>
         <div class="admin-grid">
           <label class="field">
-            <span class="field-label">Habilitar Audio</span>
+            <span class="field-label" data-i18n="admin.audio.enable">Habilitar Audio</span>
             <select name="audioEnabled">
-              <option value="true">Habilitado</option>
-              <option value="false">Deshabilitado</option>
+              <option value="true" data-i18n="admin.audio.on">Habilitado</option>
+              <option value="false" data-i18n="admin.audio.off">Deshabilitado</option>
             </select>
           </label>
           <label class="field">
-            <span class="field-label">Volumen (0.0 – 1.0)</span>
+            <span class="field-label" data-i18n="admin.audio.vol">Volumen (0.0 – 1.0)</span>
             <input type="number" name="audioVolume" min="0" max="1" step="0.1" inputmode="decimal" />
           </label>
         </div>
+        <div class="admin-actions">
+          <button type="submit" class="btn btn-success" data-i18n="admin.btn.saveCfg">Guardar Configuración</button>
+          <button type="button" id="btn-reset" class="btn btn-ghost" data-i18n="admin.btn.reset">Restablecer Valores</button>
+          <span id="saved-flash" class="saved-flash" data-i18n="admin.btn.saved">Guardado.</span>
+        </div>
       </section>
-
-      <div class="admin-actions">
-        <button type="submit" class="btn btn-success">Guardar Configuración</button>
-        <button type="button" id="btn-reset" class="btn btn-ghost">Restablecer Valores</button>
-        <span id="saved-flash" class="saved-flash">Guardado.</span>
-      </div>
     </form>
+    </div><!-- /config panel -->
 
+    <div class="admin-panel" data-panel="catalogos" role="tabpanel">
     <section class="admin-card">
-      <h2>Líneas de Producción</h2>
+      <h2 data-i18n="admin.lines">Líneas de Producción</h2>
       <table class="entity-table">
-        <thead><tr><th>ID</th><th>Etiqueta</th><th></th></tr></thead>
+        <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.label">Etiqueta</th><th></th></tr></thead>
         <tbody id="lines-tbody"></tbody>
       </table>
       <div class="entity-add">
-        <input type="text" id="new-line-id" placeholder="ID (ej. L-04)" />
-        <input type="text" id="new-line-label" placeholder="Etiqueta" />
-        <button type="button" id="btn-add-line" class="btn btn-primary">Agregar</button>
+        <input type="text" id="new-line-id" data-i18n-placeholder="admin.ph.lineId" placeholder="ID (ej. L-04)" />
+        <input type="text" id="new-line-label" data-i18n-placeholder="admin.ph.lineLabel" placeholder="Etiqueta" />
+        <button type="button" id="btn-add-line" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
       </div>
     </section>
 
-    <section class="admin-card">
-      <h2>Turnos</h2>
-      <p class="muted" style="font-size:13px;margin-top:0">El sistema genera alertas cada hora dentro del rango del turno. Hora fin menor que hora inicio = cruza medianoche.</p>
+    <section class="admin-card" data-wide="1">
+      <h2 data-i18n="admin.shifts">Turnos</h2>
+      <p class="text-helper" data-i18n="admin.shifts.note">El sistema genera alertas cada hora dentro del rango del turno. Hora fin menor que hora inicio = cruza medianoche.</p>
       <table class="entity-table">
-        <thead><tr><th>ID</th><th>Etiqueta</th><th>Inicio</th><th>Fin</th><th>Días</th><th>Recesos</th><th></th></tr></thead>
+        <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.label">Etiqueta</th><th data-i18n="admin.col.start">Inicio</th><th data-i18n="admin.col.end">Fin</th><th data-i18n="admin.col.days">Días</th><th data-i18n="admin.col.breaks">Recesos</th><th></th></tr></thead>
         <tbody id="shifts-tbody"></tbody>
       </table>
       <div class="entity-add entity-add-shift">
-        <input type="text" id="new-shift-id" placeholder="ID (ej. S3)" />
-        <input type="text" id="new-shift-label" placeholder="Etiqueta" />
+        <input type="text" id="new-shift-id" data-i18n-placeholder="admin.ph.shiftId" placeholder="ID (ej. S3)" />
+        <input type="text" id="new-shift-label" data-i18n-placeholder="admin.ph.shiftLabel" placeholder="Etiqueta" />
         <input type="time" id="new-shift-start" placeholder="06:00" />
         <input type="time" id="new-shift-end" placeholder="18:00" />
-        <input type="text" id="new-shift-days" placeholder="Días (ej. 1,2,3,4)" />
-        <button type="button" id="btn-add-shift" class="btn btn-primary">Agregar</button>
+        <input type="text" id="new-shift-days" data-i18n-placeholder="admin.ph.shiftDays" placeholder="Días (ej. 1,2,3,4)" />
+        <button type="button" id="btn-add-shift" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
       </div>
-      <p class="muted" style="font-size:12px;margin:6px 0 0">Días: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb</p>
+      <p class="text-helper-tight spacer-top-2" data-i18n="admin.shifts.daysLegend">Días: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb</p>
     </section>
 
     <section class="admin-card">
-      <h2>Operadores</h2>
+      <h2 data-i18n="admin.operators">Operadores</h2>
       <table class="entity-table">
-        <thead><tr><th>ID</th><th>Nombre</th><th></th></tr></thead>
+        <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.name">Nombre</th><th></th></tr></thead>
         <tbody id="operators-tbody"></tbody>
       </table>
       <div class="entity-add">
-        <input type="text" id="new-op-id" placeholder="ID (ej. OP-1001)" />
-        <input type="text" id="new-op-name" placeholder="Nombre" />
-        <button type="button" id="btn-add-op" class="btn btn-primary">Agregar</button>
+        <input type="text" id="new-op-id" data-i18n-placeholder="admin.ph.opId" placeholder="ID (ej. OP-1001)" />
+        <input type="text" id="new-op-name" data-i18n-placeholder="admin.ph.opName" placeholder="Nombre" />
+        <button type="button" id="btn-add-op" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
       </div>
     </section>
 
     <section class="admin-card">
-      <h2>Historial de Sesiones</h2>
+      <h2 data-i18n="admin.downtimeReasons">Motivos de Tiempo Muerto</h2>
+      <p class="text-helper" data-i18n="admin.downtimeReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
+      <ul id="downtime-reasons-list" class="reason-list"></ul>
+      <div class="entity-add">
+        <input type="text" id="new-downtime-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo (ej. Junta producción)" />
+        <button type="button" id="btn-add-downtime-reason" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2 data-i18n="admin.scrapReasons">Motivos de Rechazo</h2>
+      <p class="text-helper" data-i18n="admin.scrapReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
+      <ul id="scrap-reasons-list" class="reason-list"></ul>
+      <div class="entity-add">
+        <input type="text" id="new-scrap-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo (ej. Pistón roto)" />
+        <button type="button" id="btn-add-scrap-reason" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
+      </div>
+    </section>
+    </div><!-- /catalogos panel -->
+
+    <div class="admin-panel" data-panel="resumen" role="tabpanel">
+    <section class="admin-card" data-wide="1">
+      <h2 data-i18n="admin.history">Historial de Sesiones</h2>
       <div class="history-filter">
-        <label class="field">
-          <span class="field-label">Fecha</span>
-          <input type="date" id="history-date" />
-        </label>
-        <button id="btn-history-export" class="btn btn-primary" type="button">Exportar Día</button>
-        <button id="btn-history-export-all" class="btn btn-ghost" type="button">Exportar Todo</button>
+        <div class="weekstrip" id="weekstrip" role="group" aria-label="Selector de fecha">
+          <div class="weekstrip-head">
+            <button type="button" class="weekstrip-month" id="weekstrip-month">—</button>
+            <div class="weekstrip-nav">
+              <button type="button" class="weekstrip-icon" id="weekstrip-today" title="Hoy" aria-label="Hoy">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+              </button>
+              <button type="button" class="weekstrip-icon" id="weekstrip-prev" aria-label="Semana anterior">‹</button>
+              <button type="button" class="weekstrip-icon" id="weekstrip-next" aria-label="Semana siguiente">›</button>
+            </div>
+          </div>
+          <div class="weekstrip-dows" id="weekstrip-dows"></div>
+          <div class="weekstrip-days" id="weekstrip-days"></div>
+        </div>
+        <input type="hidden" id="history-date" />
+        <div class="history-filter-actions">
+          <button id="btn-history-export" class="btn btn-primary" type="button" data-i18n="admin.history.exportDay">Exportar Día</button>
+          <button id="btn-history-export-all" class="btn btn-ghost" type="button" data-i18n="admin.history.exportAll">Exportar Todo</button>
+        </div>
       </div>
       <div id="history-list" class="history-list"></div>
     </section>
 
-    <section class="admin-card">
-      <h2>Bitácora de Movimientos</h2>
+    <section class="admin-card" data-wide="1">
+      <h2 data-i18n="admin.movLog">Bitácora de Movimientos</h2>
       <div class="log-filters">
-        <input id="log-search" type="search" placeholder="Buscar..." class="log-search" />
+        <input id="log-search" type="search" data-i18n-placeholder="admin.search" placeholder="Buscar..." class="log-search" />
         <div id="log-type-filters" class="log-type-filters">
-          <button type="button" class="log-chip active" data-type="all">Todos</button>
-          <button type="button" class="log-chip" data-type="capture">Captura</button>
-          <button type="button" class="log-chip" data-type="scrap">Rechazo</button>
-          <button type="button" class="log-chip" data-type="alert">Alerta</button>
-          <button type="button" class="log-chip" data-type="submit">Envío</button>
-          <button type="button" class="log-chip" data-type="downtime">Paro</button>
-          <button type="button" class="log-chip" data-type="status">Estado</button>
-          <button type="button" class="log-chip" data-type="session">Sesión</button>
+          <button type="button" class="log-chip active" data-type="all" data-i18n="admin.filter.all">Todos</button>
+          <button type="button" class="log-chip" data-type="capture" data-i18n="admin.filter.capture">Captura</button>
+          <button type="button" class="log-chip" data-type="scrap" data-i18n="admin.filter.scrap">Rechazo</button>
+          <button type="button" class="log-chip" data-type="alert" data-i18n="admin.filter.alert">Alerta</button>
+          <button type="button" class="log-chip" data-type="submit" data-i18n="admin.filter.submit">Envío</button>
+          <button type="button" class="log-chip" data-type="downtime" data-i18n="admin.filter.downtime">Paro</button>
+          <button type="button" class="log-chip" data-type="status" data-i18n="admin.filter.status">Estado</button>
+          <button type="button" class="log-chip" data-type="session" data-i18n="admin.filter.session">Sesión</button>
         </div>
       </div>
       <ul id="log-list" class="log-list"></ul>
-      <div class="admin-actions" style="margin-top:10px">
-        <button id="btn-log-clear" class="btn btn-ghost btn-small" type="button">Limpiar Bitácora</button>
+      <div class="admin-actions spacer-top-2">
+        <button id="btn-log-clear" class="btn btn-ghost btn-small" type="button" data-i18n="admin.clearLog">Limpiar Bitácora</button>
       </div>
     </section>
+    </div><!-- /resumen panel -->
 
+    <div class="admin-panel" data-panel="datos" role="tabpanel">
     <section class="admin-card">
-      <h2>Datos</h2>
+      <h2 data-i18n="admin.data">Datos</h2>
       <div class="admin-actions">
-        <button type="button" id="btn-clear-data" class="btn btn-ghost">Limpiar Envíos y Alertas de Hoy</button>
-        <button type="button" id="btn-clear-sessions" class="btn btn-ghost">Borrar Todas las Sesiones</button>
+        <button type="button" id="btn-reset-today-cloud" class="btn btn-warn" data-i18n="admin.resetTodayCloud">Reset Día Actual (Supabase + local)</button>
+        <button type="button" id="btn-clear-data" class="btn btn-ghost" data-i18n="admin.clearToday">Limpiar Envíos y Alertas de Hoy</button>
+        <button type="button" id="btn-clear-sessions" class="btn btn-ghost" data-i18n="admin.clearSessions">Borrar Todas las Sesiones</button>
       </div>
     </section>
+    </div><!-- /datos panel -->
   </main>
 
   <!-- Numeric keypad overlay (shared with app.js wireNumpad) -->
@@ -210,11 +264,11 @@
         <button type="button" class="numkey" data-key="9">9</button>
         <button type="button" class="numkey numkey-secondary" data-key="clear">C</button>
         <button type="button" class="numkey" data-key="0">0</button>
-        <button type="button" class="numkey numkey-secondary" data-key="back" aria-label="Retroceso">⌫</button>
+        <button type="button" class="numkey numkey-secondary" data-key="back" data-i18n-aria-label="numpad.backAria" aria-label="Retroceso">⌫</button>
       </div>
       <div class="form-actions-row">
-        <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block">Cancelar</button>
-        <button type="button" id="btn-numpad-ok" class="btn btn-success btn-block">Listo</button>
+        <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
+        <button type="button" id="btn-numpad-ok" class="btn btn-success btn-block" data-i18n="btn.done">Listo</button>
       </div>
     </div>
   </div>
@@ -222,18 +276,23 @@
   <!-- Breaks editor modal -->
   <div id="breaks-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-form">
-      <h2 class="popup-title-left">Recesos del Turno</h2>
+      <h2 class="popup-title-left" data-i18n="breaks.title">Recesos del Turno</h2>
       <p class="popup-subtle" id="breaks-shift-label">—</p>
       <div id="breaks-list" class="breaks-list"></div>
-      <button type="button" id="btn-break-add" class="btn btn-ghost btn-block" style="margin-top:10px">+ Agregar Receso</button>
-      <div class="form-actions-row" style="margin-top:14px">
-        <button type="button" id="btn-breaks-cancel" class="btn btn-ghost btn-block">Cancelar</button>
-        <button type="button" id="btn-breaks-save" class="btn btn-success btn-block">Guardar</button>
+      <button type="button" id="btn-break-add" class="btn btn-ghost btn-block spacer-top-2" data-i18n="breaks.add">+ Agregar Receso</button>
+      <div class="form-actions-row spacer-top-3">
+        <button type="button" id="btn-breaks-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
+        <button type="button" id="btn-breaks-save" class="btn btn-success btn-block" data-i18n="btn.save">Guardar</button>
       </div>
     </div>
   </div>
 
   <script src="app.js?v=26"></script>
   <script src="admin.js?v=26"></script>
+  <script src="i18n.js?v=51"></script>
+  <script src="supabase-config.js?v=51"></script>
+  <script src="sync.js?v=51"></script>
+  <script src="app.js?v=51"></script>
+  <script src="admin.js?v=51"></script>
 </body>
 </html>

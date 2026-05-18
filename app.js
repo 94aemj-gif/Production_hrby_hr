@@ -10,6 +10,8 @@
     LINES: "prod.lines.v1",
     SHIFTS: "prod.shifts.v1",
     OPERATORS: "prod.operators.v1",
+    DOWNTIME_REASONS: "prod.downtime.reasons.v1",
+    SCRAP_REASONS:    "prod.scrap.reasons.v1",
     DEVICE: "prod.device.v1",
     SESSIONS: "prod.sessions.v1",
     LOG: "prod.log.v1",
@@ -32,9 +34,8 @@
   };
 
   const DEFAULT_LINES = [
-    { id: "L-01", label: "Línea 01" },
-    { id: "L-02", label: "Línea 02" },
-    { id: "L-03", label: "Línea 03" },
+    { id: "L-60ML", label: "#1 60ml Neomed Syringe" },
+    { id: "L-35ML", label: "#2 35ml Neomed Syringe" },
   ];
 
   // days: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
@@ -47,11 +48,8 @@
       breaks: [{ start: "22:00", end: "22:15" }, { start: "01:30", end: "01:45" }] },
   ];
 
-  const NOTE_OPTIONS = [
-    "Personal entrenamiento",
-    "Junta producción",
-    "Falta material",
-  ];
+  function tt(key, params) { return (window.i18n && window.i18n.t) ? window.i18n.t(key, params) : key; }
+  function getLocale() { return (window.i18n && window.i18n.locale) ? window.i18n.locale() : "es-MX"; }
 
   function isOvertimeDate(dateStr) {
     const [Y, M, D] = dateStr.split("-").map(Number);
@@ -60,15 +58,34 @@
   }
 
   const DEFAULT_OPERATORS = [
-    { id: "OP-0847", name: "Operador Demo" },
+    { id: "00847", name: "Operador Demo" },
   ];
 
-  const STATUS_LABEL = {
-    Running: "En operación",
-    Idle: "Inactivo",
-    Maintenance: "Mantenimiento",
-    Breakdown: "Avería",
-  };
+  // Reason lists for the new capture form's downtime and scrap sections.
+  // Editable in Admin → Catálogos. Synced cross-device via the config table.
+  const DEFAULT_DOWNTIME_REASONS = [
+    "Junta de producción",
+    "Capacitación",
+    "Cambio de material",
+    "Limpieza",
+    "Falta de material",
+    "Otro",
+  ];
+  const DEFAULT_SCRAP_REASONS = [
+    "Pistón roto",
+    "Empaque defectuoso",
+    "Calidad fuera de spec",
+    "Otro",
+  ];
+
+  function statusLabel(code) {
+    return tt({
+      Running: "top.statusOpt.running",
+      Idle: "top.statusOpt.idle",
+      Maintenance: "top.statusOpt.maintenance",
+      Breakdown: "top.statusOpt.breakdown",
+    }[code] || code);
+  }
 
   // ---- Storage helpers ----
   const load = (key, fallback) => {
@@ -78,14 +95,74 @@
     } catch (_) { return fallback; }
   };
   const save = (key, value) => {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch (e) {
+      if (e && (e.name === "QuotaExceededError" || /quota/i.test(String(e.message)))) {
+        // Surface to the sync indicator via lastError, since it polls/displays it.
+        try {
+          localStorage.setItem("prod.sync.lastError.v1", JSON.stringify({
+            ts: new Date().toISOString(),
+            message: "Storage full — could not save " + key,
+          }));
+          window.dispatchEvent(new Event("syncstatuschange"));
+        } catch (_) {}
+      }
+      return false;
+    }
   };
+
+  // ---- One-shot migration: replace the legacy demo lines with the
+  // production defaults so tablets that still have L-01/L-02/L-03 get
+  // switched over, and push the new defaults to Supabase so peers see
+  // them on their next pull.
+  const CONFIG_MIGRATION_KEY = "prod.config.migration.v1";
+  const CONFIG_MIGRATION_VERSION = 2;
+  (function migrateConfig() {
+    const cur = Number(load(CONFIG_MIGRATION_KEY, 0));
+    if (cur >= CONFIG_MIGRATION_VERSION) return;
+    // v1: replace legacy demo lines (L-01..L-03) with the production defaults.
+    if (cur < 1) {
+      const curLines = load(STORAGE.LINES, null);
+      const legacyIds = ["L-01", "L-02", "L-03"];
+      const isLegacy = !curLines || (Array.isArray(curLines) && curLines.length === 3
+        && curLines.every((l, i) => l && l.id === legacyIds[i]));
+      if (isLegacy) {
+        save(STORAGE.LINES, DEFAULT_LINES);
+        try { if (window.sync && window.sync.pushConfig) window.sync.pushConfig("lines", DEFAULT_LINES); }
+        catch (_) {}
+      }
+    }
+    // v2: migrate operator IDs from "OP-XYZW" to 5-digit zero-padded
+    // numeric (e.g., OP-0847 → 00847). Skip operators already in the new
+    // format. Push the migrated list so peers receive it.
+    if (cur < 2) {
+      const curOps = load(STORAGE.OPERATORS, null);
+      if (Array.isArray(curOps) && curOps.length) {
+        let touched = false;
+        const migrated = curOps.map((o) => {
+          if (!o || typeof o.id !== "string") return o;
+          const m = o.id.match(/^OP-(\d{1,5})$/);
+          if (!m) return o;
+          touched = true;
+          return Object.assign({}, o, { id: m[1].padStart(5, "0") });
+        });
+        if (touched) {
+          save(STORAGE.OPERATORS, migrated);
+          try { if (window.sync && window.sync.pushConfig) window.sync.pushConfig("operators", migrated); }
+          catch (_) {}
+        }
+      }
+    }
+    save(CONFIG_MIGRATION_KEY, CONFIG_MIGRATION_VERSION);
+  })();
 
   // ---- State ----
   let config = Object.assign({}, DEFAULT_CONFIG, load(STORAGE.CONFIG, {}));
   let lines = load(STORAGE.LINES, DEFAULT_LINES);
   let shifts = load(STORAGE.SHIFTS, DEFAULT_SHIFTS);
   let operators = load(STORAGE.OPERATORS, DEFAULT_OPERATORS);
+  let downtimeReasons = load(STORAGE.DOWNTIME_REASONS, DEFAULT_DOWNTIME_REASONS.slice());
+  let scrapReasons    = load(STORAGE.SCRAP_REASONS,    DEFAULT_SCRAP_REASONS.slice());
   let device = load(STORAGE.DEVICE, { lineId: lines[0] && lines[0].id, operatorId: operators[0] && operators[0].id });
   let current = null;
   let snoozeUntil = load(STORAGE.SNOOZE, 0);
@@ -191,9 +268,13 @@
     let good = 0, scrap = 0;
     for (const c of s.captures || []) {
       if (c.undone) continue;
-      const hk = captureForHour(c);
-      const bucketDate = new Date(hk + ":00:00Z");
-      if (bucketDate < start || bucketDate >= end) continue;
+      // Use the capture's actual timestamp for the in-shift check, not the
+      // forHour bucket. The bucket rounds down to the start of the hour,
+      // which is wrong for shifts that begin on a half-hour boundary
+      // (e.g., Turno 2 18:30 — an 18:31 capture buckets to 18:00, which
+      // would be < start and incorrectly filtered out).
+      const ts = new Date(c.ts);
+      if (ts < start || ts >= end) continue;
       if (c.kind === "scrap") scrap += c.qty; else good += c.qty;
     }
     return { good, scrap };
@@ -201,35 +282,6 @@
 
   // forHour rule: capture at HH:MM represents previous hour if MM < 30, else current hour.
   // Result is the hour ISO key (UTC) the capture should bucket into.
-  function updateHourProgress(s) {
-    const fill = $("hour-progress-fill");
-    const cd = $("hour-progress-countdown");
-    const label = $("hour-progress-label");
-    if (!fill || !cd || !label) return;
-    if (!s) { fill.style.width = "0%"; cd.textContent = "—"; label.textContent = "—"; return; }
-    const now = new Date();
-    const { start: shStart, end: shEnd } = getShiftWindow(s);
-    if (now < shStart || now >= shEnd) {
-      label.textContent = "Fuera de turno";
-      cd.textContent = "—";
-      fill.style.width = "0%";
-      return;
-    }
-    const hourStart = new Date(now); hourStart.setMinutes(0, 0, 0);
-    const elapsedMs = now - hourStart;
-    const pct = Math.min(100, Math.round((elapsedMs / 3600000) * 100));
-    const minsLeft = Math.max(0, 60 - Math.floor(elapsedMs / 60000));
-    let lh = hourStart.getHours();
-    const ap = lh >= 12 ? "PM" : "AM";
-    lh = lh % 12 || 12;
-    let lh2 = (hourStart.getHours() + 1) % 24;
-    const ap2 = lh2 >= 12 ? "PM" : "AM";
-    lh2 = lh2 % 12 || 12;
-    label.textContent = "Hora " + lh + ":00 " + ap + " – " + lh2 + ":00 " + ap2;
-    cd.textContent = minsLeft + " min para capturar";
-    fill.style.width = pct + "%";
-    fill.style.background = pct >= 85 ? "var(--accent)" : "var(--blue)";
-  }
 
   function computeForHour(ts) {
     const d = new Date(ts);
@@ -248,10 +300,11 @@
     const buckets = {};
     for (const c of s.captures || []) {
       if (c.undone || c.kind === "scrap") continue;
+      // Use the capture's actual timestamp; the bucket start can land
+      // outside the shift window for half-hour-boundary shifts.
+      const ts = new Date(c.ts);
+      if (ts < start || ts >= end) continue;
       const hk = captureForHour(c);
-      // bucket date check: convert key to date, must be within shift window
-      const bucketDate = new Date(hk + ":00:00Z");
-      if (bucketDate < start || bucketDate >= end) continue;
       buckets[hk] = (buckets[hk] || 0) + c.qty;
     }
     return buckets;
@@ -315,6 +368,9 @@
     return target * Math.max(0, 1 - breakFrac);
   }
 
+  // Event types we DON'T push to Supabase (already captured in other tables or pure noise).
+  const SYNC_SKIP_TYPES = { capture: 1, scrap: 1, undo: 1 };
+
   // ---- Log ----
   function logEvent(type, message, extra) {
     const entries = load(STORAGE.LOG, []);
@@ -329,6 +385,9 @@
     if (entries.length > LOG_MAX) entries.splice(0, entries.length - LOG_MAX);
     save(STORAGE.LOG, entries);
     renderLog();
+    if (window.sync && window.sync.pushEvent && !SYNC_SKIP_TYPES[type]) {
+      window.sync.pushEvent(entry);
+    }
   }
 
   function renderLog() {
@@ -344,11 +403,12 @@
     if (!filtered.length) {
       const empty = document.createElement("li");
       empty.className = "log-empty";
-      empty.textContent = entries.length ? "Sin coincidencias." : "Sin movimientos registrados.";
+      empty.textContent = entries.length ? tt("log.noMatches") : tt("log.empty");
       logListEl.appendChild(empty);
       return;
     }
     const isAdminPage = !$("counter");
+    const delTitle = tt("log.delTitle");
     filtered.slice().reverse().forEach((e) => {
       const d = new Date(e.ts);
       const li = document.createElement("li");
@@ -358,16 +418,16 @@
         '<span class="log-time">' + fmt12(d, true) + "</span>" +
         '<span class="log-tag">' + logTagLabel(e.type) + "</span>" +
         '<span class="log-msg"></span>' +
-        (canDelete ? '<button type="button" class="log-del" title="Eliminar captura" data-cap="' + e.captureId + '">✕</button>' : "");
+        (canDelete ? '<button type="button" class="log-del" title="' + escapeHtml(delTitle) + '" data-cap="' + e.captureId + '">✕</button>' : "");
       li.querySelector(".log-msg").textContent = e.message;
       logListEl.appendChild(li);
     });
     logListEl.querySelectorAll(".log-del").forEach((btn) => {
-      btn.addEventListener("click", () => {
+      btn.addEventListener("click", async () => {
         const row = btn.closest(".log-item");
-        const msg = row ? row.querySelector(".log-msg").textContent : "captura";
+        const msg = row ? row.querySelector(".log-msg").textContent : "";
         const time = row ? row.querySelector(".log-time").textContent : "";
-        if (!confirm("¿Eliminar?\n\n" + time + " — " + msg)) return;
+        if (!(await appConfirm(tt("log.delConfirm", { time, msg }), { danger: true }))) return;
         deleteCapture(btn.dataset.cap);
       });
     });
@@ -388,7 +448,8 @@
     }
     if (changed) {
       saveSessions(all);
-      logEvent("undo", "Admin eliminó captura: -" + qty + " (" + (kind === "scrap" ? "rechazos" : "piezas") + ")");
+      logEvent("undo", tt(kind === "scrap" ? "log.adminDelScrap" : "log.adminDelPieces", { qty }));
+      if (window.sync && window.sync.pushCaptureDeleted) window.sync.pushCaptureDeleted(captureId);
       renderLog();
       if (typeof renderHistory === "function") {
         const hd = $("history-date");
@@ -398,27 +459,19 @@
   }
 
   function logTagLabel(type) {
-    switch (type) {
-      case "capture": return "Captura";
-      case "scrap": return "Rechazo";
-      case "alert": return "Alerta";
-      case "snooze": return "Posponer";
-      case "submit": return "Envío";
-      case "adjust": return "Ajuste";
-      case "config": return "Config";
-      case "clear": return "Limpieza";
-      case "system": return "Sistema";
-      case "downtime": return "Paro";
-      case "status": return "Estado";
-      case "session": return "Sesión";
-      case "undo": return "Deshacer";
-      default: return type;
-    }
+    const keyMap = {
+      capture: "logTag.capture", scrap: "logTag.scrap", alert: "logTag.alert",
+      snooze: "logTag.snooze", submit: "logTag.submit", adjust: "logTag.adjust",
+      config: "logTag.config", clear: "logTag.clear", system: "logTag.system",
+      downtime: "logTag.downtime", status: "logTag.status", session: "logTag.session",
+      undo: "logTag.undo",
+    };
+    return keyMap[type] ? tt(keyMap[type]) : type;
   }
 
   function clearLog() {
     save(STORAGE.LOG, []);
-    logEvent("system", "Bitácora limpiada manualmente");
+    logEvent("system", tt("log.clearedManual"));
   }
 
   // ---- Time helpers ----
@@ -440,7 +493,7 @@
   }
   function fmtDate(d) {
     try {
-      return d.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+      return d.toLocaleDateString(getLocale(), { weekday: "long", day: "numeric", month: "long", year: "numeric" });
     } catch (_) {
       return d.toISOString().slice(0, 10);
     }
@@ -521,7 +574,18 @@
     if (!all.find((s) => sessionKey(s) === nextKey)) {
       all.push(newSessionShell(current));
       saveSessions(all);
-      logEvent("session", "Sesión iniciada (auto): " + lineLabel(current.lineId) + " · " + shiftLabel(current.shiftId) + " · " + operatorName(current.operatorId));
+      logEvent("session", tt("log.sessionStarted", {
+        line: lineLabel(current.lineId),
+        shift: shiftLabel(current.shiftId),
+        operator: operatorName(current.operatorId),
+      }));
+    }
+    if (window.sync && window.sync.registerDevice) {
+      window.sync.registerDevice({
+        lineId: current.lineId,
+        operatorId: current.operatorId,
+        name: lineLabel(current.lineId),
+      });
     }
     return true;
   }
@@ -544,9 +608,12 @@
     setText("eos-good", totals.good.toLocaleString());
     setText("eos-scrap", totals.scrap.toLocaleString());
     setText("eos-oee", oee + "%");
-    setText("eos-down", downMin + " min");
+    setText("eos-down", tt("eos.min", { n: downMin }));
     const ov = $("eos-overlay");
     if (ov) { ov.classList.remove("hidden"); ov.setAttribute("aria-hidden", "false"); }
+    // Show celebration banner + confetti AFTER the overlay is visible so
+    // the canvas has real dimensions.
+    setTimeout(() => showEosCelebration(s), 30);
     const btnX = $("btn-eos-close");
     const btnE = $("btn-eos-export");
     if (btnX) btnX.onclick = () => { ov.classList.add("hidden"); ov.setAttribute("aria-hidden", "true"); };
@@ -592,23 +659,233 @@
   function setText(id, txt) { const el = $(id); if (el) el.textContent = txt; }
   function setDisabled(id, v) { const el = $(id); if (el) el.disabled = v; }
 
+  // ---- Animated counter ----
+  function animateCounter(val) {
+    const el = $("counter");
+    if (!el) return;
+    if (typeof val !== "number" || !Number.isFinite(val)) {
+      el.textContent = val == null ? "—" : String(val);
+      el.dataset.current = "";
+      return;
+    }
+    const target = val;
+    const start = Number(el.dataset.current);
+    if (!Number.isFinite(start)) { el.dataset.current = String(target); el.textContent = target.toLocaleString(); return; }
+    if (start === target) { el.textContent = target.toLocaleString(); return; }
+    el.dataset.current = String(target);
+    const t0 = performance.now();
+    const duration = Math.min(900, 250 + Math.abs(target - start) * 4);
+    function step(t) {
+      const k = Math.min(1, (t - t0) / duration);
+      const eased = 1 - Math.pow(1 - k, 3);
+      const cur = Math.round(start + (target - start) * eased);
+      el.textContent = cur.toLocaleString();
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+    if (target > start) {
+      el.classList.remove("counter-flash");
+      void el.offsetWidth;
+      el.classList.add("counter-flash");
+    }
+  }
+
+  // ---- Hour progress (horizontal bar under the counter) ----
+  function updateHourRing(s) {
+    const fill  = $("hour-progress-fill");
+    const cd    = $("hour-progress-countdown");
+    const label = $("hour-progress-label");
+    if (!fill || !cd || !label) return;
+    if (!s) { fill.style.width = "0%"; cd.textContent = "—"; label.textContent = "—"; return; }
+    const now = new Date();
+    const { start: shStart, end: shEnd } = getShiftWindow(s);
+    if (now < shStart || now >= shEnd) {
+      label.textContent = tt("counter.outOfShift");
+      cd.textContent = "—";
+      fill.style.width = "0%";
+      return;
+    }
+    const hourStart = new Date(now); hourStart.setMinutes(0, 0, 0);
+    const elapsedMs = now - hourStart;
+    const pct = Math.min(100, Math.round((elapsedMs / 3600000) * 100));
+    const minsLeft = Math.max(0, 60 - Math.floor(elapsedMs / 60000));
+    let lh = hourStart.getHours();
+    const ap = lh >= 12 ? "PM" : "AM";
+    lh = lh % 12 || 12;
+    let lh2 = (hourStart.getHours() + 1) % 24;
+    const ap2 = lh2 >= 12 ? "PM" : "AM";
+    lh2 = lh2 % 12 || 12;
+    label.textContent = tt("counter.hourRange", { h1: lh, ap1: ap, h2: lh2, ap2: ap2 });
+    cd.textContent    = tt("counter.minToCapture", { n: minsLeft });
+    fill.style.width  = pct + "%";
+    fill.style.background = pct >= 85 ? "var(--accent)" : "var(--blue)";
+  }
+
+  // ---- OEE donut (topbar) ----
+  const OEE_RADIUS = 24;
+  const OEE_CIRC = 2 * Math.PI * OEE_RADIUS;
+  function updateOEEDonut(oeePct) {
+    const arc  = $("oee-arc");
+    const txt  = $("oee-pct");
+    const wrap = $("oee-donut");
+    if (!arc || !txt || !wrap) return;
+    const v = Math.max(0, Math.min(100, Number.isFinite(oeePct) ? oeePct : 0));
+    const len = (v / 100) * OEE_CIRC;
+    arc.style.strokeDasharray = len + " " + Math.max(0.001, OEE_CIRC - len);
+    arc.style.strokeDashoffset = "0";
+    txt.textContent = Math.round(v) + "%";
+    wrap.classList.remove("oee-low", "oee-mid", "oee-high");
+    wrap.classList.add(v < 50 ? "oee-low" : v < 85 ? "oee-mid" : "oee-high");
+  }
+
+  // ---- Production heatmap (charts view) ----
+  const HEATMAP_DAYS = 14;
+  function renderHeatmap() {
+    const wrap = $("heatmap");
+    if (!wrap) return;
+    const all = loadSessions();
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const dates = [];
+    for (let i = HEATMAP_DAYS - 1; i >= 0; i--) {
+      dates.push(new Date(today.getTime() - i * 86400000).toISOString().slice(0, 10));
+    }
+    const dateSet = new Set(dates);
+    const grid = {};
+    let maxVal = 0;
+    for (const s of all) {
+      if (!s || !s.captures || !dateSet.has(s.date)) continue;
+      for (const c of s.captures) {
+        if (c.undone || c.kind === "scrap") continue;
+        const h = new Date(c.ts).getHours();
+        grid[s.date] = grid[s.date] || {};
+        grid[s.date][h] = (grid[s.date][h] || 0) + (Number(c.qty) || 0);
+        if (grid[s.date][h] > maxVal) maxVal = grid[s.date][h];
+      }
+    }
+    wrap.innerHTML = "";
+    wrap.appendChild(document.createElement("div")); // top-left corner
+    for (let h = 0; h < 24; h++) {
+      const lbl = document.createElement("div");
+      lbl.className = "heatmap-col-label";
+      lbl.textContent = (h % 6 === 0) ? ((h % 12) || 12) + (h < 12 ? "a" : "p") : "";
+      wrap.appendChild(lbl);
+    }
+    for (const d of dates) {
+      const dd = new Date(d + "T00:00:00");
+      const rowLbl = document.createElement("div");
+      rowLbl.className = "heatmap-row-label";
+      rowLbl.textContent = pad2(dd.getDate()) + "/" + pad2(dd.getMonth() + 1);
+      wrap.appendChild(rowLbl);
+      for (let h = 0; h < 24; h++) {
+        const cell = document.createElement("div");
+        cell.className = "heatmap-cell";
+        const v = (grid[d] && grid[d][h]) || 0;
+        let level = 0;
+        if (maxVal > 0 && v > 0) {
+          const r = v / maxVal;
+          level = r < 0.2 ? 1 : r < 0.45 ? 2 : r < 0.75 ? 3 : 4;
+        }
+        cell.dataset.level = String(level);
+        cell.title = d + " · " + (((h % 12) || 12) + (h < 12 ? "a" : "p")) + " — " + v.toLocaleString();
+        wrap.appendChild(cell);
+      }
+    }
+  }
+
+  // ---- EOS celebration (banner + confetti when target met) ----
+  function eosBannerKind(goodTotal, shiftTarget) {
+    if (shiftTarget <= 0) return null;
+    const ratio = goodTotal / shiftTarget;
+    if (ratio >= 1.0) return "win";
+    if (ratio >= 0.9) return "close";
+    return "miss";
+  }
+  let confettiRaf = null;
+  function runConfetti() {
+    const cv = $("eos-confetti");
+    if (!cv) return;
+    const parent = cv.parentElement;
+    const rect = parent ? parent.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
+    cv.width = rect.width;
+    cv.height = rect.height;
+    const ctx = cv.getContext("2d");
+    const colors = ["#1aa05a", "#1f7ee0", "#e07a2b", "#d23b4d", "#f4c430"];
+    const pieces = [];
+    for (let i = 0; i < 120; i++) {
+      pieces.push({
+        x: Math.random() * rect.width,
+        y: -20 - Math.random() * rect.height * 0.5,
+        vx: (Math.random() - 0.5) * 2,
+        vy: 1 + Math.random() * 3,
+        w: 6 + Math.random() * 6,
+        h: 8 + Math.random() * 8,
+        a: Math.random() * Math.PI * 2,
+        va: (Math.random() - 0.5) * 0.25,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      });
+    }
+    const t0 = performance.now();
+    const DURATION = 4000;
+    if (confettiRaf) cancelAnimationFrame(confettiRaf);
+    function step(t) {
+      const elapsed = t - t0;
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      for (const p of pieces) {
+        p.vy += 0.04; p.x += p.vx; p.y += p.vy; p.a += p.va;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.a);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+      if (elapsed < DURATION) confettiRaf = requestAnimationFrame(step);
+      else { ctx.clearRect(0, 0, rect.width, rect.height); confettiRaf = null; }
+    }
+    confettiRaf = requestAnimationFrame(step);
+  }
+  function showEosCelebration(s) {
+    const banner = $("eos-banner");
+    if (!banner || !s) return;
+    const totals = shiftTotals(s);
+    const { start, end } = getShiftWindow(s);
+    const shiftHours = Math.max(1, (end - start) / 3600000);
+    const shiftTarget = (config.hourlyTarget || 0) * shiftHours;
+    const kind = eosBannerKind(totals.good, shiftTarget);
+    banner.classList.remove("eos-win", "eos-close", "eos-miss", "hidden");
+    if (kind === "win") {
+      banner.classList.add("eos-win");
+      banner.textContent = "🎉  " + tt("eos.bannerWin");
+      runConfetti();
+    } else if (kind === "close") {
+      banner.classList.add("eos-close");
+      banner.textContent = "🏅  " + tt("eos.bannerClose");
+    } else if (kind === "miss") {
+      banner.classList.add("eos-miss");
+      banner.textContent = tt("eos.bannerMiss");
+    } else {
+      banner.classList.add("hidden");
+    }
+  }
+
   function renderAll() {
     const s = getSession();
     const capBtn = $("btn-capture");
     if (!s) {
-      setText("shift-label", device.lineId ? lineLabel(device.lineId) + " · Sin turno activo" : "Configure dispositivo en Admin");
+      setText("shift-label", device.lineId ? lineLabel(device.lineId) + " · " + tt("shift.noActive") : tt("shift.configDevice"));
       setText("operator-label", device.operatorId ? operatorName(device.operatorId) : "—");
-      setText("counter", "—");
+      animateCounter("—");
       setText("scrap-count", "—");
       setText("metric-target", config.hourlyTarget);
       setText("metric-hour", "—");
       setText("metric-hour-range", "—");
       setText("metric-efficiency", "—");
-      setText("metric-efficiency-sub", "Fuera de turno");
+      setText("metric-efficiency-sub", tt("counter.outOfShift"));
       setText("oee", "—");
+      updateOEEDonut(0);
       setDisabled("equip-status", true);
       const pill = $("shift-status");
-      if (pill) { pill.className = "status-pill status-paused"; pill.textContent = "Fuera de Turno"; }
+      if (pill) { pill.className = "status-pill status-paused"; pill.textContent = tt("status.outOfShift"); }
       renderSchedule();
       updateNextAlert();
       if (capBtn) capBtn.disabled = true;
@@ -618,11 +895,11 @@
     setDisabled("equip-status", false);
     updateSession(rolloverHourIfNeeded);
     const fresh = getSession();
-    const otSuffix = isOvertimeDate(fresh.date) ? " · Tiempo Extra" : "";
+    const otSuffix = isOvertimeDate(fresh.date) ? " · " + tt("shift.overtime") : "";
     setText("shift-label", lineLabel(fresh.lineId) + " · " + shiftLabel(fresh.shiftId) + otSuffix);
     setText("operator-label", operatorName(fresh.operatorId));
     const totals = shiftTotals(fresh);
-    setText("counter", totals.good.toLocaleString());
+    animateCounter(totals.good);
     setText("scrap-count", totals.scrap.toLocaleString());
     setText("metric-target", config.hourlyTarget);
 
@@ -641,9 +918,11 @@
     setText("metric-efficiency", shiftEff.pct + "%");
     const effEl = $("metric-efficiency");
     if (effEl) effEl.style.color = shiftEff.pct >= 90 ? "var(--green)" : shiftEff.pct >= 60 ? "var(--blue)" : "var(--accent)";
-    setText("metric-efficiency-sub", shiftEff.completedHours + (shiftEff.completedHours === 1 ? " hr completa" : " hrs completas"));
+    setText("metric-efficiency-sub", tt(shiftEff.completedHours === 1 ? "metric.hrComplete" : "metric.hrsComplete", { n: shiftEff.completedHours }));
 
-    setText("oee", computeOEE(fresh) + "%");
+    const oeePct = computeOEE(fresh);
+    setText("oee", oeePct + "%");
+    updateOEEDonut(oeePct);
     const eqs = $("equip-status"); if (eqs) eqs.value = fresh.currentStatus;
     applyStatusPill(fresh.currentStatus);
     renderChart(fresh);
@@ -661,7 +940,7 @@
     const emptyEl = $("counter-empty");
     if (emptyEl) emptyEl.classList.toggle("hidden", totals.good > 0);
     // Hour-in-progress bar + countdown
-    updateHourProgress(fresh);
+    updateHourRing(fresh);
     // Last capture row
     const last = getLastUserCapture(fresh);
     const lastEl = $("last-capture");
@@ -669,7 +948,8 @@
     if (lastEl && lastText) {
       if (last) {
         const ts = new Date(last.ts);
-        lastText.textContent = "Emp " + last.employeeId + " · " + (last.kind === "scrap" ? last.qty + " rechazos" : "+" + last.qty + " piezas") + " · " + fmt12(ts);
+        lastText.textContent = tt(last.kind === "scrap" ? "counter.lastCapture.scrap" : "counter.lastCapture.good",
+          { emp: last.employeeId, qty: last.qty, time: fmt12(ts) });
         lastEl.classList.remove("hidden");
       } else {
         lastEl.classList.add("hidden");
@@ -718,10 +998,10 @@
     const pill = $("shift-status");
     if (!pill) return;
     pill.className = "status-pill";
-    if (status === "Running") { pill.classList.add("status-active"); pill.textContent = "Activo"; }
-    else if (status === "Idle") { pill.classList.add("status-paused"); pill.textContent = "Inactivo"; }
-    else if (status === "Maintenance") { pill.classList.add("status-completed"); pill.textContent = "Mantenimiento"; }
-    else if (status === "Breakdown") { pill.classList.add("status-paused"); pill.textContent = "Avería"; }
+    if (status === "Running")          { pill.classList.add("status-active", "status-running");   pill.textContent = tt("status.active"); }
+    else if (status === "Idle")        { pill.classList.add("status-paused", "status-idle");       pill.textContent = tt("status.idle"); }
+    else if (status === "Maintenance") { pill.classList.add("status-completed", "status-maint");   pill.textContent = tt("status.maintenance"); }
+    else if (status === "Breakdown")   { pill.classList.add("status-paused", "status-breakdown");  pill.textContent = tt("status.breakdown"); }
   }
 
   // ---- OEE (availability * performance * quality) within shift window ----
@@ -767,6 +1047,37 @@
     return { ctx, w: rect.width, h: rect.height };
   }
 
+  // Rounded-top rectangle (bar with rounded top corners, flat bottom).
+  function barRoundedTop(ctx, x, y, w, h, r) {
+    if (h <= 0 || w <= 0) return;
+    const rr = Math.min(r, w / 2, h);
+    ctx.beginPath();
+    ctx.moveTo(x, y + h);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+    ctx.fill();
+  }
+  function softGridline(ctx, x1, y, x2) {
+    ctx.save();
+    ctx.strokeStyle = "rgba(15,23,42,0.06)";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 4]);
+    ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+    ctx.restore();
+  }
+  function hexWithAlpha(hex, a) {
+    if (!hex || hex[0] !== "#") return hex;
+    const h = hex.slice(1);
+    const n = h.length === 3
+      ? [h[0]+h[0], h[1]+h[1], h[2]+h[2]]
+      : [h.slice(0,2), h.slice(2,4), h.slice(4,6)];
+    return "rgba(" + parseInt(n[0],16) + "," + parseInt(n[1],16) + "," + parseInt(n[2],16) + "," + a + ")";
+  }
+
   function drawCumulativeChart(cv, s) {
     if (!cv || !s) return;
     const { ctx, w, h } = fitCanvas(cv);
@@ -790,20 +1101,39 @@
       elapsedHrs = Math.min(totalHrs, Math.max(0, (hourTo - shStart) / 3600000));
       points.push({ x: elapsedHrs, val: cum, target: cumTarget });
     }
-    if (!points.length) { ctx.fillStyle = getCss("--muted"); ctx.font = "13px system-ui"; ctx.fillText("Sin datos aún", 10, 30); return; }
+    if (!points.length) { ctx.fillStyle = getCss("--muted"); ctx.font = "13px system-ui"; ctx.fillText(tt("charts.noData"), 10, 30); return; }
     const padL = 44, padR = 14, padT = 14, padB = 22;
     const cw = w - padL - padR, ch = h - padT - padB;
     const maxY = Math.max(...points.map(p => Math.max(p.val, p.target)), 1);
     const maxX = totalHrs;
-    ctx.strokeStyle = getCss("--border"); ctx.lineWidth = 1; ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
+    // soft dashed gridlines
+    ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
     [0, 0.5, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+      softGridline(ctx, padL, y, padL + cw);
       ctx.fillText(Math.round(maxY * p).toLocaleString(), 4, y + 3);
     });
+    const blue = getCss("--blue") || "#1f7ee0";
+    // area fill under actual line (gradient)
+    const grad = ctx.createLinearGradient(0, padT, 0, padT + ch);
+    grad.addColorStop(0, hexWithAlpha(blue, 0.28));
+    grad.addColorStop(1, hexWithAlpha(blue, 0.0));
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const x = padL + (p.x / maxX) * cw;
+      const y = padT + ch * (1 - p.val / maxY);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    const lastX = padL + (points[points.length - 1].x / maxX) * cw;
+    ctx.lineTo(lastX, padT + ch);
+    ctx.lineTo(padL + (points[0].x / maxX) * cw, padT + ch);
+    ctx.closePath();
+    ctx.fill();
     // target line
     ctx.strokeStyle = getCss("--warning") || "#f59e0b";
     ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 2;
     ctx.beginPath();
     points.forEach((p, i) => {
       const x = padL + (p.x / maxX) * cw;
@@ -814,6 +1144,9 @@
     ctx.setLineDash([]);
     // actual line
     ctx.strokeStyle = getCss("--accent") || "#3b82f6"; ctx.lineWidth = 3;
+    ctx.strokeStyle = blue;
+    ctx.lineWidth = 3;
+    ctx.lineJoin = "round";
     ctx.beginPath();
     points.forEach((p, i) => {
       const x = padL + (p.x / maxX) * cw;
@@ -821,14 +1154,19 @@
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.stroke();
-    // last point dot
+    // last point dot with halo
     const last = points[points.length - 1];
     const lx = padL + (last.x / maxX) * cw;
     const ly = padT + ch * (1 - last.val / maxY);
     ctx.fillStyle = getCss("--accent") || "#3b82f6";
+    ctx.fillStyle = hexWithAlpha(blue, 0.2);
+    ctx.beginPath(); ctx.arc(lx, ly, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = blue;
     ctx.beginPath(); ctx.arc(lx, ly, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.beginPath(); ctx.arc(lx, ly, 2, 0, Math.PI * 2); ctx.fill();
     // legend
-    ctx.fillStyle = getCss("--muted"); ctx.fillText("─ real  · · · meta", padL, h - 4);
+    ctx.fillStyle = getCss("--muted"); ctx.fillText(tt("charts.legend"), padL, h - 4);
   }
 
   function drawScrapChart(cv, s) {
@@ -853,17 +1191,18 @@
     const padL = 30, padR = 14, padT = 12, padB = 22;
     const cw = w - padL - padR, ch = h - padT - padB;
     const max = Math.max(1, ...bars.map(b => b.value));
-    ctx.strokeStyle = getCss("--border"); ctx.lineWidth = 1; ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
+    ctx.font = "11px system-ui"; ctx.fillStyle = getCss("--muted");
     [0, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+      softGridline(ctx, padL, y, padL + cw);
       ctx.fillText(Math.round(max * p), 4, y + 3);
     });
     const bw = cw / Math.max(1, bars.length);
     ctx.fillStyle = getCss("--danger") || "#ef4444";
     bars.forEach((b, i) => {
       const bh = (b.value / max) * ch;
-      ctx.fillRect(padL + i * bw + 2, padT + ch - bh, Math.max(2, bw - 4), bh);
+      const bwInner = Math.max(2, bw - 6);
+      barRoundedTop(ctx, padL + i * bw + 3, padT + ch - bh, bwInner, bh, 4);
     });
     ctx.fillStyle = getCss("--muted");
     const step = Math.max(1, Math.ceil(bars.length / 10));
@@ -889,7 +1228,7 @@
     const arr = Object.entries(byEmp).map(([emp, qty]) => ({ emp, qty })).sort((a, b) => b.qty - a.qty).slice(0, 8);
     const padL = 60, padR = 14, padT = 10, padB = 16;
     const cw = w - padL - padR, ch = h - padT - padB;
-    if (!arr.length) { ctx.fillStyle = getCss("--muted"); ctx.font = "13px system-ui"; ctx.fillText("Sin capturas con empleado aún", 10, 30); return; }
+    if (!arr.length) { ctx.fillStyle = getCss("--muted"); ctx.font = "13px system-ui"; ctx.fillText(tt("charts.noEmployees"), 10, 30); return; }
     const max = Math.max(...arr.map(a => a.qty), 1);
     const rowH = ch / arr.length;
     ctx.font = "12px system-ui";
@@ -907,9 +1246,45 @@
     });
   }
 
+  // Charts view can be scrubbed back in time via the weekstrip. When the
+  // selected date is today, use the live current session; otherwise pick the
+  // best matching session for that date (prefer same line+shift+operator as
+  // this device, fall back to the most recently updated).
+  let chartsViewDate = null; // ISO yyyy-mm-dd; null = today/live
+  function pickSessionForChartsDate(iso) {
+    if (!iso || iso === todayKey()) return getSession();
+    const matches = loadSessions().filter((s) => s.date === iso);
+    if (!matches.length) return null;
+    const preferred = matches.find((s) =>
+      s.lineId === device.lineId &&
+      s.shiftId === (current && current.shiftId) &&
+      s.operatorId === device.operatorId
+    );
+    if (preferred) return preferred;
+    const sorted = matches.slice().sort((a, b) =>
+      (b.updatedAt || b.startedAt || "").localeCompare(a.updatedAt || a.startedAt || "")
+    );
+    return sorted[0];
+  }
   function renderChartsView() {
-    const s = getSession();
-    if (!s) return;
+    const iso = chartsViewDate || todayKey();
+    const s = pickSessionForChartsDate(iso);
+    const empty = $("charts-empty");
+    if (!s) {
+      if (empty) empty.classList.remove("hidden");
+      setText("kpi-oee", "—"); setText("kpi-avail", "—");
+      setText("kpi-perf", "—"); setText("kpi-qual", "—");
+      const cvs = ["chart-hourly", "chart-cumulative", "chart-scrap"];
+      for (const id of cvs) {
+        const cv = $(id);
+        if (cv) { const c = cv.getContext("2d"); c && c.clearRect(0, 0, cv.width, cv.height); }
+      }
+      renderHeatmap();
+      const d2 = $("date-label-2");
+      if (d2) d2.textContent = fmtDate(new Date(iso + "T00:00:00"));
+      return;
+    }
+    if (empty) empty.classList.add("hidden");
     const oeeStats = computeOEEBreakdown(s);
     setText("kpi-oee", oeeStats.oee + "%");
     setText("kpi-avail", oeeStats.availability + "%");
@@ -918,8 +1293,9 @@
     drawShiftChart($("chart-hourly"), s);
     drawCumulativeChart($("chart-cumulative"), s);
     drawScrapChart($("chart-scrap"), s);
+    renderHeatmap();
     const d = $("date-label-2");
-    if (d) d.textContent = fmtDate(new Date());
+    if (d) d.textContent = fmtDate(new Date(iso + "T00:00:00"));
   }
 
   function computeOEEBreakdown(s) {
@@ -993,9 +1369,12 @@
     const text = getCss("--muted") || "#8a8a93";
     const border = getCss("--border") || "#232329";
     ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = text;
+    // grid (soft dashed)
+    const text = getCss("--muted") || "#5c6678";
+    ctx.font = "11px system-ui, sans-serif"; ctx.fillStyle = text;
     [0, 0.5, 1].forEach((p) => {
       const y = padT + ch * (1 - p);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
+      softGridline(ctx, padL, y, padL + cw);
       ctx.fillText(Math.round(max * p), 4, y + 3);
     });
 
@@ -1003,6 +1382,7 @@
     const targetY = padT + ch * (1 - target / max);
     ctx.strokeStyle = getCss("--warning") || "#f59e0b";
     ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(padL, targetY); ctx.lineTo(padL + cw, targetY); ctx.stroke();
     ctx.setLineDash([]);
 
@@ -1018,17 +1398,17 @@
       return b.isCurrent ? cAccent : cRed;
     }
     buckets.forEach((b, i) => {
-      const x = padL + i * bw + 2;
-      const bwInner = Math.max(2, bw - 4);
+      const x = padL + i * bw + 3;
+      const bwInner = Math.max(2, bw - 6);
       // shade break hours
       if (b.hasBreak) {
-        ctx.fillStyle = "rgba(150,150,150,0.12)";
+        ctx.fillStyle = "rgba(150,150,150,0.10)";
         ctx.fillRect(x, padT, bwInner, ch);
       }
       const bh = (b.value / max) * ch;
       const y = padT + ch - bh;
       ctx.fillStyle = barColorFor(b);
-      ctx.fillRect(x, y, bwInner, bh);
+      barRoundedTop(ctx, x, y, bwInner, bh, 4);
     });
 
     // x labels (skip if cramped)
@@ -1060,10 +1440,10 @@
       const passed = mins < nowMin;
       const li = document.createElement("li");
       if (passed) li.classList.add("done");
-      const label = idx === 0 ? "Primer registro horario"
-        : idx === times.length - 1 ? "Resumen de fin de turno"
-        : "Registrar producción de la hora";
-      li.innerHTML = `<span class="sched-time">${fmt12FromHHMM(t)}</span><span class="sched-tag">Alerta</span><span>${escapeHtml(label)}</span>`;
+      const label = idx === 0 ? tt("sched.first")
+        : idx === times.length - 1 ? tt("sched.last")
+        : tt("sched.regular");
+      li.innerHTML = `<span class="sched-time">${fmt12FromHHMM(t)}</span><span class="sched-tag">${escapeHtml(tt("sched.tag"))}</span><span>${escapeHtml(label)}</span>`;
       scheduleListEl.appendChild(li);
     });
   }
@@ -1081,7 +1461,7 @@
     const capBtn = $("btn-capture");
     if (upcoming.length) {
       const minsToNext = upcoming[0].mins - nowMin;
-      if (cd) cd.textContent = "en " + minsToNext + " min";
+      if (cd) cd.textContent = tt("sched.in", { n: minsToNext });
       if (capBtn) capBtn.classList.toggle("pulse", minsToNext <= 5);
     } else {
       if (cd) cd.textContent = "—";
@@ -1096,7 +1476,7 @@
     if (dateEl) dateEl.textContent = fmtDate(now);
     const changed = ensureAutoSession();
     if (changed) renderAll();
-    updateHourProgress(getSession());
+    updateHourRing(getSession());
     if (!isShiftActive()) return;
 
     const popupOpen = !$("alert-overlay").classList.contains("hidden") || !$("form-overlay").classList.contains("hidden");
@@ -1116,15 +1496,20 @@
     }
   }
 
+  function updateSnoozeButton() {
+    const btn = $("btn-snooze");
+    if (btn) btn.textContent = tt("btn.snooze", { n: config.snoozeMinutes });
+  }
+
   function showAlert(hhmm) {
     activeAlertTime = hhmm;
     $("alert-time").textContent = fmt12FromHHMM(hhmm);
-    $("snooze-label").textContent = String(config.snoozeMinutes);
+    updateSnoozeButton();
     $("alert-overlay").classList.remove("hidden");
     $("alert-overlay").setAttribute("aria-hidden", "false");
     playBeep();
     buzz([200, 100, 200, 100, 200]);
-    logEvent("alert", "Alerta disparada para " + fmt12FromHHMM(hhmm));
+    logEvent("alert", tt("log.alertFired", { time: fmt12FromHHMM(hhmm) }));
   }
 
   function hideAlert() {
@@ -1135,11 +1520,14 @@
   function showForm() {
     $("form-time").textContent = activeAlertTime ? fmt12FromHHMM(activeAlertTime) : fmt12(new Date());
     $("f-count").value = "";
-    $("f-scrap").value = "";
     const last = getLastUserCapture(getSession());
     $("f-operator").value = last ? last.employeeId : "";
-    selectedNotes = [];
-    renderNoteChips();
+    clearEmployeeError();
+    // Reset the optional sections + their dynamic rows.
+    setSectionEnabled("downtime", false);
+    setSectionEnabled("scrap", false);
+    $("f-downtime-rows").innerHTML = "";
+    $("f-scrap-rows").innerHTML = "";
     populateHoraSelect();
     $("form-overlay").classList.remove("hidden");
     $("form-overlay").setAttribute("aria-hidden", "false");
@@ -1147,6 +1535,73 @@
       if (last) $("f-count").focus();
       else $("f-operator").focus();
     }, 50);
+  }
+
+  // ---- Capture form: section toggle + dynamic rows ----
+  function setSectionEnabled(which, on) {
+    const enableEl = $("f-" + which + "-enable");
+    const rowsEl   = $("f-" + which + "-rows");
+    const addBtn   = $("btn-add-" + which);
+    if (!enableEl || !rowsEl || !addBtn) return;
+    enableEl.checked = !!on;
+    rowsEl.classList.toggle("hidden", !on);
+    addBtn.classList.toggle("hidden", !on);
+    if (on && rowsEl.children.length === 0) {
+      // First-time enable: seed one empty row so the operator sees the inputs.
+      addReasonRow(which);
+    }
+  }
+
+  function reasonsFor(which) {
+    return which === "downtime" ? (downtimeReasons || []) : (scrapReasons || []);
+  }
+  function unitLabelFor(which) {
+    return which === "downtime" ? tt("form.minutes") : tt("form.units");
+  }
+
+  function addReasonRow(which) {
+    const rowsEl = $("f-" + which + "-rows");
+    if (!rowsEl) return;
+    const row = document.createElement("div");
+    row.className = "form-row";
+    row.dataset.kind = which;
+    row.innerHTML =
+      '<input type="text" class="numpad-input row-qty" autocomplete="off" inputmode="numeric" readonly placeholder="' +
+        escapeHtml(unitLabelFor(which)) + '" />' +
+      '<select class="row-reason"></select>' +
+      '<button type="button" class="row-del" aria-label="' + escapeHtml(tt("form.removeRow")) + '">&times;</button>';
+    const sel = row.querySelector(".row-reason");
+    const opts = ['<option value="" disabled selected>' + escapeHtml(tt("form.pickReason")) + '</option>']
+      .concat(reasonsFor(which).map((r) => '<option value="' + escapeHtml(r) + '">' + escapeHtml(r) + '</option>'));
+    sel.innerHTML = opts.join("");
+    row.querySelector(".row-del").addEventListener("click", () => {
+      row.remove();
+    });
+    // Wire the numpad for the new qty input (wireNumpad's initial pass only
+    // covers inputs present at boot).
+    const qtyInp = row.querySelector(".row-qty");
+    if (qtyInp) {
+      const open = (e) => { e.preventDefault(); qtyInp.blur(); openNumpad(qtyInp); };
+      qtyInp.addEventListener("click", open);
+      qtyInp.addEventListener("focus", open);
+    }
+    rowsEl.appendChild(row);
+  }
+
+  function clearEmployeeError() {
+    const inp = $("f-operator");
+    const err = $("f-operator-error");
+    if (inp) inp.classList.remove("invalid");
+    if (err) err.classList.add("hidden");
+  }
+  function setEmployeeError() {
+    const inp = $("f-operator");
+    const err = $("f-operator-error");
+    if (inp) inp.classList.add("invalid");
+    if (err) err.classList.remove("hidden");
+  }
+  function isValidEmployee(id) {
+    return typeof id === "string" && /^\d{5}$/.test(id);
   }
 
   function populateHoraSelect() {
@@ -1171,17 +1626,26 @@
       let lh2 = (t.getHours() + 1) % 24;
       const ap2 = lh2 >= 12 ? "PM" : "AM";
       const lh212 = lh2 % 12 || 12;
-      const label = lh12 + ":00 " + ap + " – " + lh212 + ":00 " + ap2 + (filled[key] ? "  (ya capturado: " + filled[key] + ")" : "");
+      const label = filled[key]
+        ? tt("form.hourOptCaptured", { h1: lh12, ap1: ap, h2: lh212, ap2: ap2, n: filled[key] })
+        : tt("form.hourOpt", { h1: lh12, ap1: ap, h2: lh212, ap2: ap2 });
       const isDefault = key === defaultForHour;
       opts.push(`<option value="${key}"${isDefault ? " selected" : ""}>${escapeHtml(label)}</option>`);
     }
-    sel.innerHTML = opts.join("") || '<option value="">Sin horas disponibles</option>';
+    sel.innerHTML = opts.join("") || '<option value="">' + escapeHtml(tt("form.noHours")) + '</option>';
   }
 
-  function hideForm(force) {
-    const hasValues = !force && (($("f-count") && $("f-count").value) || ($("f-scrap") && $("f-scrap").value) || ($("f-operator") && $("f-operator").value) || (selectedNotes && selectedNotes.length));
+  async function hideForm(force) {
+    const opEl = $("f-operator"); const countEl = $("f-count");
+    const dEnable = $("f-downtime-enable"); const sEnable = $("f-scrap-enable");
+    const hasValues = !force && (
+      (opEl && opEl.value) ||
+      (countEl && countEl.value) ||
+      (dEnable && dEnable.checked) ||
+      (sEnable && sEnable.checked)
+    );
     if (hasValues) {
-      if (!confirm("¿Cancelar captura sin guardar?")) return;
+      if (!(await appConfirm(tt("form.confirmCancel")))) return;
     }
     $("form-overlay").classList.add("hidden");
     $("form-overlay").setAttribute("aria-hidden", "true");
@@ -1220,6 +1684,73 @@
     toastTimer = setTimeout(() => el.classList.remove("show"), opts && opts.duration ? opts.duration : 3000);
   }
 
+  // ---- Non-blocking confirm (replaces window.confirm) ----
+  // window.confirm is synchronous and freezes the main thread for as long
+  // as the dialog is open, which Chrome attributes to the click handler
+  // and reports as an INP issue. This helper renders an in-app modal,
+  // returns a Promise<boolean>, and lets the page paint immediately.
+  let _confirmEl = null;
+  function appConfirm(message, opts) {
+    opts = opts || {};
+    return new Promise((resolve) => {
+      if (!_confirmEl) {
+        const overlay = document.createElement("div");
+        overlay.className = "overlay app-confirm-overlay hidden";
+        overlay.setAttribute("aria-hidden", "true");
+        overlay.innerHTML =
+          '<div class="popup app-confirm-popup" role="alertdialog" aria-labelledby="app-confirm-title" aria-describedby="app-confirm-msg">' +
+            '<h2 id="app-confirm-title" class="popup-title-left"></h2>' +
+            '<p id="app-confirm-msg" class="popup-subtle" style="white-space:pre-line"></p>' +
+            '<div class="form-actions-row">' +
+              '<button type="button" class="btn btn-ghost btn-block" data-act="cancel"></button>' +
+              '<button type="button" class="btn btn-block" data-act="ok"></button>' +
+            '</div>' +
+          '</div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener("click", (e) => {
+          // Click on the backdrop (outside the popup) cancels.
+          if (e.target === overlay) overlay._cancel && overlay._cancel();
+        });
+        _confirmEl = overlay;
+      }
+      const titleEl  = _confirmEl.querySelector("#app-confirm-title");
+      const msgEl    = _confirmEl.querySelector("#app-confirm-msg");
+      const okBtn    = _confirmEl.querySelector('[data-act="ok"]');
+      const cancelBtn = _confirmEl.querySelector('[data-act="cancel"]');
+
+      titleEl.textContent = opts.title || tt("confirm.title");
+      msgEl.textContent   = message || "";
+      okBtn.textContent     = opts.okLabel     || tt("btn.confirm");
+      cancelBtn.textContent = opts.cancelLabel || tt("btn.cancel");
+      okBtn.className = "btn btn-block " + (opts.danger ? "btn-warn" : "btn-success");
+
+      function cleanup(result) {
+        _confirmEl.classList.add("hidden");
+        _confirmEl.setAttribute("aria-hidden", "true");
+        okBtn.removeEventListener("click", onOk);
+        cancelBtn.removeEventListener("click", onCancel);
+        document.removeEventListener("keydown", onKey);
+        _confirmEl._cancel = null;
+        resolve(result);
+      }
+      function onOk()     { cleanup(true);  }
+      function onCancel() { cleanup(false); }
+      function onKey(e) {
+        if (e.key === "Escape") onCancel();
+        else if (e.key === "Enter") onOk();
+      }
+      _confirmEl._cancel = onCancel;
+      okBtn.addEventListener("click", onOk);
+      cancelBtn.addEventListener("click", onCancel);
+      document.addEventListener("keydown", onKey);
+      _confirmEl.classList.remove("hidden");
+      _confirmEl.setAttribute("aria-hidden", "false");
+      // Focus OK after the next frame so the dialog has rendered.
+      requestAnimationFrame(() => { try { okBtn.focus(); } catch (_) {} });
+    });
+  }
+  window.appConfirm = appConfirm;
+
   // ---- Vibration ----
   function buzz(pattern) {
     try { if (navigator.vibrate) navigator.vibrate(pattern || 200); } catch (_) {}
@@ -1243,7 +1774,7 @@
     if (!input) return;
     numpadTarget = input;
     numpadBuffer = (input.value || "").replace(/[^0-9]/g, "");
-    const label = (input.previousElementSibling && input.previousElementSibling.textContent) || "Ingrese cantidad";
+    const label = (input.previousElementSibling && input.previousElementSibling.textContent) || tt("numpad.enterQty");
     const title = $("numpad-title");
     if (title) title.textContent = label;
     // Show quick chips only for quantity fields (f-count, f-scrap)
@@ -1312,36 +1843,15 @@
   }
 
   // ---- Notes chips ----
-  let selectedNotes = [];
-
-  function renderNoteChips() {
-    const container = $("f-notes");
-    if (!container) return;
-    container.innerHTML = "";
-    NOTE_OPTIONS.forEach((label) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "note-chip" + (selectedNotes.indexOf(label) !== -1 ? " active" : "");
-      btn.textContent = label;
-      btn.addEventListener("click", () => {
-        const i = selectedNotes.indexOf(label);
-        if (i === -1) selectedNotes.push(label);
-        else selectedNotes.splice(i, 1);
-        renderNoteChips();
-      });
-      container.appendChild(btn);
-    });
-  }
-
   // ---- Captures (good + scrap) with undo ----
-  function addCapture(qty, kind) {
+  async function addCapture(qty, kind) {
     const sess = getSession();
     if (!sess) return;
     const now = new Date();
     if (!isWithinShift(now, sess)) {
       const { start, end } = getShiftWindow(sess);
-      const msg = "Fuera del horario del turno (" + fmt12(start) + " – " + fmt12(end) + "). ¿Registrar de todas formas?";
-      if (!confirm(msg)) return;
+      const msg = tt("form.outOfShift", { start: fmt12(start), end: fmt12(end) });
+      if (!(await appConfirm(msg))) return;
     }
     const id = "c" + Date.now() + Math.random().toString(36).slice(2, 6);
     const ts = now.toISOString();
@@ -1351,9 +1861,12 @@
     const fresh = getSession();
     const totals = shiftTotals(fresh);
     if (kind === "scrap") {
-      logEvent("scrap", "Rechazos: +" + qty + " (total " + totals.scrap.toLocaleString() + ")", { captureId: id });
+      logEvent("scrap", tt("log.scrapMsg", { qty, total: totals.scrap.toLocaleString() }), { captureId: id });
     } else {
-      logEvent("capture", "Captura: +" + qty + " piezas (total " + totals.good.toLocaleString() + ")", { captureId: id });
+      logEvent("capture", tt("log.captureMsg", { qty, total: totals.good.toLocaleString() }), { captureId: id });
+    }
+    if (window.sync && window.sync.pushCapture) {
+      window.sync.pushCapture({ id, ts, qty, kind }, current);
     }
     renderAll();
   }
@@ -1365,7 +1878,8 @@
     if (last.undone) return;
     if (Date.now() - new Date(last.ts).getTime() > UNDO_WINDOW_MS) return;
     updateSession((s2) => { s2.captures[s2.captures.length - 1].undone = true; });
-    logEvent("undo", "Captura deshecha: -" + last.qty + " (" + (last.kind === "scrap" ? "rechazos" : "piezas") + ")");
+    logEvent("undo", tt(last.kind === "scrap" ? "log.undoMsgScrap" : "log.undoMsgPieces", { qty: last.qty }));
+    if (window.sync && window.sync.pushCaptureUndone) window.sync.pushCaptureUndone(last.id);
     renderAll();
   }
 
@@ -1379,7 +1893,7 @@
     if (age < 0 || age > UNDO_WINDOW_MS) { btn.classList.add("hidden"); return; }
     btn.classList.remove("hidden");
     const remain = Math.ceil((UNDO_WINDOW_MS - age) / 1000);
-    btn.textContent = "Deshacer (" + remain + "s)";
+    btn.textContent = tt("btn.undoCountdown", { s: remain });
     clearTimeout(undoTimer);
     undoTimer = setTimeout(() => updateUndoButton(getSession()), 1000);
   }
@@ -1404,54 +1918,143 @@
     });
     const fresh = getSession();
     const lastDt = fresh.downtime[fresh.downtime.length - 1];
-    logEvent("status", "Estado cambiado a: " + STATUS_LABEL[newStatus]);
+    logEvent("status", tt("log.statusChanged", { status: statusLabel(newStatus) }));
     if (newStatus !== "Running") {
-      logEvent("downtime", "Paro iniciado: " + STATUS_LABEL[newStatus]);
+      logEvent("downtime", tt("log.downStarted", { status: statusLabel(newStatus) }));
     } else {
       if (lastDt && lastDt.durationMs) {
         const mins = Math.round(lastDt.durationMs / 60000);
-        logEvent("downtime", "Paro terminado: " + STATUS_LABEL[lastDt.status] + " (" + mins + " min)");
+        logEvent("downtime", tt("log.downEnded", { status: statusLabel(lastDt.status), mins }));
+        if (window.sync && window.sync.pushDowntime) window.sync.pushDowntime(lastDt, current);
       }
     }
     renderAll();
   }
 
   // ---- Submissions ----
-  function submitForm(e) {
+  function collectRows(which) {
+    const rowsEl = $("f-" + which + "-rows");
+    const enableEl = $("f-" + which + "-enable");
+    if (!rowsEl || !enableEl || !enableEl.checked) return [];
+    const out = [];
+    rowsEl.querySelectorAll(".form-row").forEach((row) => {
+      const qty = Number((row.querySelector(".row-qty") || {}).value);
+      const reason = (row.querySelector(".row-reason") || {}).value || "";
+      if (Number.isFinite(qty) && qty > 0 && reason) out.push({ qty, reason });
+    });
+    return out;
+  }
+
+  async function submitForm(e) {
     e.preventDefault();
     const s = getSession();
-    if (!s) { hideForm(); return; }
+    if (!s) { await hideForm(); return; }
     const employeeId = ($("f-operator").value || "").trim();
     const qty = Number($("f-count").value);
-    const scrap = Number($("f-scrap").value) || 0;
-    if (!employeeId) { $("f-operator").focus(); return; }
+    if (!isValidEmployee(employeeId)) { setEmployeeError(); $("f-operator").focus(); return; }
+    clearEmployeeError();
     if (!Number.isFinite(qty) || qty <= 0) { $("f-count").focus(); return; }
-    if (!Number.isFinite(scrap) || scrap < 0) { $("f-scrap").focus(); return; }
-    const notes = selectedNotes.slice();
+
+    const downtimeRows = collectRows("downtime");
+    const scrapRows    = collectRows("scrap");
+
+    // If a section's checkbox is on but no valid rows: focus the first
+    // incomplete input so the operator knows what's missing.
+    if ($("f-downtime-enable").checked && downtimeRows.length === 0) {
+      const firstRow = $("f-downtime-rows").querySelector(".form-row");
+      if (firstRow) { const inp = firstRow.querySelector(".row-qty"); inp && inp.focus(); }
+      return;
+    }
+    if ($("f-scrap-enable").checked && scrapRows.length === 0) {
+      const firstRow = $("f-scrap-rows").querySelector(".form-row");
+      if (firstRow) { const inp = firstRow.querySelector(".row-qty"); inp && inp.focus(); }
+      return;
+    }
+
     const now = new Date();
     const ts = now.toISOString();
     if (!isWithinShift(now, s)) {
-      if (!confirm("Fuera del horario del turno. ¿Registrar de todas formas?")) return;
+      if (!(await appConfirm(tt("form.outOfShiftSimple")))) return;
     }
-    const goodId = "c" + Date.now() + "g" + Math.random().toString(36).slice(2, 5);
-    const scrapId = "c" + Date.now() + "s" + Math.random().toString(36).slice(2, 5);
     const forHour = ($("f-forhour") && $("f-forhour").value) || computeForHour(ts);
+
+    const goodId = "c" + Date.now() + "g" + Math.random().toString(36).slice(2, 5);
+    const scrapIds = scrapRows.map((_, i) =>
+      "c" + Date.now() + "s" + i + Math.random().toString(36).slice(2, 4));
+    // downtime.id is a UUID column in Supabase; captures.id is text. Don't
+    // mix the formats.
+    const newUuid = () => (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : "u-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+    const downtimeIds = downtimeRows.map(() => newUuid());
+
     updateSession((s2) => {
-      s2.captures.push({ id: goodId, ts, qty, kind: "good", employeeId, notes, forHour });
-      if (scrap > 0) s2.captures.push({ id: scrapId, ts, qty: scrap, kind: "scrap", employeeId, notes, forHour });
+      s2.captures.push({ id: goodId, ts, qty, kind: "good", employeeId, forHour });
+      scrapRows.forEach((r, i) => {
+        s2.captures.push({
+          id: scrapIds[i], ts, qty: r.qty, kind: "scrap",
+          employeeId, notes: [r.reason], forHour,
+        });
+      });
+      downtimeRows.forEach((r, i) => {
+        const durationMs = r.qty * 60000;
+        const startTs = new Date(now.getTime() - durationMs).toISOString();
+        s2.downtime.push({
+          id: downtimeIds[i],
+          start: startTs,
+          end: ts,
+          status: "Manual",
+          reason: r.reason,
+          durationMs,
+        });
+      });
+      const totalScrap = scrapRows.reduce((sum, r) => sum + r.qty, 0);
       s2.submissions.push({
         timestamp: ts, alertTime: activeAlertTime, shiftId: s.shiftId, lineId: s.lineId,
-        employeeId, productionCount: qty, scrapCount: scrap, notes, forHour,
+        employeeId, productionCount: qty, scrapCount: totalScrap,
+        scrapRows, downtimeRows, forHour,
       });
     });
-    const noteStr = notes.length ? " · " + notes.join(", ") : "";
-    logEvent("capture", "Emp " + employeeId + ": +" + qty + " piezas" + (scrap ? ", " + scrap + " rechazos" : "") + noteStr);
+
+    if (window.sync && window.sync.pushCapture) {
+      window.sync.pushCapture({ id: goodId, ts, qty, kind: "good", employeeId, forHour }, current);
+      scrapRows.forEach((r, i) => {
+        window.sync.pushCapture({
+          id: scrapIds[i], ts, qty: r.qty, kind: "scrap",
+          employeeId, notes: [r.reason], forHour,
+        }, current);
+      });
+    }
+    if (window.sync && window.sync.pushDowntime) {
+      downtimeRows.forEach((r, i) => {
+        const durationMs = r.qty * 60000;
+        const startTs = new Date(now.getTime() - durationMs).toISOString();
+        window.sync.pushDowntime({
+          id: downtimeIds[i],
+          start: startTs,
+          end: ts,
+          status: "Manual",
+          reason: r.reason,
+          durationMs,
+        }, current);
+      });
+    }
+
+    // Log a single human-readable summary.
+    const totalScrap = scrapRows.reduce((sum, r) => sum + r.qty, 0);
+    const totalDown  = downtimeRows.reduce((sum, r) => sum + r.qty, 0);
+    const summaryParts = [];
+    if (totalScrap > 0) summaryParts.push(totalScrap + " " + tt("form.units") + " rechazo");
+    if (totalDown > 0)  summaryParts.push(totalDown  + " " + tt("form.minutes") + " paro");
+    const extras = summaryParts.length ? " · " + summaryParts.join(" · ") : "";
+    logEvent("capture", tt("log.captureFullV2", { emp: employeeId, qty, extras }));
+
     activeAlertTime = null;
-    hideForm(true);
+    await hideForm(true);
     renderAll();
     const cv = $("view-charts");
     if (cv && !cv.hidden) renderChartsView();
-    toast("✓ Registrado +" + qty + " piezas — Emp " + employeeId);
+    toast(tt("toast.registered", { qty, emp: employeeId }));
     buzz(80);
   }
 
@@ -1460,7 +2063,7 @@
     const pending = load(STORAGE.PENDING, []);
     if (!pending.length) return;
     save(STORAGE.PENDING, []);
-    logEvent("system", "Envíos pendientes sincronizados: " + pending.length);
+    logEvent("system", tt("log.flushed", { n: pending.length }));
   }
 
   // ---- History ----
@@ -1482,7 +2085,7 @@
     if (!listEl) return;
     const all = loadSessions().filter((s) => s.date === date);
     if (!all.length) {
-      listEl.innerHTML = '<p class="muted">Sin sesiones para esta fecha.</p>';
+      listEl.innerHTML = '<p class="muted">' + escapeHtml(tt("history.empty")) + '</p>';
       return;
     }
     listEl.innerHTML = all.map((s, idx) => {
@@ -1496,11 +2099,11 @@
             <span class="muted">${escapeHtml(operatorName(s.operatorId))}</span>
           </div>
           <div class="hi-stats">
-            <span>Producción: <strong>${totals.good.toLocaleString()}</strong></span>
-            <span>Rechazos: <strong>${totals.scrap.toLocaleString()}</strong></span>
-            <span>OEE: <strong>${oee}%</strong></span>
-            <span>Paro: <strong>${downMin} min</strong></span>
-            <span>Envíos: <strong>${(s.submissions || []).length}</strong></span>
+            <span>${escapeHtml(tt("history.production"))}: <strong>${totals.good.toLocaleString()}</strong></span>
+            <span>${escapeHtml(tt("history.scrap"))}: <strong>${totals.scrap.toLocaleString()}</strong></span>
+            <span>${escapeHtml(tt("history.oee"))}: <strong>${oee}%</strong></span>
+            <span>${escapeHtml(tt("history.down"))}: <strong>${escapeHtml(tt("history.min", { n: downMin }))}</strong></span>
+            <span>${escapeHtml(tt("history.submissions"))}: <strong>${(s.submissions || []).length}</strong></span>
           </div>
           <canvas class="hist-chart" data-idx="${idx}" width="600" height="140"></canvas>
         </div>
@@ -1537,7 +2140,7 @@
     a.download = "produccion-" + date + ".csv";
     a.click();
     URL.revokeObjectURL(url);
-    logEvent("system", "Exportado CSV: " + date);
+    logEvent("system", tt("log.exportedCSV", { date }));
   }
 
   function exportAllCSV() {
@@ -1560,7 +2163,7 @@
     a.download = "produccion-todos.csv";
     a.click();
     URL.revokeObjectURL(url);
-    logEvent("system", "Exportado CSV completo (" + all.length + " sesiones)");
+    logEvent("system", tt("log.exportedAllCSV", { n: all.length }));
   }
 
   // ---- Wiring ----
@@ -1626,7 +2229,7 @@
     if (eqs) eqs.addEventListener("change", (e) => changeStatus(e.target.value));
 
     const _on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
-    _on("btn-log-clear", "click", () => { if (confirm("¿Limpiar la bitácora de movimientos?")) clearLog(); });
+    _on("btn-log-clear", "click", async () => { if (await appConfirm(tt("log.confirmClear"), { danger: true })) clearLog(); });
     _on("log-search", "input", (e) => { logFilterText = e.target.value.toLowerCase().trim(); renderLog(); });
     document.querySelectorAll(".log-chip").forEach((chip) => {
       chip.addEventListener("click", () => {
@@ -1672,6 +2275,20 @@
       if (s) renderChart(s);
     });
 
+    // Charts-view weekstrip (lets the user scrub past dates). Initialized
+    // lazily on first switch to the charts view, since its container starts
+    // hidden and Intl rendering needs the DOM laid out.
+    let chartsWeekStripReady = false;
+    function ensureChartsWeekStrip() {
+      if (chartsWeekStripReady) return;
+      if (!$("charts-weekstrip")) return;
+      chartsWeekStripReady = true;
+      initWeekStrip("charts-weekstrip", chartsViewDate || todayKey(), (iso) => {
+        chartsViewDate = iso;
+        renderChartsView();
+      });
+    }
+
     // Sidebar nav
     function switchView(view) {
       document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
@@ -1680,7 +2297,7 @@
       if (cap) cap.hidden = view !== "capture";
       if (ch) ch.hidden = view !== "charts";
       save("prod.ui.view", view);
-      if (view === "charts") renderChartsView();
+      if (view === "charts") { ensureChartsWeekStrip(); renderChartsView(); }
       if (view === "capture") {
         renderAll();
       }
@@ -1715,9 +2332,27 @@
       snoozeUntil = Date.now() + config.snoozeMinutes * 60 * 1000;
       save(STORAGE.SNOOZE, snoozeUntil);
       hideAlert();
-      logEvent("snooze", "Alerta pospuesta " + config.snoozeMinutes + " min");
+      logEvent("snooze", tt("log.snoozed", { n: config.snoozeMinutes }));
     });
     $("entry-form").addEventListener("submit", submitForm);
+
+    // Section toggles + add-row buttons (new capture form).
+    const dEnable = $("f-downtime-enable");
+    const sEnable = $("f-scrap-enable");
+    if (dEnable) dEnable.addEventListener("change", () => setSectionEnabled("downtime", dEnable.checked));
+    if (sEnable) sEnable.addEventListener("change", () => setSectionEnabled("scrap",    sEnable.checked));
+    const addD = $("btn-add-downtime");
+    const addS = $("btn-add-scrap");
+    if (addD) addD.addEventListener("click", () => addReasonRow("downtime"));
+    if (addS) addS.addEventListener("click", () => addReasonRow("scrap"));
+
+    // Live employee-# validation: clear error as soon as it reaches 5 digits.
+    const opEl = $("f-operator");
+    if (opEl) {
+      opEl.addEventListener("input", () => {
+        if (isValidEmployee(opEl.value.trim())) clearEmployeeError();
+      });
+    }
 
     window.addEventListener("online", flushPending);
     window.addEventListener("storage", (e) => {
@@ -1739,21 +2374,147 @@
     return;
   }
 
+  // ---- Weekstrip date picker (admin history + charts view) ----
+  function initWeekStrip(prefix, initialIso, onSelect) {
+    // Back-compat: old call signature was initWeekStrip(initialIso, onSelect).
+    if (typeof prefix === "string" && typeof initialIso === "function" && onSelect === undefined) {
+      onSelect = initialIso; initialIso = prefix; prefix = "weekstrip";
+    }
+    if (!prefix) prefix = "weekstrip";
+    const container = $(prefix);
+    const monthBtn = $(prefix + "-month");
+    const todayBtn = $(prefix + "-today");
+    const prevBtn  = $(prefix + "-prev");
+    const nextBtn  = $(prefix + "-next");
+    const dowsEl   = $(prefix + "-dows");
+    const daysEl   = $(prefix + "-days");
+    if (!container || !monthBtn || !daysEl || !dowsEl) return null;
+
+    let weekStart;
+    let selectedIso = initialIso || todayKey();
+
+    function isoToDate(iso) {
+      const [Y, M, D] = iso.split("-").map(Number);
+      return new Date(Y, M - 1, D, 0, 0, 0, 0);
+    }
+    function dateToIso(d) {
+      return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+    }
+    function sundayOf(d) {
+      const r = new Date(d); r.setHours(0, 0, 0, 0);
+      r.setDate(r.getDate() - r.getDay());
+      return r;
+    }
+    function capFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    function renderDows() {
+      const locale = getLocale();
+      const fmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
+      const ref = sundayOf(new Date());
+      dowsEl.innerHTML = "";
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(ref); d.setDate(ref.getDate() + i);
+        const span = document.createElement("span");
+        span.textContent = capFirst(fmt.format(d).replace(/\.$/, ""));
+        dowsEl.appendChild(span);
+      }
+    }
+
+    function render() {
+      const sel = isoToDate(selectedIso);
+      const ws = new Date(weekStart);
+      const we = new Date(ws); we.setDate(we.getDate() + 6);
+      const monthRef = (sel >= ws && sel <= we) ? sel : new Date(ws.getTime() + 3 * 86400000);
+      const locale = getLocale();
+      const monthFmt = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" });
+      monthBtn.textContent = capFirst(monthFmt.format(monthRef));
+
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const todayIso = dateToIso(today);
+
+      daysEl.innerHTML = "";
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
+        const iso = dateToIso(d);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "weekstrip-day";
+        if (iso === selectedIso) btn.classList.add("is-selected");
+        if (iso === todayIso)    btn.classList.add("is-today");
+        if (d > today)           btn.classList.add("is-future");
+        btn.textContent = String(d.getDate());
+        btn.setAttribute("aria-label", d.toLocaleDateString(locale, {
+          weekday: "long", day: "numeric", month: "long", year: "numeric",
+        }));
+        if (iso === selectedIso) btn.setAttribute("aria-selected", "true");
+        const isoCaptured = iso;
+        btn.addEventListener("click", () => {
+          if (btn.classList.contains("is-future")) return;
+          selectInternal(isoCaptured);
+        });
+        daysEl.appendChild(btn);
+      }
+    }
+
+    function selectInternal(iso) {
+      selectedIso = iso;
+      const sel = isoToDate(iso);
+      const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+      if (sel < weekStart || sel >= weekEnd) weekStart = sundayOf(sel);
+      render();
+      if (typeof onSelect === "function") onSelect(iso);
+    }
+    function next() { weekStart = new Date(weekStart.getTime() + 7 * 86400000); render(); }
+    function prev() { weekStart = new Date(weekStart.getTime() - 7 * 86400000); render(); }
+    function jumpToday() {
+      const t = new Date(); t.setHours(0, 0, 0, 0);
+      weekStart = sundayOf(t);
+      selectInternal(dateToIso(t));
+    }
+
+    weekStart = sundayOf(isoToDate(selectedIso));
+    renderDows();
+    render();
+
+    if (todayBtn) todayBtn.addEventListener("click", jumpToday);
+    if (prevBtn)  prevBtn.addEventListener("click", prev);
+    if (nextBtn)  nextBtn.addEventListener("click", next);
+    if (monthBtn) monthBtn.addEventListener("click", jumpToday);
+
+    window.addEventListener("languagechange", () => { renderDows(); render(); });
+
+    return {
+      select: selectInternal,
+      today: jumpToday,
+      getValue: function () { return selectedIso; },
+    };
+  }
+
   function bootAdmin() {
     wireNumpad();
+    if (window.i18n && window.i18n.bindToggle) window.i18n.bindToggle($("lang-toggle"));
     renderLog();
     const dateEl = $("history-date");
     if (dateEl) {
       dateEl.value = todayKey();
       renderHistory(dateEl.value);
-      dateEl.addEventListener("change", (e) => renderHistory(e.target.value));
+      // Weekstrip is the visible picker; #history-date is a hidden mirror so
+      // existing readers (exports, CSV, etc.) keep working unchanged.
+      if ($("weekstrip")) {
+        initWeekStrip("weekstrip", dateEl.value, (iso) => {
+          dateEl.value = iso;
+          renderHistory(iso);
+        });
+      } else {
+        dateEl.addEventListener("change", (e) => renderHistory(e.target.value));
+      }
     }
     const btnExp = $("btn-history-export");
     if (btnExp) btnExp.addEventListener("click", () => exportCSV($("history-date").value));
     const btnExpAll = $("btn-history-export-all");
     if (btnExpAll) btnExpAll.addEventListener("click", exportAllCSV);
     const btnClr = $("btn-log-clear");
-    if (btnClr) btnClr.addEventListener("click", () => { if (confirm("¿Limpiar la bitácora de movimientos?")) clearLog(); });
+    if (btnClr) btnClr.addEventListener("click", async () => { if (await appConfirm(tt("log.confirmClear"), { danger: true })) clearLog(); });
     const search = $("log-search");
     if (search) search.addEventListener("input", (e) => { logFilterText = e.target.value.toLowerCase().trim(); renderLog(); });
     document.querySelectorAll(".log-chip").forEach((chip) => {
@@ -1767,16 +2528,385 @@
     window.addEventListener("storage", (e) => {
       if (e.key === STORAGE.LOG) renderLog();
     });
+    window.addEventListener("languagechange", () => { renderLog(); });
+  }
+
+  // ---- Remote merge (pull-sync from Supabase) ----
+  // Server wins: undo/delete tombstones from any device propagate here.
+  // Inserts are idempotent by id. Pulled-only sessions get a minimal shell.
+  function shellForRemoteSession(date, lineId, shiftId, operatorId) {
+    const sh = shifts.find((x) => x.id === shiftId);
+    const alertTimes = sh && sh.startTime && sh.endTime
+      ? generateHourlyAlerts(sh.startTime, sh.endTime)
+      : config.alertTimes.slice();
+    return {
+      date, lineId, shiftId, operatorId,
+      startedAt: date + "T00:00:00.000Z",
+      endedAt: null,
+      goodCount: 0, scrapCount: 0,
+      hourValue: 0,
+      hourStart: date + "T00",
+      hourly: {},
+      captures: [],
+      submissions: [],
+      downtime: [],
+      currentStatus: "Running",
+      alertTimes,
+      updatedAt: new Date().toISOString(),
+      _remote: true,
+    };
+  }
+
+  // Window for adding remote rows to the local capture log. Older rows still
+  // merge into sessions (History/Charts) but don't flood the bitácora.
+  const REMOTE_LOG_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+  function mergeRemoteIntoLog(payload, ownDeviceId) {
+    const log = load(STORAGE.LOG, []);
+    const seen = new Set();
+    for (const e of log) { if (e._remoteId) seen.add(e._remoteId); }
+    const now = Date.now();
+    let added = 0;
+
+    function recent(ts) {
+      if (!ts) return false;
+      const t = new Date(ts).getTime();
+      return Number.isFinite(t) && (now - t) <= REMOTE_LOG_WINDOW_MS;
+    }
+
+    for (const r of payload.captures || []) {
+      if (!r.device_id || r.device_id === ownDeviceId) continue;
+      if (!recent(r.ts)) continue;
+      // Skip captures that already arrived as undone — the matching undo event
+      // will be logged separately and a phantom "+N" entry would be confusing.
+      if (r.undone) continue;
+      const key = "c:" + r.id;
+      if (seen.has(key)) continue;
+      const isScrap = r.kind === "scrap";
+      const message = tt(isScrap ? "log.scrapRemote" : "log.captureRemote", { qty: r.qty });
+      log.push({
+        ts: r.ts,
+        type: isScrap ? "scrap" : "capture",
+        message,
+        sessionRef: r.session_date + "|" + r.line_id + "|" + r.shift_id + "|" + r.operator_id,
+        captureId: r.id,
+        _remoteId: key,
+        _remoteDeviceId: r.device_id,
+      });
+      seen.add(key);
+      added++;
+    }
+
+    for (const e of payload.events || []) {
+      if (!e.device_id || e.device_id === ownDeviceId) continue;
+      if (!recent(e.ts)) continue;
+      const key = "e:" + e.id;
+      if (seen.has(key)) continue;
+      let type = e.type || "system";
+      let message = e.message || "";
+      if (type === "capture_undone") { type = "undo"; message = tt("log.undoRemote"); }
+      else if (type === "capture_deleted") { type = "undo"; message = tt("log.adminDelRemote"); }
+      log.push({
+        ts: e.ts,
+        type,
+        message,
+        sessionRef: null,
+        captureId: e.capture_id || undefined,
+        _remoteId: key,
+        _remoteDeviceId: e.device_id,
+      });
+      seen.add(key);
+      added++;
+    }
+
+    if (added > 0) {
+      log.sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
+      if (log.length > LOG_MAX) log.splice(0, log.length - LOG_MAX);
+      save(STORAGE.LOG, log);
+      return true;
+    }
+    return false;
+  }
+
+  // Pending tombstones bridge the race where an undo/delete event arrives
+  // before the matching capture row (e.g. admin deletes on Device B before
+  // Device A finishes flushing its queued capture). Keyed by capture_id.
+  const TOMBSTONES_KEY = "prod.sync.pendingTombstones.v1";
+  function loadPendingTombstones() {
+    try { return JSON.parse(localStorage.getItem(TOMBSTONES_KEY) || "{}"); }
+    catch (_) { return {}; }
+  }
+  function savePendingTombstones(t) {
+    try { localStorage.setItem(TOMBSTONES_KEY, JSON.stringify(t)); } catch (_) {}
+  }
+
+  // Track day_reset broadcasts already applied so we don't re-apply on every pull.
+  // Each entry: eventId -> { day, ts, appliedAt }. Pruned after 30 days.
+  const APPLIED_RESETS_KEY = "prod.sync.appliedResets.v1";
+  function loadAppliedResets() {
+    try { return JSON.parse(localStorage.getItem(APPLIED_RESETS_KEY) || "{}"); }
+    catch (_) { return {}; }
+  }
+  function saveAppliedResets(m) {
+    // Prune entries older than 30 days to bound growth.
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    for (const k of Object.keys(m)) {
+      const t = m[k] && m[k].appliedAt;
+      if (t && new Date(t).getTime() < cutoff) delete m[k];
+    }
+    try { localStorage.setItem(APPLIED_RESETS_KEY, JSON.stringify(m)); } catch (_) {}
+  }
+
+  // Map of config row "key" to local storage key.
+  const CONFIG_KEY_TO_LOCAL = {
+    lines:             STORAGE.LINES,
+    shifts:            STORAGE.SHIFTS,
+    operators:         STORAGE.OPERATORS,
+    settings:          STORAGE.CONFIG,
+    downtime_reasons:  STORAGE.DOWNTIME_REASONS,
+    scrap_reasons:     STORAGE.SCRAP_REASONS,
+  };
+  const CONFIG_LAST_APPLIED_KEY = "prod.sync.configLastApplied.v1";
+
+  function applyConfigRows(rows) {
+    if (!rows || !rows.length) return false;
+    let lastApplied = {};
+    try { lastApplied = JSON.parse(localStorage.getItem(CONFIG_LAST_APPLIED_KEY) || "{}"); }
+    catch (_) {}
+    let changed = false;
+    for (const r of rows) {
+      if (!r || !r.key || r.value == null) continue;
+      const localKey = CONFIG_KEY_TO_LOCAL[r.key];
+      if (!localKey) continue;
+      const incomingTs = r.updated_at || "";
+      const lastTs = lastApplied[r.key] || "";
+      if (lastTs && incomingTs && incomingTs <= lastTs) continue;
+      save(localKey, r.value);
+      lastApplied[r.key] = incomingTs;
+      changed = true;
+    }
+    if (changed) {
+      try { localStorage.setItem(CONFIG_LAST_APPLIED_KEY, JSON.stringify(lastApplied)); } catch (_) {}
+      // Reload module-level variables so renderAll / ensureAutoSession see
+      // the new config without a page reload.
+      config           = Object.assign({}, DEFAULT_CONFIG, load(STORAGE.CONFIG, {}));
+      lines            = load(STORAGE.LINES,            DEFAULT_LINES);
+      shifts           = load(STORAGE.SHIFTS,           DEFAULT_SHIFTS);
+      operators        = load(STORAGE.OPERATORS,        DEFAULT_OPERATORS);
+      downtimeReasons  = load(STORAGE.DOWNTIME_REASONS, DEFAULT_DOWNTIME_REASONS.slice());
+      scrapReasons     = load(STORAGE.SCRAP_REASONS,    DEFAULT_SCRAP_REASONS.slice());
+    }
+    return changed;
+  }
+
+  function applyRemote(payload) {
+    if (!payload) return;
+    const configChanged = applyConfigRows(payload.config);
+    const all = loadSessions();
+    const tombstones = loadPendingTombstones();
+    let changed = configChanged;
+    let tombstonesChanged = false;
+
+    function findOrCreate(date, lineId, shiftId, operatorId) {
+      if (!date || !lineId || !shiftId || !operatorId) return null;
+      const k = date + "|" + lineId + "|" + shiftId + "|" + operatorId;
+      let s = all.find((x) => sessionKey(x) === k);
+      if (!s) {
+        s = shellForRemoteSession(date, lineId, shiftId, operatorId);
+        all.push(s);
+        changed = true;
+      }
+      return s;
+    }
+
+    for (const r of payload.captures || []) {
+      const sess = findOrCreate(r.session_date, r.line_id, r.shift_id, r.operator_id);
+      if (!sess) continue;
+      if (!sess.captures) sess.captures = [];
+      const existing = sess.captures.find((c) => c.id === r.id);
+      if (existing) {
+        // Server-wins: if the server marked it undone, propagate.
+        if (r.undone && !existing.undone) { existing.undone = true; changed = true; }
+        continue;
+      }
+      const hasPendingTombstone = !!tombstones[r.id];
+      sess.captures.push({
+        id: r.id,
+        ts: r.ts,
+        qty: r.qty,
+        kind: r.kind,
+        employeeId: r.employee_id || undefined,
+        notes: r.notes || undefined,
+        forHour: r.for_hour || undefined,
+        undone: !!r.undone || hasPendingTombstone,
+      });
+      if (hasPendingTombstone) {
+        delete tombstones[r.id];
+        tombstonesChanged = true;
+      }
+      changed = true;
+    }
+
+    for (const r of payload.downtime || []) {
+      const sess = findOrCreate(r.session_date, r.line_id, r.shift_id, r.operator_id);
+      if (!sess) continue;
+      if (!sess.downtime) sess.downtime = [];
+      if (!sess.downtime.find((d) => d.id === r.id)) {
+        sess.downtime.push({
+          id: r.id,
+          start: r.start_ts,
+          end: r.end_ts || null,
+          status: r.status || null,
+          durationMs: r.duration_ms || null,
+        });
+        changed = true;
+      }
+    }
+
+    // day_reset broadcast: another device wiped a day on Supabase. Apply
+    // the same wipe locally so the bitácora/sessions match. Idempotent via
+    // applied-id set so we don't re-apply on every pull.
+    const appliedResets = loadAppliedResets();
+    let appliedChanged = false;
+    let logForcedClear = false;
+    for (const r of payload.events || []) {
+      if (r.type !== "day_reset" || !r.message || !r.id) continue;
+      if (appliedResets[r.id]) continue;
+      const dayIso = r.message;
+      // Mark as applied even for our own broadcasts (we already wiped locally).
+      appliedResets[r.id] = { day: dayIso, ts: r.ts || new Date().toISOString(),
+                              appliedAt: new Date().toISOString() };
+      appliedChanged = true;
+      if (r.device_id && r.device_id === payload.ownDeviceId) continue;
+      // Drop sessions for that day from the in-memory list (saveSessions below).
+      for (let i = all.length - 1; i >= 0; i--) {
+        if (all[i] && all[i].date === dayIso) { all.splice(i, 1); changed = true; }
+      }
+      // Forcibly clear log entries for the day (and any pending tombstones for the same).
+      const log = load(STORAGE.LOG, []);
+      const logKept = log.filter((en) => !(en && typeof en.ts === "string" && en.ts.slice(0, 10) === dayIso));
+      if (logKept.length !== log.length) {
+        save(STORAGE.LOG, logKept);
+        logForcedClear = true;
+      }
+      for (const k of Object.keys(tombstones)) {
+        const t = tombstones[k];
+        if (t && typeof t.ts === "string" && t.ts.slice(0, 10) === dayIso) {
+          delete tombstones[k]; tombstonesChanged = true;
+        }
+      }
+      // Tell sync to drop pending pushes for that date too.
+      if (window.sync && typeof window.sync.purgePendingForDate === "function") {
+        window.sync.purgePendingForDate(dayIso);
+      }
+    }
+    if (appliedChanged) saveAppliedResets(appliedResets);
+
+    for (const r of payload.events || []) {
+      if (r.type !== "capture_undone" && r.type !== "capture_deleted") continue;
+      const capId = r.capture_id;
+      if (!capId) continue;
+      let found = false;
+      for (const sess of all) {
+        const cap = (sess.captures || []).find((c) => c.id === capId);
+        if (cap) {
+          found = true;
+          if (!cap.undone) { cap.undone = true; changed = true; }
+          break;
+        }
+      }
+      if (!found) {
+        // Capture row hasn't arrived yet — remember the tombstone so we can
+        // apply it when it does. TTL cleanup happens in sync.js pull().
+        tombstones[capId] = { ts: r.ts || new Date().toISOString(), type: r.type };
+        tombstonesChanged = true;
+      }
+    }
+
+    if (changed) saveSessions(all);
+    if (tombstonesChanged) savePendingTombstones(tombstones);
+    const logChanged = mergeRemoteIntoLog(payload, payload.ownDeviceId);
+    if (changed || logChanged || logForcedClear) refreshAfterRemote();
+  }
+
+  function refreshAfterRemote() {
+    // Counter view present?
+    if ($("counter")) {
+      renderAll();
+      const ch = $("view-charts");
+      if (ch && !ch.hidden && typeof renderChartsView === "function") renderChartsView();
+    }
+    // Admin view present?
+    if ($("log-list")) renderLog();
+    const hd = $("history-date");
+    if (hd && typeof renderHistory === "function") renderHistory(hd.value);
+  }
+
+  window.app = Object.assign(window.app || {}, { applyRemote });
+
+  // Drop sessions older than N days so localStorage doesn't fill up over time.
+  // Safari iOS caps localStorage at ~5MB; without pruning a high-volume line
+  // hits the wall around the 3-month mark.
+  const SESSION_RETENTION_DAYS = 30;
+  function pruneOldSessions() {
+    try {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - SESSION_RETENTION_DAYS);
+      const cutoffStr = cutoff.toISOString().slice(0, 10);
+      const all = loadSessions();
+      const kept = all.filter((s) => s && s.date && s.date >= cutoffStr);
+      if (kept.length < all.length) saveSessions(kept);
+    } catch (_) {}
   }
 
   // ---- Boot ----
+  function renderSyncStatus(detail) {
+    const el = $("sync-status");
+    if (!el) return;
+    const s = detail || (window.sync && window.sync.getStatus && window.sync.getStatus()) || { enabled: false, pending: 0 };
+    el.classList.remove("sync-ok", "sync-pending", "sync-off", "sync-err");
+    if (!s.enabled) {
+      el.classList.add("sync-off");
+      el.textContent = tt("sync.off");
+      el.title = tt("sync.offTitle");
+      return;
+    }
+    if (s.lastError) {
+      el.classList.add("sync-err");
+      el.textContent = tt("sync.error", { n: s.pending });
+      el.title = (s.lastError && s.lastError.message) || tt("sync.errorTitle");
+      return;
+    }
+    if (s.pending > 0) {
+      el.classList.add("sync-pending");
+      el.textContent = tt("sync.pending", { n: s.pending });
+      el.title = tt("sync.pendingTitle");
+      return;
+    }
+    el.classList.add("sync-ok");
+    el.textContent = tt("sync.ok");
+    el.title = s.lastSync ? tt("sync.okTitle", { when: new Date(s.lastSync).toLocaleString(window.i18n ? window.i18n.locale() : "es-MX") }) : tt("sync.ok");
+  }
+
   function boot() {
+    pruneOldSessions();
     if ($("counter")) {
       wire();
       wireNumpad();
+      if (window.i18n && window.i18n.bindToggle) window.i18n.bindToggle($("lang-toggle"));
+      const syncEl = $("sync-status");
+      if (syncEl) {
+        syncEl.addEventListener("click", () => {
+          if (window.sync && window.sync.flush) window.sync.flush();
+          if (window.sync && window.sync.pull)  window.sync.pull();
+        });
+        window.addEventListener("syncstatuschange", (e) => renderSyncStatus(e.detail));
+        renderSyncStatus();
+      }
       ensureAutoSession();
       renderAll();
       renderLog();
+      updateSnoozeButton();
       tick();
       setInterval(tick, 1000);
       setInterval(() => {
@@ -1785,6 +2915,14 @@
         if (ch && !ch.hidden) renderChartsView();
         else renderAll();
       }, 30000);
+      window.addEventListener("languagechange", () => {
+        renderAll();
+        renderLog();
+        updateSnoozeButton();
+        renderSyncStatus();
+        const ch = $("view-charts");
+        if (ch && !ch.hidden) renderChartsView();
+      });
       flushPending();
       registerSW();
     } else {
