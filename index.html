@@ -6,7 +6,7 @@
   <title data-i18n="page.title.capture">Registro de Producción</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f5f7fb" />
-  <link rel="stylesheet" href="styles.css?v=48" />
+  <link rel="stylesheet" href="styles.css?v=50" />
 </head>
 <body class="screen with-sidebar">
   <aside class="sidebar">
@@ -123,7 +123,7 @@
     <div class="clock-row">
       <div class="clock-stack">
         <div id="date-label-2" class="date-label">—</div>
-        <div class="section-title" style="margin:0" data-i18n="charts.title">Gráficas en Vivo</div>
+        <div class="section-title no-margin" data-i18n="charts.title">Gráficas en Vivo</div>
       </div>
     </div>
 
@@ -142,7 +142,7 @@
         <div class="weekstrip-dows" id="charts-weekstrip-dows"></div>
         <div class="weekstrip-days" id="charts-weekstrip-days"></div>
       </div>
-      <div id="charts-empty" class="muted hidden" style="margin-top:10px" data-i18n="charts.noSession">Sin sesión para esa fecha.</div>
+      <div id="charts-empty" class="muted hidden spacer-top-2" data-i18n="charts.noSession">Sin sesión para esa fecha.</div>
     </section>
 
     <section class="kpi-grid">
@@ -165,22 +165,22 @@
     </section>
 
     <section class="chart-card">
-      <div class="section-title" style="margin-bottom:12px" data-i18n="charts.hourlyVsTarget">Producción por Hora vs Meta</div>
+      <div class="section-title" data-i18n="charts.hourlyVsTarget">Producción por Hora vs Meta</div>
       <canvas id="chart-hourly" width="600" height="170"></canvas>
     </section>
 
     <section class="chart-card">
-      <div class="section-title" style="margin-bottom:12px" data-i18n="charts.cumulativeVsTarget">Acumulado del Turno vs Meta Acumulada</div>
+      <div class="section-title" data-i18n="charts.cumulativeVsTarget">Acumulado del Turno vs Meta Acumulada</div>
       <canvas id="chart-cumulative" width="600" height="170"></canvas>
     </section>
 
     <section class="chart-card">
-      <div class="section-title" style="margin-bottom:12px" data-i18n="charts.scrapByHour">Rechazos por Hora</div>
+      <div class="section-title" data-i18n="charts.scrapByHour">Rechazos por Hora</div>
       <canvas id="chart-scrap" width="600" height="140"></canvas>
     </section>
 
     <section class="chart-card" id="heatmap-card">
-      <div class="section-title" style="margin-bottom:12px" data-i18n="charts.heatmap">Mapa de Calor — Producción por Hora (14 días)</div>
+      <div class="section-title" data-i18n="charts.heatmap">Mapa de Calor — Producción por Hora (14 días)</div>
       <div id="heatmap" class="heatmap" aria-hidden="true"></div>
       <div class="heatmap-legend">
         <span class="muted" data-i18n="charts.heatmapLegendLess">menos</span>
@@ -339,7 +339,7 @@
         <div class="eos-stat"><div class="eos-label" data-i18n="eos.oee">OEE</div><div id="eos-oee" class="eos-val">0%</div></div>
         <div class="eos-stat"><div class="eos-label" data-i18n="eos.totalDown">Paro Total</div><div id="eos-down" class="eos-val">0 min</div></div>
       </div>
-      <div class="form-actions-row" style="margin-top:14px">
+      <div class="form-actions-row spacer-top-3">
         <button type="button" id="btn-eos-export" class="btn btn-primary btn-block" data-i18n="eos.exportCsv">Exportar CSV</button>
         <button type="button" id="btn-eos-close" class="btn btn-success btn-block" data-i18n="eos.closeShift">Cerrar Turno</button>
       </div>
@@ -350,9 +350,9 @@
 
   <audio id="alert-sound" preload="auto"></audio>
 
-  <script src="i18n.js?v=48"></script>
-  <script src="supabase-config.js?v=48"></script>
-  <script src="sync.js?v=48"></script>
-  <script src="app.js?v=48"></script>
+  <script src="i18n.js?v=50"></script>
+  <script src="supabase-config.js?v=50"></script>
+  <script src="sync.js?v=50"></script>
+  <script src="app.js?v=50"></script>
 </body>
 </html>
