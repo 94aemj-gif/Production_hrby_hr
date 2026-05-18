@@ -13,10 +13,22 @@
       // Page titles
       "page.title.capture": "Registro de Producción",
       "page.title.admin": "Configuración Admin",
+      "page.title.dashboard": "Tablero — Producción",
+      "dashboard.title": "Tablero",
+      "dashboard.nav.capture": "Captura",
+      "dashboard.totalProduction": "Producción total",
+      "dashboard.totalScrap": "Rechazos",
+      "dashboard.linesActive": "Líneas activas",
+      "dashboard.avgPace": "Ritmo promedio",
+      "dashboard.empty": "Aún no hay líneas configuradas.",
+      "dashboard.noActivity": "Sin actividad",
+      "dashboard.noActivityHint": "Sin captura registrada hoy en esta línea.",
+      "dashboard.lastCapture": "Última: +{qty} · {time}",
 
       // Sidebar / nav
       "nav.capture": "Captura",
       "nav.charts": "Gráficas",
+      "nav.dashboard": "Tablero",
 
       // Top bar
       "top.status": "Estado",
@@ -375,9 +387,21 @@
     en: {
       "page.title.capture": "Production Logging",
       "page.title.admin": "Admin Settings",
+      "page.title.dashboard": "Dashboard — Production",
+      "dashboard.title": "Dashboard",
+      "dashboard.nav.capture": "Capture",
+      "dashboard.totalProduction": "Total production",
+      "dashboard.totalScrap": "Scrap",
+      "dashboard.linesActive": "Active lines",
+      "dashboard.avgPace": "Avg. pace",
+      "dashboard.empty": "No lines configured yet.",
+      "dashboard.noActivity": "No activity",
+      "dashboard.noActivityHint": "No captures recorded today on this line.",
+      "dashboard.lastCapture": "Last: +{qty} · {time}",
 
       "nav.capture": "Capture",
       "nav.charts": "Charts",
+      "nav.dashboard": "Dashboard",
 
       "top.status": "Status",
       "top.statusOpt.running": "Running",
