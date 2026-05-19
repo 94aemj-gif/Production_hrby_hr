@@ -1375,7 +1375,7 @@ button { font-family: inherit; cursor: pointer; }
 .shift-info { min-width: 0; flex: 1 1 auto; }
 
 /* --- Tablet (≤1024px) --- */
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   .topbar { padding: 12px 18px; gap: 12px; flex-wrap: wrap; }
   .topbar-right { gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
   .main { padding: 22px 22px 32px; gap: 22px; }
@@ -1389,7 +1389,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 /* --- Large phones / small tablets (≤768px) --- */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .topbar { padding: 10px 14px; gap: 8px; }
   .topbar-right { gap: 6px; }
   .shift-info { font-size: 14px; gap: 8px; }
@@ -1661,7 +1661,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .admin .entity-table td:last-child .btn:first-child { margin-left: 0; }
 /* Allow row wrap only if the viewport is very narrow */
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   .admin .entity-table td:last-child .btn {
     min-height: var(--touch-min);
     padding: 8px 14px;
@@ -2825,7 +2825,7 @@ body.app-shell .with-sidebar { display: none; }
   width: 100%;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   .capture-grid { grid-template-columns: 1fr; }
   .brandbar { grid-template-columns: 1fr; gap: 14px; padding: 14px 18px; }
   .nav-pills { justify-self: start; }
@@ -3228,7 +3228,7 @@ body.app-shell .bottab-ic {
    - Show kebab button + bottom tab bar
    - Brandbar collapses to: brand + kebab
    ============================================================ */
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   body.app-shell .brandbar {
     grid-template-columns: 1fr auto;
     grid-template-rows: auto;
@@ -3307,7 +3307,7 @@ body.app-shell .bottab-ic {
    - Counter-card capture button → fixed FAB above bottom tab bar
    - Smaller card padding, tighter metrics stack
    ============================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body.app-shell .page { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); gap: 14px; }
   body.app-shell .brandbar { padding: 12px 14px; }
   body.app-shell .brand-mark { width: 40px; height: 40px; font-size: 13px; border-radius: 11px; }
@@ -3375,7 +3375,7 @@ body.app-shell .bottab-ic {
 /* ============================================================
    DESKTOP (>=1025px) — clean single-row brandbar
    ============================================================ */
-@media (min-width: 1025px) {
+@media (min-width: 1024px) {
   body.app-shell .bottom-tabbar { display: none !important; }
   body.app-shell .kebab-btn { display: none !important; }
   body.app-shell .brandbar {
@@ -3422,7 +3422,7 @@ body.app-shell .bottab-ic {
 }
 
 /* Below 1280: drop the next-alert label, then Tablero text, then EN — graceful degradation */
-@media (min-width: 1025px) and (max-width: 1199px) {
+@media (min-width: 1024px) and (max-width: 1199px) {
   body.app-shell .brandbar > .brandbar-right > .next-alert > .next-alert-sub { display: none; }
   body.app-shell .brandbar > .brandbar-right > .status-select > span { display: none; }
 }
@@ -3438,7 +3438,7 @@ body.app-shell .bottab-ic {
    ============================================================ */
 
 /* (1) FAB rescue — counter-actions display:contents + show child */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body.app-shell .page .counter-actions { display: contents !important; }
   body.app-shell #btn-undo { display: none !important; }
   body.app-shell #btn-capture.btn.btn-capture {
@@ -3459,7 +3459,7 @@ body.app-shell .bottab-ic {
 }
 
 /* (3) Drawer — give next-alert + status-select clean row labels */
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   body.app-shell .brandbar.menu-open .brandbar-right .next-alert {
     display: flex;
     align-items: center;
@@ -3498,7 +3498,7 @@ body.app-shell .bottab-ic {
 }
 
 /* (4) Admin page — mobile polish (admin.html has its own .admin shell) */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .admin .actions-row-between {
     flex-wrap: wrap;
     gap: 10px;
@@ -3551,7 +3551,7 @@ body.app-shell .bottab-ic {
    page padding-bottom enough to clear FAB + tab-bar + safe-area.
    Center the FAB text properly.
    ============================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   /* Reserve space at end of scroll for FAB (56) + gap (16) + tab-bar (~64) + safe-area */
   body.app-shell .page {
     padding-bottom: calc(150px + env(safe-area-inset-bottom));
@@ -3576,7 +3576,7 @@ body.app-shell .bottab-ic {
    .counter-card .counter-actions on every viewport. Keep the
    bottom tab bar + kebab drawer.
    ============================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body.app-shell .page .counter-actions {
     display: flex !important;
     justify-content: center;
@@ -3619,7 +3619,7 @@ body.app-shell .bottab-ic {
    ============================================================ */
 
 /* (1) Capture button wider on mobile — fill nearly the whole card */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body.app-shell .page .counter-actions {
     width: 100%;
   }
@@ -3643,7 +3643,7 @@ body.app-shell .page .counter-card .counter {
 }
 
 /* (3 + 4) Drawer rows — clean labeled layout */
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   /* Reset earlier ::before that mashed text */
   body.app-shell .brandbar.menu-open .brandbar-right .sync-status::before,
   body.app-shell .brandbar.menu-open .brandbar-right .lang-toggle::before {
@@ -3799,7 +3799,7 @@ body.app-shell .page .counter-card .counter {
 }
 
 /* (5) Tablero (dashboard.html) — mobile header polish */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body.dashboard-body .topbar {
     flex-direction: column;
     align-items: stretch;
@@ -3860,7 +3860,7 @@ body.app-shell .page .counter-card .counter {
    Target screenshot: narrow pill ~280px wide, ~64px tall,
    large border-radius, soft shadow, centered. NOT a wide bar.
    ============================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body.app-shell .page .counter-actions {
     width: 100% !important;
     justify-content: center !important;
@@ -3892,7 +3892,7 @@ body.app-shell .page .counter-card .counter {
    popup at viewport height, scroll inside, and shrink the
    internal sizes (numpad keys, padding) so everything fits.
    ============================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   /* Overlay reduces edge padding on phones */
   body.app-shell .overlay,
   .overlay { padding: 12px !important; }
@@ -4043,7 +4043,7 @@ body.app-shell .page .counter-card .counter {
 .back-btn:active { transform: translateY(1px) scale(0.97); }
 
 /* Tablero (dashboard.html) + Admin (admin.html): clear bottom tabbar */
-@media (max-width: 1024px) {
+@media (max-width: 1023px) {
   body.app-shell .dashboard-main,
   body.app-shell .admin {
     padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important;
@@ -4277,7 +4277,7 @@ body.app-shell:has(#admin-lock:not(.hidden)) .bottom-tabbar { display: none !imp
 }
 
 /* Mobile: bento collapses to single-column stack */
-@media (max-width: 1023.98px) {
+@media (max-width: 1023px) {
   .bento-grid {
     display: flex;
     flex-direction: column;
@@ -4658,12 +4658,12 @@ body.app-shell:has(#admin-lock:not(.hidden)) .bottom-tabbar { display: none !imp
 }
 
 /* Desktop force 4-up summary even at narrow widths if room */
-@media (min-width: 760px) {
+@media (min-width: 768px) {
   .dashboard-summary {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   }
 }
-@media (max-width: 759px) and (min-width: 480px) {
+@media (max-width: 767px) and (min-width: 480px) {
   .dashboard-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
