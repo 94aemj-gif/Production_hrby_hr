@@ -23,7 +23,7 @@ body.dashboard-body {
   --success: #059669;
   --warning: #ea580c;
   --danger: #be123c;
-  --info: #3b82f6;
+  --info: #0d9488; /* alias to accent — kill saturated blue per skill audit */
   --sans: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, monospace;
 }
@@ -177,6 +177,25 @@ body .live-dot {
   box-shadow: 0 0 0 3px rgba(5,150,105,0.18);
   display: inline-block;
   flex-shrink: 0;
+  position: relative;
+}
+body .live-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: var(--success);
+  opacity: 0.4;
+  animation: livedot-pulse 2.2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes livedot-pulse {
+  0%   { transform: scale(0.7); opacity: 0.5; }
+  70%  { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body .live-dot::after { animation: none; }
 }
 
 body .brandbar #sync-status,
@@ -377,6 +396,47 @@ body .action-btn {
 }
 body .btn:hover,
 body .action-btn:hover { background: var(--paper-3); }
+body .btn:active,
+body .action-btn:active,
+body #btn-capture:active,
+body .nav-item:active,
+body .nav-pill:active,
+body .filter-chip:active,
+body .sn-link:active {
+  transform: translateY(1px);
+  transition: transform 80ms ease-out;
+}
+body .btn,
+body .action-btn,
+body .nav-item,
+body .nav-pill,
+body .filter-chip,
+body .sn-link,
+body #btn-capture,
+body .admin-link {
+  transition: background-color 200ms ease, color 200ms ease, transform 120ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease, filter 200ms ease;
+}
+
+/* Focus-visible a11y */
+body .btn:focus-visible,
+body .action-btn:focus-visible,
+body .nav-item:focus-visible,
+body .nav-pill:focus-visible,
+body .filter-chip:focus-visible,
+body .sn-link:focus-visible,
+body .admin-link:focus-visible,
+body #btn-capture:focus-visible,
+body #lang-toggle:focus-visible,
+body #sync-status:focus-visible,
+body .weekstrip-icon:focus-visible,
+body .weekstrip-day:focus-visible,
+body .kebab-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+body input:focus-visible,
+body select:focus-visible,
+body textarea:focus-visible { outline: none; }
 
 body .btn-primary,
 body .action-btn.primary,
@@ -420,7 +480,7 @@ body .bento-grid .counter-card {
   grid-row: 1 / span 3;
   background: var(--paper);
   border-radius: 22px;
-  box-shadow: 0 0 0 1px var(--line), 0 12px 28px -20px rgba(15,15,20,0.1);
+  box-shadow: 0 0 0 1px var(--line), 0 12px 28px -20px rgba(13,70,80,0.10);
   padding: 36px 40px 32px;
   display: flex;
   flex-direction: column;
@@ -500,12 +560,41 @@ body .btn-capture {
   cursor: pointer;
   background: var(--accent);
   color: var(--paper);
-  box-shadow: 0 6px 18px -8px rgba(15,23,42,0.18);
+  box-shadow: 0 6px 18px -8px rgba(13,70,80,0.28);
   min-height: 56px;
   letter-spacing: 0;
   text-transform: none;
+  transform: translateY(0);
 }
-body #btn-capture:hover { filter: brightness(0.93); }
+body #btn-capture:hover {
+  filter: brightness(0.94);
+  box-shadow: 0 10px 22px -8px rgba(13,70,80,0.32);
+  transform: translateY(-1px);
+}
+body #btn-capture:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px -4px rgba(13,70,80,0.28);
+}
+
+/* Skeleton + shimmer */
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+body .skeleton {
+  background: linear-gradient(90deg, var(--paper-3) 0%, var(--paper-2) 50%, var(--paper-3) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  body .skeleton { animation: none; }
+}
+
+/* Counter flash on capture */
+@keyframes counter-flash {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+body #counter.counter-flash { animation: counter-flash 360ms cubic-bezier(0.16, 1, 0.3, 1); }
 
 body .counter-card #btn-undo {
   padding: 18px 32px;
@@ -546,8 +635,10 @@ body #hour-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
   border-radius: 999px;
-  width: 0;
-  transition: width 0.4s ease;
+  /* Width still set by app.js; mirror to transform via CSS for hardware-accel paint. */
+  transform-origin: left center;
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Side bento tiles */
@@ -557,7 +648,7 @@ body .bento-chart,
 body .bento-scrap {
   background: var(--paper);
   border-radius: 22px;
-  box-shadow: 0 0 0 1px var(--line), 0 12px 28px -20px rgba(15,15,20,0.1);
+  box-shadow: 0 0 0 1px var(--line), 0 12px 28px -20px rgba(13,70,80,0.10);
   padding: 22px 24px;
   display: flex;
   flex-direction: column;
@@ -610,8 +701,9 @@ body #bento-oee-bar-fill {
   height: 100%;
   background: var(--accent);
   border-radius: 999px;
-  width: 0;
-  transition: width 0.4s ease;
+  transform-origin: left center;
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body .bento-chart canvas,
@@ -647,7 +739,7 @@ body .metrics-strip {
   margin-bottom: 20px;
   background: var(--paper);
   border-radius: 22px;
-  box-shadow: 0 0 0 1px var(--line), 0 8px 20px -16px rgba(15,15,20,0.08);
+  box-shadow: 0 0 0 1px var(--line), 0 8px 20px -16px rgba(13,70,80,0.08);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   padding: 20px 28px;
@@ -677,10 +769,18 @@ body .metric-strip-value {
   font-size: 28px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  font-family: var(--sans);
   letter-spacing: -0.02em;
   line-height: 1;
   color: var(--ink);
 }
+body .kpi-value,
+body .ds-value,
+body .line-card-count,
+body .strip-value,
+body #bento-oee-pct,
+body #scrap-count,
+body #counter { font-variant-numeric: tabular-nums; }
 body .metric-strip-sub {
   font-family: var(--mono);
   font-size: 11px;
@@ -876,8 +976,9 @@ body .kpi-tile .kpi-bar-fill {
   height: 100%;
   border-radius: 999px;
   background: var(--accent);
-  width: 0;
-  transition: width 0.4s ease;
+  transform-origin: left center;
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Charts grid 2x2 + heatmap card */
@@ -1202,7 +1303,7 @@ body.app-shell main.admin {
   gap: 0;
   max-width: none;
   padding: 0;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
   background: var(--bg);
 }
 
@@ -1213,7 +1314,7 @@ body.app-shell .admin-sidenav {
   overflow-y: auto;
   position: sticky;
   top: 56px;
-  height: calc(100vh - 56px);
+  height: calc(100dvh - 56px);
 }
 
 body.app-shell .sn-section {
