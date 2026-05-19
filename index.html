@@ -1,51 +1,237 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title data-i18n="page.title.capture">Registro de Producción</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#f0f5f7" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-25..200" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=84" />
-  <link rel="stylesheet" href="styles-v6.css?v=84" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title data-i18n="page.title.capture">Captura · Producción</title>
+<meta name="theme-color" content="#f0f5f7" />
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-25..200" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css?v=90" />
+<style>
+  /* === Mockup v3-1-captura.html + v3-2-graficas.html — scoped to body.shell-captura === */
+  body.shell-captura {
+    --bg: #f0f5f7; --paper: #fbfdfd; --paper-2: #f8fafb; --paper-3: #eaf0f3;
+    --line: #dbe5ec; --line-2: #c6d3dc; --ink: #0c1a26; --ink-2: #1e3a4d; --muted: #5d7282;
+    --accent: #0d9488; --accent-2: #14b8a6; --accent-soft: #ccfbf1;
+    --success: #059669; --warning: #ea580c; --danger: #be123c; --info: #3b82f6;
+    --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  body.shell-captura, body.shell-captura * { box-sizing: border-box; }
+  body.shell-captura { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  body.shell-captura .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; vertical-align: middle; }
+
+  body.shell-captura .topbar { height: 56px; padding: 0 32px; background: var(--paper); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 24px; position: sticky; top: 0; z-index: 60; }
+  body.shell-captura .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: -0.01em; min-width: 0; }
+  body.shell-captura .brand-dot { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; color: var(--paper); }
+  body.shell-captura .brand-text { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+  body.shell-captura .brand-name { color: var(--ink); font-size: 16px; white-space: nowrap; }
+  body.shell-captura .brand-sub { color: var(--muted); font-size: 12px; font-weight: 500; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 18ch; }
+  body.shell-captura .nav-pills { display: flex; gap: 4px; margin-left: 12px; flex-shrink: 0; }
+  body.shell-captura .nav-pill { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; background: transparent; border: none; font-family: inherit; line-height: 1; text-decoration: none; }
+  body.shell-captura .nav-pill:hover { color: var(--ink); }
+  body.shell-captura .nav-pill.active { background: var(--ink); color: var(--paper); }
+  body.shell-captura .topbar-actions { display: flex; gap: 12px; align-items: center; }
+  body.shell-captura .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: var(--muted); cursor: pointer; background: transparent; border: none; }
+  body.shell-captura .icon-btn:hover { background: var(--paper-3); color: var(--ink); }
+  body.shell-captura .shift-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-family: var(--mono); color: var(--ink); white-space: nowrap; }
+  body.shell-captura .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px rgba(5,150,105,0.18); display: inline-block; flex-shrink: 0; position: relative; }
+  body.shell-captura .live-dot::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; background: var(--success); opacity: 0.4; animation: livedot-pulse 2.2s ease-out infinite; pointer-events: none; }
+  @keyframes livedot-pulse { 0% { transform: scale(0.7); opacity: 0.5; } 70% { transform: scale(2.2); opacity: 0; } 100% { transform: scale(2.2); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { body.shell-captura .live-dot::after { animation: none; } }
+  body.shell-captura .sync-status { width: 36px; height: 36px; border-radius: 10px; background: transparent; border: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; font-size: 11px; font-family: var(--mono); font-weight: 600; }
+  body.shell-captura .sync-status:hover { background: var(--paper-3); color: var(--ink); }
+  body.shell-captura .sync-status.sync-ok { color: var(--success); }
+  body.shell-captura .sync-status.sync-err { color: var(--danger); }
+  body.shell-captura .sync-status.sync-pending { color: var(--warning); }
+  body.shell-captura .lang-toggle { width: 36px; height: 36px; border-radius: 10px; background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 12px; font-family: var(--mono); font-weight: 700; }
+  body.shell-captura .lang-toggle:hover { background: var(--paper-3); color: var(--ink); }
+  body.shell-captura .admin-link { padding: 8px 16px; background: var(--ink); color: var(--paper); border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; line-height: 1; }
+
+  body.shell-captura .page { padding: 28px 40px 56px; max-width: 1280px; margin: 0 auto; }
+  body.shell-captura .page.hidden, body.shell-captura .page[hidden] { display: none; }
+  body.shell-captura .page-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 24px; }
+  body.shell-captura .page-title { font-size: 32px; font-weight: 700; letter-spacing: -0.03em; margin: 0; color: var(--ink); line-height: 1.1; }
+  body.shell-captura .page-meta { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin-top: 4px; }
+  body.shell-captura .clock-block { text-align: right; font-family: var(--mono); display: flex; flex-direction: column; gap: 2px; align-items: flex-end; flex-shrink: 0; }
+  body.shell-captura .clock-date { font-size: 12px; color: var(--muted); }
+  body.shell-captura .clock-time { font-size: 28px; font-weight: 600; letter-spacing: -0.04em; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1; }
+  body.shell-captura .actions { display: flex; gap: 10px; }
+
+  body.shell-captura .bento { display: grid; grid-template-columns: 7fr 5fr; gap: 20px; align-items: stretch; }
+  body.shell-captura .hero { grid-column: 1; grid-row: 1 / span 3; background: var(--paper); border-radius: 22px; box-shadow: 0 0 0 1px var(--line), 0 12px 28px -20px rgba(13,70,80,0.10); padding: 36px 40px 32px; display: flex; flex-direction: column; align-items: flex-start; min-height: 540px; position: relative; overflow: hidden; }
+  body.shell-captura .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 50% 0%, var(--accent-soft), transparent 70%); pointer-events: none; }
+  body.shell-captura .hero > * { position: relative; }
+  body.shell-captura .kicker { font-family: var(--mono); color: var(--accent); font-size: 12px; font-weight: 600; background: var(--accent-soft); padding: 7px 16px; border-radius: 999px; margin: 0; display: inline-block; }
+  body.shell-captura .counter { font-size: clamp(120px, 14vw, 200px); line-height: 0.92; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.06em; margin: auto 0; text-align: left; width: 100%; }
+  body.shell-captura .last-capture { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  body.shell-captura .counter-row { display: flex; gap: 14px; align-items: center; }
+  body.shell-captura .btn-hero { padding: 18px 48px; border: none; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; min-height: 56px; }
+  body.shell-captura .btn-hero-primary { background: var(--accent); color: var(--paper); box-shadow: 0 6px 18px -8px rgba(13,70,80,0.28); }
+  body.shell-captura .btn-hero-primary:hover { filter: brightness(0.94); transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(13,70,80,0.32); }
+  body.shell-captura .btn-hero-primary:active { transform: translateY(1px); }
+  body.shell-captura .btn-hero-ghost { background: transparent; border: 1px solid var(--line-2); color: var(--ink); }
+  body.shell-captura .hour-ribbon { align-self: stretch; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+  body.shell-captura .ribbon-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
+  body.shell-captura .ribbon-cd { font-family: var(--mono); }
+  body.shell-captura .ribbon-bar { height: 8px; background: var(--paper-3); border-radius: 999px; overflow: hidden; }
+  body.shell-captura .ribbon-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; transition: width 0.4s cubic-bezier(0.16,1,0.3,1); width: 0; }
+
+  body.shell-captura .tile { background: var(--paper); border-radius: 22px; box-shadow: 0 0 0 1px var(--line), 0 12px 28px -20px rgba(13,70,80,0.10); padding: 22px 24px; display: flex; flex-direction: column; gap: 8px; }
+  body.shell-captura .tile-label { font-family: var(--mono); color: var(--muted); font-size: 12px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  body.shell-captura .tile-icon { color: var(--accent); }
+  body.shell-captura .tile-big { font-family: var(--sans); font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1; color: var(--ink); }
+  body.shell-captura .tile-delta { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 2px; padding: 3px 8px; border-radius: 999px; }
+  body.shell-captura .delta-up { color: var(--success); background: rgba(5,150,105,0.12); }
+  body.shell-captura .delta-down { color: var(--danger); background: rgba(190,18,60,0.12); }
+  body.shell-captura .tile-bar { height: 6px; background: var(--paper-3); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  body.shell-captura .tile-bar-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.4s cubic-bezier(0.16,1,0.3,1); width: 0; }
+  body.shell-captura .tile-oee { grid-column: 2; grid-row: 1; }
+  body.shell-captura .tile-chart { grid-column: 2; grid-row: 2; flex: 1; }
+  body.shell-captura .tile-scrap { grid-column: 2; grid-row: 3; }
+  body.shell-captura .tile-chart canvas { width: 100%; flex: 1; min-height: 160px; max-height: 200px; }
+
+  body.shell-captura .strip { margin-top: 20px; background: var(--paper); border-radius: 22px; box-shadow: 0 0 0 1px var(--line), 0 8px 20px -16px rgba(13,70,80,0.08); display: grid; grid-template-columns: repeat(3, 1fr); padding: 20px 28px; }
+  body.shell-captura .strip-item { padding: 0 24px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+  body.shell-captura .strip-item:first-child { border-left: 0; padding-left: 0; }
+  body.shell-captura .strip-label { font-family: var(--mono); color: var(--muted); font-size: 12px; font-weight: 600; }
+  body.shell-captura .strip-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1; color: var(--ink); font-family: var(--sans); }
+  body.shell-captura .strip-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  body.shell-captura .strip-value.up { color: var(--success); }
+  body.shell-captura .strip-value.down { color: var(--danger); }
+
+  /* Gráficas */
+  body.shell-captura .btn { padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); min-height: 40px; line-height: 1; }
+  body.shell-captura .btn:hover { background: var(--paper-3); }
+  body.shell-captura .btn:active { transform: translateY(1px); }
+  body.shell-captura .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+  body.shell-captura .btn-primary:hover { filter: brightness(0.93); }
+  body.shell-captura .weekstrip { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
+  body.shell-captura .weekstrip-month { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); font-weight: 700; flex-shrink: 0; min-width: 96px; background: transparent; border: none; padding: 0; cursor: pointer; text-align: left; }
+  body.shell-captura .weekstrip-dows { display: none; }
+  body.shell-captura .weekstrip-days { display: flex; gap: 6px; flex: 1; overflow-x: auto; }
+  body.shell-captura .weekstrip-day { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 4px 8px; border-radius: 10px; background: transparent; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; color: var(--ink); position: relative; line-height: 1.1; flex-shrink: 0; font-family: var(--sans); }
+  body.shell-captura .weekstrip-day:hover { background: var(--paper-3); }
+  body.shell-captura .weekstrip-day.is-selected, body.shell-captura .weekstrip-day.selected { background: var(--accent); color: var(--paper); }
+  body.shell-captura .weekstrip-day.is-today { box-shadow: inset 0 0 0 1px var(--accent); }
+  body.shell-captura .weekstrip-day.is-future { opacity: 0.35; cursor: default; }
+  body.shell-captura .weekstrip-nav { display: flex; gap: 4px; flex-shrink: 0; }
+  body.shell-captura .weekstrip-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; cursor: pointer; color: var(--muted); border: 1px solid transparent; background: transparent; padding: 0; }
+  body.shell-captura .weekstrip-icon:hover { background: var(--paper-3); color: var(--ink); }
+
+  body.shell-captura .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  body.shell-captura .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  body.shell-captura .kpi-head { display: flex; justify-content: space-between; align-items: center; }
+  body.shell-captura .kpi-label { font-family: var(--mono); color: var(--muted); font-size: 12px; font-weight: 600; }
+  body.shell-captura .kpi-icon { color: var(--accent); }
+  body.shell-captura .kpi-body { display: flex; align-items: baseline; gap: 8px; }
+  body.shell-captura .kpi-value { font-family: var(--sans); font-size: 36px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+  body.shell-captura .kpi-value.featured { color: var(--accent); }
+  body.shell-captura .kpi-unit { font-size: 14px; color: var(--muted); font-weight: 600; }
+  body.shell-captura .kpi-delta { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 2px; padding: 3px 8px; border-radius: 999px; }
+  body.shell-captura .delta-flat { color: var(--muted); background: var(--paper-3); }
+  body.shell-captura .kpi-bar { height: 4px; background: var(--paper-3); border-radius: 999px; overflow: hidden; }
+  body.shell-captura .kpi-bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width 0.4s cubic-bezier(0.16,1,0.3,1); width: 0; }
+
+  body.shell-captura .charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  body.shell-captura .chart-card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; display: flex; flex-direction: column; }
+  body.shell-captura .chart-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+  body.shell-captura .chart-title { font-family: var(--mono); font-size: 13px; color: var(--ink); font-weight: 600; }
+  body.shell-captura .chart-card canvas { width: 100%; max-height: 260px; min-height: 200px; }
+
+  body.shell-captura .heatmap-card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; }
+  body.shell-captura .heatmap-card .heatmap { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; }
+  body.shell-captura .heatmap > div { height: 16px; border-radius: 2px; background: var(--paper-3); }
+  body.shell-captura .heatmap > div[data-level="1"] { background: var(--accent); opacity: 0.25; }
+  body.shell-captura .heatmap > div[data-level="2"] { background: var(--accent); opacity: 0.5; }
+  body.shell-captura .heatmap > div[data-level="3"] { background: var(--accent); opacity: 0.75; }
+  body.shell-captura .heatmap > div[data-level="4"] { background: var(--accent); opacity: 1; }
+  body.shell-captura .heatmap-legend { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 12px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  body.shell-captura .heatmap-swatch { width: 12px; height: 12px; border-radius: 2px; background: var(--paper-3); display: inline-block; }
+  body.shell-captura .heatmap-swatch[data-level="1"] { background: var(--accent); opacity: 0.25; }
+  body.shell-captura .heatmap-swatch[data-level="2"] { background: var(--accent); opacity: 0.5; }
+  body.shell-captura .heatmap-swatch[data-level="3"] { background: var(--accent); opacity: 0.75; }
+  body.shell-captura .heatmap-swatch[data-level="4"] { background: var(--accent); opacity: 1; }
+
+  body.shell-captura .oee-donut { width: 36px; height: 36px; position: relative; display: inline-grid; place-items: center; }
+  body.shell-captura .oee-donut svg { width: 100%; height: 100%; }
+  body.shell-captura .oee-donut .donut-bg { fill: none; stroke: var(--paper-3); stroke-width: 6; }
+  body.shell-captura .oee-donut .donut-arc { fill: none; stroke: var(--accent); stroke-width: 6; stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; }
+  body.shell-captura .oee-donut-text { position: absolute; font-family: var(--mono); font-size: 9px; font-weight: 700; color: var(--ink); }
+
+  body.shell-captura .kebab-btn { display: none; background: transparent; border: none; color: var(--muted); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; }
+  @media (max-width: 1023px) {
+    body.shell-captura .topbar { padding: 0 16px; gap: 12px; flex-wrap: wrap; }
+    body.shell-captura .nav-pills { display: none; }
+    body.shell-captura .topbar-actions { display: none; }
+    body.shell-captura .topbar.menu-open .topbar-actions { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; padding: 12px 0 4px; border-top: 1px solid var(--line); }
+    body.shell-captura .kebab-btn { display: grid; place-items: center; }
+  }
+  @media (max-width: 880px) {
+    body.shell-captura .bento { grid-template-columns: 1fr; }
+    body.shell-captura .hero, body.shell-captura .tile { grid-column: 1; grid-row: auto; min-height: 0; }
+    body.shell-captura .hero { padding: 24px 24px 20px; min-height: 360px; }
+    body.shell-captura .counter { font-size: clamp(96px, 22vw, 160px); }
+    body.shell-captura .strip { grid-template-columns: 1fr; }
+    body.shell-captura .strip-item { padding: 12px 0; border-left: 0; border-top: 1px solid var(--line); }
+    body.shell-captura .strip-item:first-child { border-top: 0; padding-top: 0; }
+    body.shell-captura .kpis { grid-template-columns: repeat(2, 1fr); }
+    body.shell-captura .charts-grid { grid-template-columns: 1fr; }
+    body.shell-captura .page { padding: 20px 16px 80px; }
+  }
+  @media (max-width: 760px) {
+    body.shell-captura .page-head { flex-wrap: wrap; gap: 12px; }
+    body.shell-captura .page-title { font-size: 24px; }
+    body.shell-captura .clock-time { font-size: 22px; }
+    body.shell-captura .weekstrip { flex-wrap: wrap; padding: 10px; gap: 8px; }
+  }
+
+  body.shell-captura .bottom-tabbar { display: none; }
+  @media (max-width: 1023px) {
+    body.shell-captura .bottom-tabbar { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); z-index: 50; padding: 6px 8px; gap: 4px; }
+    body.shell-captura .bottom-tabbar .bottab-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 4px; border-radius: 10px; color: var(--muted); text-decoration: none; gap: 2px; font-family: inherit; background: transparent; border: none; cursor: pointer; }
+    body.shell-captura .bottom-tabbar .bottab-item.active { background: var(--ink); color: var(--paper); }
+    body.shell-captura .bottom-tabbar .bottab-ic { font-size: 18px; }
+    body.shell-captura .bottom-tabbar .bottab-label { font-size: 11px; font-family: var(--mono); font-weight: 600; }
+  }
+
+  body.shell-captura .hidden { display: none !important; }
+</style>
 </head>
-<body class="app-shell">
+<body class="shell-captura app-shell">
 
-  <!-- ================= TOP BRAND BAR ================= -->
-  <header class="brandbar">
+  <header class="topbar">
     <div class="brand">
-      <div class="brand-dot brand-mark"><span class="material-symbols-outlined" style="font-size:18px;">precision_manufacturing</span></div>
+      <div class="brand-dot"><span class="material-symbols-outlined" style="font-size: 18px;">precision_manufacturing</span></div>
       <div class="brand-text">
-        <b id="brand-title">Producción</b>
-        <span id="brand-sub">L-02 · Turno actual</span>
+        <div class="brand-name" id="brand-title">Producción</div>
+        <div class="brand-sub" id="brand-sub">L · Turno actual</div>
       </div>
-      <nav class="nav-pills">
-        <button type="button" class="nav-item active" data-view="capture" data-i18n="nav.capture">Captura</button>
-        <button type="button" class="nav-item" data-view="charts" data-i18n="nav.charts">Gráficas</button>
-        <a class="nav-item" href="dashboard.html" data-i18n="nav.dashboard">Tablero</a>
-        <a class="nav-item" id="admin-link" href="admin.html" data-i18n="top.admin">Admin</a>
-      </nav>
+      <div class="nav-pills">
+        <button type="button" class="nav-pill active" data-view="capture" data-i18n="nav.capture">Captura</button>
+        <button type="button" class="nav-pill" data-view="charts" data-i18n="nav.charts">Gráficas</button>
+        <a class="nav-pill" href="dashboard.html" data-i18n="nav.dashboard">Tablero</a>
+        <a class="nav-pill" id="admin-link" href="admin.html" data-i18n="top.admin">Admin</a>
+      </div>
     </div>
-
-    <div class="brandbar-right">
-      <div class="shift-info shift-pill">
-        <span class="live-dot" aria-hidden="true"></span>
+    <div class="topbar-actions">
+      <div class="shift-pill">
+        <span class="live-dot"></span>
         <span id="shift-label">—</span>
         <span id="shift-status" class="status-pill status-active">activo</span>
-        <div class="oee-donut" id="oee-donut" title="OEE">
-          <svg viewBox="0 0 56 56" aria-hidden="true">
-            <circle cx="28" cy="28" r="24" class="donut-bg"></circle>
-            <circle cx="28" cy="28" r="24" id="oee-arc" class="donut-arc"></circle>
-          </svg>
-          <div id="oee-pct" class="oee-donut-text">—</div>
-        </div>
+      </div>
+      <div class="oee-donut" id="oee-donut" title="OEE">
+        <svg viewBox="0 0 56 56" aria-hidden="true">
+          <circle cx="28" cy="28" r="24" class="donut-bg"></circle>
+          <circle cx="28" cy="28" r="24" id="oee-arc" class="donut-arc"></circle>
+        </svg>
+        <div id="oee-pct" class="oee-donut-text">—</div>
       </div>
       <div class="status-select hidden">
-        <span class="muted" data-i18n="top.status">Estado</span>
         <select id="equip-status">
           <option value="Running" data-i18n="top.statusOpt.running">En operación</option>
           <option value="Idle" data-i18n="top.statusOpt.idle">Inactivo</option>
@@ -53,257 +239,200 @@
           <option value="Breakdown" data-i18n="top.statusOpt.breakdown">Avería</option>
         </select>
       </div>
-      <div class="next-alert hidden">
-        <span class="muted" data-i18n="top.nextAlert">Próxima alerta</span>
+      <span class="next-alert hidden">
         <span id="next-alert-time">--:--</span>
-        <span id="next-alert-countdown" class="next-alert-sub muted">—</span>
-      </div>
-      <button type="button" id="sync-status" class="sync-status sync-off" title=""><span class="material-symbols-outlined" style="font-size:18px;">sync</span></button>
+        <span id="next-alert-countdown">—</span>
+      </span>
+      <button type="button" id="sync-status" class="sync-status sync-off"><span class="material-symbols-outlined" style="font-size:18px;">sync</span></button>
       <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
     </div>
-
-    <button type="button" id="kebab-btn" class="kebab-btn" aria-label="Más opciones" aria-expanded="false"><span class="material-symbols-outlined">more_horiz</span></button>
+    <button type="button" id="kebab-btn" class="kebab-btn" aria-label="Más opciones"><span class="material-symbols-outlined">more_horiz</span></button>
   </header>
 
-  <!-- ================= CAPTURE VIEW ================= -->
-  <main class="page view active" id="view-capture">
-
+  <main class="page view" id="view-capture">
     <div class="page-head">
-      <div class="page-title-row">
-        <div>
-          <h1 class="page-title" data-i18n="capture.pageTitle">Captura del turno</h1>
-          <div class="page-meta">
-            <span class="live-dot"></span>
-            <span id="capture-meta-text">Turno activo</span>
-          </div>
+      <div>
+        <h1 class="page-title" data-i18n="capture.pageTitle">Captura del turno</h1>
+        <div class="page-meta">
+          <span class="live-dot"></span>
+          <span id="capture-meta-text" data-i18n="capture.metaShiftActive">Turno activo</span>
         </div>
-        <div class="clock-block">
-          <span id="date-label" class="date-label">—</span>
-          <span id="clock" class="clock">--:--</span>
-        </div>
+      </div>
+      <div class="clock-block">
+        <div class="clock-date" id="date-label">—</div>
+        <div class="clock-time" id="clock">--:--</div>
       </div>
     </div>
 
-    <div class="bento-grid">
-      <!-- HERO: counter -->
-      <section class="counter-card bento-hero" id="counter-card">
-        <span class="card-label kicker" data-i18n="counter.cardLabel">Producción del turno</span>
-        <div id="counter" class="counter">0</div>
-        <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque CAPTURAR para iniciar</div>
+    <div class="bento bento-grid">
+      <section class="hero counter-card bento-hero" id="counter-card">
+        <span class="kicker card-label" data-i18n="counter.cardLabel">Producción del turno</span>
+        <div class="counter" id="counter">0</div>
+        <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque Capturar para iniciar</div>
         <div id="last-capture" class="last-capture hidden">
           <span class="muted" data-i18n="counter.lastShort">Última:</span> <span id="last-capture-text">—</span>
         </div>
-        <div class="counter-actions">
-          <button id="btn-capture" class="btn btn-capture btn-primary" data-i18n="btn.capture" data-i18n-aria-label="btn.captureAria" aria-label="Capturar producción">Capturar</button>
-          <button id="btn-undo" class="btn btn-ghost hidden" data-i18n="btn.undo" data-i18n-aria-label="btn.undoAria" aria-label="Deshacer última captura">Deshacer</button>
+        <div class="counter-row counter-actions">
+          <button id="btn-capture" class="btn-hero btn-hero-primary btn-capture" data-i18n="btn.capture" aria-label="Capturar producción">Capturar</button>
+          <button id="btn-undo" class="btn-hero btn-hero-ghost hidden" data-i18n="btn.undo" aria-label="Deshacer">Deshacer</button>
         </div>
-        <div id="hour-progress" class="hour-progress hour-progress-inline">
-          <div class="hour-progress-head">
-            <span id="hour-progress-label" class="muted" data-i18n="counter.currentHourLabel">Hora actual</span>
-            <span id="hour-progress-countdown" class="hour-progress-cd">—</span>
+        <div id="hour-progress" class="hour-ribbon hour-progress hour-progress-inline">
+          <div class="ribbon-head hour-progress-head">
+            <span id="hour-progress-label" data-i18n="counter.currentHourLabel">Hora actual</span>
+            <span class="ribbon-cd" id="hour-progress-countdown">—</span>
           </div>
-          <div class="hour-progress-bar">
-            <div id="hour-progress-fill" class="hour-progress-fill"></div>
-          </div>
+          <div class="ribbon-bar hour-progress-bar"><div class="ribbon-fill hour-progress-fill" id="hour-progress-fill"></div></div>
         </div>
       </section>
 
-      <!-- BENTO SIDE: OEE / Chart / Scrap -->
-      <section class="card bento-tile bento-oee">
-        <span class="bento-label">
+      <section class="tile tile-oee bento-tile bento-oee">
+        <div class="tile-label bento-label">
           <span data-i18n="bento.oeeNow">OEE actual</span>
-          <span class="material-symbols-outlined" aria-hidden="true">analytics</span>
-        </span>
-        <span id="bento-oee-pct" class="bento-big">—</span>
-        <div class="bento-oee-bar" aria-hidden="true">
-          <div id="bento-oee-bar-fill" class="bento-oee-bar-fill"></div>
+          <span class="material-symbols-outlined tile-icon">analytics</span>
         </div>
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <span class="tile-big bento-big" id="bento-oee-pct" style="color:var(--accent);">—</span>
+          <span class="tile-delta delta-up hidden" id="bento-oee-delta">↑ —%</span>
+        </div>
+        <div class="tile-bar bento-oee-bar"><div class="tile-bar-fill bento-oee-bar-fill" id="bento-oee-bar-fill"></div></div>
       </section>
 
-      <section class="card chart-card bento-tile bento-chart collapsible" id="chart-section" data-collapsed="false">
-        <button type="button" class="collapse-toggle" id="chart-toggle" aria-expanded="true" aria-controls="hour-chart">
-          <span class="section-title" data-i18n="chart.hourlyTrend">Tendencia por hora</span>
-          <span class="collapse-icon material-symbols-outlined" aria-hidden="true">expand_more</span>
-        </button>
-        <canvas id="hour-chart" width="600" height="120"></canvas>
+      <section class="tile tile-chart bento-tile bento-chart" id="chart-section" data-collapsed="false">
+        <div class="tile-label bento-label"><span data-i18n="chart.hourlyTrend">Tendencia por hora</span></div>
+        <canvas id="hour-chart" width="600" height="160"></canvas>
       </section>
 
-      <section class="card bento-tile bento-scrap">
-        <span class="bento-label">
+      <section class="tile tile-scrap bento-tile bento-scrap">
+        <div class="tile-label bento-label">
           <span data-i18n="metric.shiftScrap">Rechazos del turno</span>
-          <span class="material-symbols-outlined" style="color:var(--danger);" aria-hidden="true">error</span>
-        </span>
-        <span id="scrap-count" class="bento-big">0</span>
+          <span class="material-symbols-outlined tile-icon" style="color:var(--danger);">error</span>
+        </div>
+        <span class="tile-big bento-big" id="scrap-count" style="color:var(--danger);">0</span>
+        <div id="scrap-pct-line" style="font-size:12px;color:var(--muted);margin-top:4px;"></div>
       </section>
     </div>
 
-    <!-- HORIZONTAL METRICS STRIP -->
-    <section class="metrics-strip">
-      <div class="metric-strip-item">
-        <span class="metric-strip-label" data-i18n="metric.lastHour">Última hora</span>
-        <span id="metric-hour" class="metric-strip-value">0</span>
-        <span id="metric-hour-range" class="metric-strip-sub muted">—</span>
+    <section class="strip metrics-strip">
+      <div class="strip-item metric-strip-item">
+        <span class="strip-label metric-strip-label" data-i18n="metric.lastHour">Última hora</span>
+        <span class="strip-value metric-strip-value" id="metric-hour">0</span>
+        <span class="strip-sub metric-strip-sub" id="metric-hour-range">—</span>
       </div>
-      <div class="metric-strip-item">
-        <span class="metric-strip-label" data-i18n="metric.targetHour">Meta por hora</span>
-        <span id="metric-target" class="metric-strip-value">0</span>
-        <span class="metric-strip-sub muted" data-i18n="metric.targetSub">configurada en Admin</span>
+      <div class="strip-item metric-strip-item">
+        <span class="strip-label metric-strip-label" data-i18n="metric.targetHour">Meta por hora</span>
+        <span class="strip-value metric-strip-value" id="metric-target">0</span>
+        <span class="strip-sub metric-strip-sub" data-i18n="metric.targetSub">configurada en Admin</span>
       </div>
-      <div class="metric-strip-item">
-        <span class="metric-strip-label" data-i18n="metric.efficiency">Eficiencia turno</span>
-        <span id="metric-efficiency" class="metric-strip-value">—</span>
+      <div class="strip-item metric-strip-item">
+        <span class="strip-label metric-strip-label" data-i18n="metric.efficiency">Eficiencia turno</span>
+        <span class="strip-value metric-strip-value" id="metric-efficiency">—</span>
       </div>
     </section>
 
-    <!-- ACTIVITY LOG -->
-    <section class="card log collapsible" id="log-section" data-collapsed="true">
-      <button type="button" class="collapse-toggle" id="log-toggle" aria-expanded="false" aria-controls="log-list">
-        <span class="section-title" data-i18n="log.title">Bitácora de Capturas</span>
-        <span class="collapse-icon material-symbols-outlined" aria-hidden="true">expand_more</span>
-      </button>
+    <section class="card log collapsible hidden" id="log-section" data-collapsed="true">
       <ul id="log-list" class="log-list"></ul>
     </section>
   </main>
 
-  <!-- ================= CHARTS VIEW ================= -->
-  <main class="page view" id="view-charts" hidden>
-
+  <main class="page view hidden" id="view-charts" hidden>
     <div class="page-head">
-      <div class="page-title-row">
-        <div>
-          <h1 class="page-title" data-i18n="charts.title">Gráficas en Vivo</h1>
-          <div class="page-meta">
-            <span class="live-dot"></span>
-            <span id="charts-meta-text" data-i18n="charts.subtitle">Histórico por día</span>
-          </div>
+      <div>
+        <h1 class="page-title" data-i18n="charts.title">Gráficas en Vivo</h1>
+        <div class="page-meta">
+          <span class="live-dot"></span>
+          <span data-i18n="charts.subtitle">Histórico por día</span>
         </div>
-        <div class="clock-block">
-          <span id="date-label-2" class="date-label">—</span>
-        </div>
+      </div>
+      <div class="clock-block">
+        <div class="clock-date" id="date-label-2">—</div>
       </div>
     </div>
 
-    <!-- Compact weekstrip -->
     <section class="weekstrip" id="charts-weekstrip" role="group" aria-label="Selector de fecha">
       <button type="button" class="weekstrip-month" id="charts-weekstrip-month">—</button>
       <div class="weekstrip-dows" id="charts-weekstrip-dows"></div>
       <div class="weekstrip-days" id="charts-weekstrip-days"></div>
       <div class="weekstrip-nav">
-        <button type="button" class="weekstrip-icon" id="charts-weekstrip-today" title="Hoy" aria-label="Hoy">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-        </button>
-        <button type="button" class="weekstrip-icon" id="charts-weekstrip-prev" aria-label="Semana anterior"><span class="material-symbols-outlined">chevron_left</span></button>
-        <button type="button" class="weekstrip-icon" id="charts-weekstrip-next" aria-label="Semana siguiente"><span class="material-symbols-outlined">chevron_right</span></button>
+        <button type="button" class="weekstrip-icon" id="charts-weekstrip-today" title="Hoy" aria-label="Hoy"><span class="material-symbols-outlined">today</span></button>
+        <button type="button" class="weekstrip-icon" id="charts-weekstrip-prev" aria-label="Anterior"><span class="material-symbols-outlined">chevron_left</span></button>
+        <button type="button" class="weekstrip-icon" id="charts-weekstrip-next" aria-label="Siguiente"><span class="material-symbols-outlined">chevron_right</span></button>
       </div>
     </section>
-    <div id="charts-empty" class="muted hidden" style="margin-bottom:16px;" data-i18n="charts.noSession">Sin sesión para esa fecha.</div>
+    <div id="charts-empty" class="hidden" style="color:var(--muted);margin-bottom:16px;" data-i18n="charts.noSession">Sin sesión para esa fecha.</div>
 
-    <section class="kpi-grid">
-      <div class="kpi-tile kpi-featured">
-        <div class="kpi-head">
-          <span class="kpi-label" data-i18n="kpi.oee">OEE</span>
-          <span class="material-symbols-outlined" style="color:var(--accent);font-size:18px;" aria-hidden="true">analytics</span>
-        </div>
-        <div class="kpi-row">
-          <span id="kpi-oee" class="kpi-value">—</span>
-          <span class="kpi-unit">%</span>
-        </div>
-        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-oee-fill" style="background: var(--accent);"></div></div>
+    <section class="kpis">
+      <div class="kpi">
+        <div class="kpi-head"><span class="kpi-label" data-i18n="kpi.oee">OEE</span><span class="material-symbols-outlined kpi-icon">analytics</span></div>
+        <div class="kpi-body"><span class="kpi-value featured" id="kpi-oee">—</span><span class="kpi-unit">%</span></div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-oee-fill"></div></div>
       </div>
-      <div class="kpi-tile">
-        <div class="kpi-head">
-          <span class="kpi-label" data-i18n="kpi.availability">Disponibilidad</span>
-          <span class="material-symbols-outlined" style="color:var(--info);font-size:18px;" aria-hidden="true">timer</span>
-        </div>
-        <div class="kpi-row">
-          <span id="kpi-avail" class="kpi-value">—</span>
-          <span class="kpi-unit">%</span>
-        </div>
-        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-avail-fill" style="background: var(--info);"></div></div>
+      <div class="kpi">
+        <div class="kpi-head"><span class="kpi-label" data-i18n="kpi.availability">Disponibilidad</span><span class="material-symbols-outlined kpi-icon">timer</span></div>
+        <div class="kpi-body"><span class="kpi-value" id="kpi-avail">—</span><span class="kpi-unit">%</span></div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-avail-fill"></div></div>
       </div>
-      <div class="kpi-tile">
-        <div class="kpi-head">
-          <span class="kpi-label" data-i18n="kpi.performance">Rendimiento</span>
-          <span class="material-symbols-outlined" style="color:var(--warning);font-size:18px;" aria-hidden="true">speed</span>
-        </div>
-        <div class="kpi-row">
-          <span id="kpi-perf" class="kpi-value">—</span>
-          <span class="kpi-unit">%</span>
-        </div>
-        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-perf-fill" style="background: var(--warning);"></div></div>
+      <div class="kpi">
+        <div class="kpi-head"><span class="kpi-label" data-i18n="kpi.performance">Rendimiento</span><span class="material-symbols-outlined kpi-icon" style="color:var(--warning);">speed</span></div>
+        <div class="kpi-body"><span class="kpi-value" id="kpi-perf">—</span><span class="kpi-unit">%</span></div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-perf-fill" style="background:var(--warning);"></div></div>
       </div>
-      <div class="kpi-tile">
-        <div class="kpi-head">
-          <span class="kpi-label" data-i18n="kpi.quality">Calidad</span>
-          <span class="material-symbols-outlined" style="color:var(--accent);font-size:18px;" aria-hidden="true">verified</span>
-        </div>
-        <div class="kpi-row">
-          <span id="kpi-qual" class="kpi-value">—</span>
-          <span class="kpi-unit">%</span>
-        </div>
-        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-qual-fill" style="background: var(--accent);"></div></div>
+      <div class="kpi">
+        <div class="kpi-head"><span class="kpi-label" data-i18n="kpi.quality">Calidad</span><span class="material-symbols-outlined kpi-icon">verified</span></div>
+        <div class="kpi-body"><span class="kpi-value" id="kpi-qual">—</span><span class="kpi-unit">%</span></div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-qual-fill"></div></div>
       </div>
     </section>
 
     <div class="charts-grid">
       <section class="chart-card">
-        <div class="section-title" data-i18n="charts.hourlyVsTarget">Producción por hora vs meta</div>
-        <canvas id="chart-hourly" width="600" height="220"></canvas>
+        <div class="chart-head"><span class="chart-title" data-i18n="charts.hourlyVsTarget">Producción por hora vs meta</span></div>
+        <canvas id="chart-hourly" width="600" height="240"></canvas>
       </section>
-
       <section class="chart-card">
-        <div class="section-title" data-i18n="charts.cumulativeVsTarget">Acumulado del turno vs meta acumulada</div>
-        <canvas id="chart-cumulative" width="600" height="220"></canvas>
+        <div class="chart-head"><span class="chart-title" data-i18n="charts.cumulativeVsTarget">Acumulado del turno vs meta</span></div>
+        <canvas id="chart-cumulative" width="600" height="240"></canvas>
       </section>
-
       <section class="chart-card">
-        <div class="section-title" data-i18n="charts.scrapByHour">Rechazos por hora</div>
-        <canvas id="chart-scrap" width="600" height="220"></canvas>
+        <div class="chart-head"><span class="chart-title" data-i18n="charts.scrapByHour">Rechazos por hora</span></div>
+        <canvas id="chart-scrap" width="600" height="240"></canvas>
       </section>
-
-      <section class="chart-card" id="heatmap-card">
-        <div class="section-title" data-i18n="charts.heatmap">Mapa de calor: producción por hora (14 días)</div>
-        <div id="heatmap" class="heatmap" aria-hidden="true"></div>
-        <div class="heatmap-legend">
-          <span class="muted" data-i18n="charts.heatmapLegendLess">menos</span>
-          <span class="heatmap-swatch" data-level="0"></span>
-          <span class="heatmap-swatch" data-level="1"></span>
-          <span class="heatmap-swatch" data-level="2"></span>
-          <span class="heatmap-swatch" data-level="3"></span>
-          <span class="heatmap-swatch" data-level="4"></span>
-          <span class="muted" data-i18n="charts.heatmapLegendMore">más</span>
+      <section class="chart-card heatmap-card" id="heatmap-card">
+        <div class="chart-head">
+          <span class="chart-title" data-i18n="charts.heatmap">Mapa de calor 14 días</span>
+          <div class="heatmap-legend">
+            <span data-i18n="charts.heatmapLegendLess">menos</span>
+            <span class="heatmap-swatch" data-level="0"></span>
+            <span class="heatmap-swatch" data-level="1"></span>
+            <span class="heatmap-swatch" data-level="2"></span>
+            <span class="heatmap-swatch" data-level="3"></span>
+            <span class="heatmap-swatch" data-level="4"></span>
+            <span data-i18n="charts.heatmapLegendMore">más</span>
+          </div>
         </div>
+        <div id="heatmap" class="heatmap" aria-hidden="true"></div>
       </section>
     </div>
-
   </main>
 
-  <!-- ================= OVERLAYS ================= -->
-
-  <!-- Alert popup -->
+  <!-- Overlays -->
   <div id="alert-overlay" class="overlay hidden" aria-hidden="true">
     <div id="alert-popup" class="popup popup-alert" role="alertdialog" aria-labelledby="alert-title">
       <span class="bell material-symbols-outlined" aria-hidden="true" style="font-size:40px;color:var(--accent);">notifications_active</span>
-      <h2 id="alert-title" class="popup-title" data-i18n="alert.title">Registro de Producción</h2>
+      <h2 id="alert-title" class="popup-title" data-i18n="alert.title">Registro de producción</h2>
       <div id="alert-time" class="popup-time">--:--</div>
-      <p class="popup-body" data-i18n="alert.body">
-        Por favor registre sus datos de producción antes de continuar.
-        Esto asegura registros precisos del turno.
-      </p>
+      <p class="popup-body" data-i18n="alert.body">Por favor registre sus datos antes de continuar.</p>
       <div class="popup-actions">
-        <button id="btn-register" class="btn btn-primary btn-block" data-i18n="btn.register">Registrar Datos</button>
+        <button id="btn-register" class="btn btn-primary btn-block" data-i18n="btn.register">Registrar datos</button>
         <button id="btn-snooze" class="btn btn-ghost btn-block">Posponer <span id="snooze-label">5</span> min</button>
       </div>
     </div>
   </div>
 
-  <!-- Capture form -->
   <div id="form-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-form popup-form-v2" role="dialog" aria-labelledby="form-title">
       <h2 id="form-title" class="popup-title-left"><span id="form-time">--:--</span> <span id="form-title-text" data-i18n="form.title">Capturar Producción</span></h2>
       <p class="popup-subtle" data-i18n="form.subtle">Escanee su número de empleado y registre la cantidad.</p>
       <form id="entry-form" class="entry-form entry-form-v2" autocomplete="off">
-
         <div class="form-header-grid">
           <label class="field">
             <span class="field-label" data-i18n="form.empNum"># de Empleado (5 dígitos)</span>
@@ -315,38 +444,26 @@
             <select id="f-forhour" class="hora-select"></select>
           </label>
         </div>
-
         <section class="form-section form-section-required">
-          <div class="form-section-head">
-            <span class="form-section-letter">A</span>
-            <span class="form-section-title" data-i18n="form.qtyTitle">Unidades producidas (piezas)</span>
-            <span class="form-section-req" data-i18n="form.required">requerido</span>
-          </div>
+          <div class="form-section-head"><span class="form-section-letter">A</span><span class="form-section-title" data-i18n="form.qtyTitle">Unidades producidas (piezas)</span><span class="form-section-req" data-i18n="form.required">requerido</span></div>
           <input type="text" id="f-count" name="count" class="numpad-input" autocomplete="off" readonly required />
         </section>
-
         <section class="form-section">
           <label class="form-section-head form-section-toggle">
             <input type="checkbox" id="f-downtime-enable" class="form-section-checkbox" />
-            <span class="form-section-letter">B</span>
-            <span class="form-section-title" data-i18n="form.downtimeTitle">Tiempo muerto (minutos)</span>
-            <span class="form-section-opt" data-i18n="form.optional">opcional</span>
+            <span class="form-section-letter">B</span><span class="form-section-title" data-i18n="form.downtimeTitle">Tiempo muerto (minutos)</span><span class="form-section-opt" data-i18n="form.optional">opcional</span>
           </label>
           <div id="f-downtime-rows" class="form-rows hidden"></div>
           <button type="button" id="btn-add-downtime" class="btn btn-ghost btn-small form-add-row hidden" data-i18n="form.addDowntime">+ Agregar tiempo muerto</button>
         </section>
-
         <section class="form-section">
           <label class="form-section-head form-section-toggle">
             <input type="checkbox" id="f-scrap-enable" class="form-section-checkbox" />
-            <span class="form-section-letter">C</span>
-            <span class="form-section-title" data-i18n="form.scrapTitle">Rechazos (piezas)</span>
-            <span class="form-section-opt" data-i18n="form.optional">opcional</span>
+            <span class="form-section-letter">C</span><span class="form-section-title" data-i18n="form.scrapTitle">Rechazos (piezas)</span><span class="form-section-opt" data-i18n="form.optional">opcional</span>
           </label>
           <div id="f-scrap-rows" class="form-rows hidden"></div>
           <button type="button" id="btn-add-scrap" class="btn btn-ghost btn-small form-add-row hidden" data-i18n="form.addScrap">+ Agregar rechazo</button>
         </section>
-
         <div class="form-actions-row">
           <button type="button" id="btn-form-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
           <button type="submit" class="btn btn-primary btn-block" data-i18n="btn.capture">Capturar</button>
@@ -355,7 +472,6 @@
     </div>
   </div>
 
-  <!-- Numeric keypad overlay -->
   <div id="numpad-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-numpad" role="dialog" aria-labelledby="numpad-title">
       <h2 id="numpad-title" class="popup-title-left">—</h2>
@@ -379,7 +495,7 @@
         <button type="button" class="numkey" data-key="9">9</button>
         <button type="button" class="numkey numkey-secondary" data-key="clear">C</button>
         <button type="button" class="numkey" data-key="0">0</button>
-        <button type="button" class="numkey numkey-secondary" data-key="back" data-i18n-aria-label="numpad.backAria" aria-label="Retroceso">⌫</button>
+        <button type="button" class="numkey numkey-secondary" data-key="back" aria-label="Retroceso">⌫</button>
       </div>
       <div class="form-actions-row">
         <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
@@ -388,14 +504,12 @@
     </div>
   </div>
 
-  <!-- Admin password prompt -->
   <div id="admin-gate-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-login">
       <h2 class="popup-title-left" data-i18n="gate.title">Acceso Admin</h2>
       <p class="popup-subtle" data-i18n="gate.subtle">Ingrese contraseña para continuar.</p>
       <form id="admin-gate-form" class="entry-form" autocomplete="off">
-        <label class="field">
-          <span class="field-label" data-i18n="gate.password">Contraseña</span>
+        <label class="field"><span class="field-label" data-i18n="gate.password">Contraseña</span>
           <input type="password" id="admin-gate-pwd" class="numpad-input" autocomplete="off" readonly required />
         </label>
         <div id="admin-gate-error" class="form-error hidden" data-i18n="gate.wrong">Contraseña incorrecta.</div>
@@ -407,54 +521,39 @@
     </div>
   </div>
 
-  <!-- End-of-shift summary -->
   <div id="eos-overlay" class="overlay hidden" aria-hidden="true">
     <canvas id="eos-confetti" class="eos-confetti" aria-hidden="true"></canvas>
     <div class="popup popup-form popup-eos">
       <div id="eos-banner" class="eos-banner hidden"></div>
-      <h2 class="popup-title-left" data-i18n="eos.title">Resumen de Turno</h2>
+      <h2 class="popup-title-left" data-i18n="eos.title">Resumen de turno</h2>
       <p class="popup-subtle" id="eos-shift">—</p>
       <div class="eos-stats">
         <div class="eos-stat"><div class="eos-label" data-i18n="eos.production">Producción</div><div id="eos-good" class="eos-val">0</div></div>
         <div class="eos-stat"><div class="eos-label" data-i18n="eos.scrap">Rechazos</div><div id="eos-scrap" class="eos-val">0</div></div>
         <div class="eos-stat"><div class="eos-label" data-i18n="eos.oee">OEE</div><div id="eos-oee" class="eos-val">0%</div></div>
-        <div class="eos-stat"><div class="eos-label" data-i18n="eos.totalDown">Paro Total</div><div id="eos-down" class="eos-val">0 min</div></div>
+        <div class="eos-stat"><div class="eos-label" data-i18n="eos.totalDown">Paro total</div><div id="eos-down" class="eos-val">0 min</div></div>
       </div>
       <div class="form-actions-row spacer-top-3">
         <button type="button" id="btn-eos-export" class="btn btn-ghost btn-block" data-i18n="eos.exportCsv">Exportar CSV</button>
-        <button type="button" id="btn-eos-close" class="btn btn-primary btn-block" data-i18n="eos.closeShift">Cerrar Turno</button>
+        <button type="button" id="btn-eos-close" class="btn btn-primary btn-block" data-i18n="eos.closeShift">Cerrar turno</button>
       </div>
     </div>
   </div>
 
   <div id="toast" class="toast hidden" aria-live="polite"></div>
-
   <audio id="alert-sound" preload="auto"></audio>
 
-  <!-- Mobile bottom tabbar -->
   <nav class="bottom-tabbar" id="bottom-tabbar" aria-label="Navegación principal">
-    <button type="button" class="nav-item bottab-item active" data-view="capture">
-      <span class="bottab-ic material-symbols-outlined" aria-hidden="true">add_circle</span>
-      <span class="bottab-label" data-i18n="nav.capture">Captura</span>
-    </button>
-    <button type="button" class="nav-item bottab-item" data-view="charts">
-      <span class="bottab-ic material-symbols-outlined" aria-hidden="true">insights</span>
-      <span class="bottab-label" data-i18n="nav.charts">Gráficas</span>
-    </button>
-    <a class="bottab-item bottab-link" href="dashboard.html">
-      <span class="bottab-ic material-symbols-outlined" aria-hidden="true">dashboard</span>
-      <span class="bottab-label" data-i18n="nav.dashboard">Tablero</span>
-    </a>
-    <a class="bottab-item bottab-link" href="admin.html">
-      <span class="bottab-ic material-symbols-outlined" aria-hidden="true">tune</span>
-      <span class="bottab-label" data-i18n="top.admin">Admin</span>
-    </a>
+    <button type="button" class="bottab-item active" data-view="capture"><span class="bottab-ic material-symbols-outlined">add_circle</span><span class="bottab-label" data-i18n="nav.capture">Captura</span></button>
+    <button type="button" class="bottab-item" data-view="charts"><span class="bottab-ic material-symbols-outlined">insights</span><span class="bottab-label" data-i18n="nav.charts">Gráficas</span></button>
+    <a class="bottab-item" href="dashboard.html"><span class="bottab-ic material-symbols-outlined">dashboard</span><span class="bottab-label" data-i18n="nav.dashboard">Tablero</span></a>
+    <a class="bottab-item" href="admin.html"><span class="bottab-ic material-symbols-outlined">tune</span><span class="bottab-label" data-i18n="top.admin">Admin</span></a>
   </nav>
 
   <script>
     (function(){
       var k = document.getElementById('kebab-btn');
-      var bb = document.querySelector('.brandbar');
+      var bb = document.querySelector('.topbar');
       if(!k || !bb) return;
       k.addEventListener('click', function(){
         var open = bb.classList.toggle('menu-open');
@@ -469,10 +568,10 @@
     })();
   </script>
 
-  <script src="seed.js?v=84"></script>
-  <script src="i18n.js?v=84"></script>
-  <script src="supabase-config.js?v=84"></script>
-  <script src="sync.js?v=84"></script>
-  <script src="app.js?v=84"></script>
+  <script src="seed.js?v=90"></script>
+  <script src="i18n.js?v=90"></script>
+  <script src="supabase-config.js?v=90"></script>
+  <script src="sync.js?v=90"></script>
+  <script src="app.js?v=90"></script>
 </body>
 </html>

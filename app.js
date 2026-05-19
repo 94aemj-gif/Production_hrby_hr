@@ -2301,7 +2301,7 @@
 
     // Sidebar nav
     function switchView(view) {
-      document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
+      document.querySelectorAll("[data-view]").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
       const cap = $("view-capture");
       const ch = $("view-charts");
       if (cap) cap.hidden = view !== "capture";
@@ -2312,7 +2312,7 @@
         renderAll();
       }
     }
-    document.querySelectorAll(".nav-item").forEach((btn) => {
+    document.querySelectorAll("[data-view]").forEach((btn) => {
       btn.addEventListener("click", () => switchView(btn.dataset.view));
     });
     const initialView = load("prod.ui.view", "capture");
