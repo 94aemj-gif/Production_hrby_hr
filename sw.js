@@ -1,4 +1,4 @@
-const CACHE = "prod-v8";
+const CACHE = "prod-v9";
 const ASSETS = [
   "./",
   "./index.html",
@@ -10,8 +10,8 @@ const ASSETS = [
   "./sync.js",
   "./seed.js",
   "./i18n.js",
+  "./tokens.css",
   "./styles.css",
-  "./styles-v6.css",
   "./manifest.json",
 ];
 
