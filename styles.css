@@ -4844,3 +4844,116 @@ body.app-shell:has(#admin-lock:not(.hidden)) .bottom-tabbar { display: none !imp
   font-weight: 600;
 }
 
+
+/* ============================================================
+   ===  EDITORIAL v4 — TABLERO STRUCTURAL (mockup parity)
+   ============================================================ */
+
+/* Brandbar on dashboard: keep static (no need to be sticky here) */
+body.dashboard-body .brandbar { position: static; }
+
+/* Hide legacy .topbar rules in dashboard context — element removed */
+body.dashboard-body .topbar { display: none !important; }
+
+/* Dashboard-head: explicit row layout (override .page-head column) */
+.dashboard-head {
+  flex-direction: row !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+.dashboard-head > div:first-child { text-align: left; }
+.dashboard-head .page-title { font-size: 28px; margin: 0 0 4px; }
+.dashboard-head .page-meta { justify-content: flex-start; }
+
+/* Summary tile: icon row + value/unit/delta layout */
+.dashboard-summary .ds-tile {
+  padding: 16px 18px;
+  gap: 12px;
+}
+.dashboard-summary .ds-label {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  margin-bottom: 0 !important;
+}
+.dashboard-summary .ds-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.dashboard-summary .ds-icon-danger { color: var(--danger); }
+.dashboard-summary .ds-icon-warning { color: var(--warning); }
+.dashboard-summary .ds-body {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ds-delta {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+.ds-delta.up,
+.ds-delta.delta-up    { color: var(--success); background: color-mix(in srgb, var(--success) 14%, transparent); }
+.ds-delta.down,
+.ds-delta.delta-down  { color: var(--danger);  background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.ds-delta.flat,
+.ds-delta.delta-flat  { color: var(--muted);   background: var(--paper-3); }
+
+/* Line-card: target hint + meta-row footer */
+.line-card-big {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.line-card-target {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-left: auto;
+}
+.line-card-meta {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-top: 10px;
+  margin-top: auto;
+  border-top: 1px solid var(--paper-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.line-card-meta-right { font-weight: 700; color: var(--ink); }
+
+/* Brandbar adjustments for Tablero shift-pill */
+body.dashboard-body .brandbar #shift-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: 0;
+}
+body.dashboard-body .brandbar #shift-pill .live-dot { margin: 0; }

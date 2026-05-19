@@ -5,19 +5,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n="page.title.dashboard">Tablero</title>
   <meta name="theme-color" content="#f5f7fb" />
-  <link rel="stylesheet" href="styles.css?v=78" />
+  <link rel="stylesheet" href="styles.css?v=79" />
 </head>
 <body class="dashboard-body app-shell">
-  <header class="topbar">
-    <div class="shift-info">
-      <a class="back-btn" href="index.html" aria-label="Volver a Captura">&larr;</a>
-      <h1 class="dashboard-title" data-i18n="dashboard.title">Tablero</h1>
-      <span id="dashboard-date" class="muted"></span>
+
+  <!-- Inline SVG sprite (icons for summary tiles) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="ico-factory" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M3 21V11l5 3V8l5 3V5l8 5v11z M7 21v-4 M11 21v-4 M15 21v-4 M19 21v-4"/>
+      </symbol>
+      <symbol id="ico-error" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="12" cy="16.2" r="1.05" fill="currentColor"/>
+      </symbol>
+      <symbol id="ico-timeline" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M3 17l5-6 4 4 6-8 3 4"/>
+        <circle cx="3" cy="17" r="1.4" fill="currentColor"/>
+        <circle cx="21" cy="11" r="1.4" fill="currentColor"/>
+      </symbol>
+      <symbol id="ico-speed" viewBox="0 0 24 24">
+        <path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M4 14a8 8 0 1 1 16 0"/>
+        <path d="M12 14l4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="12" cy="14" r="1.4" fill="currentColor"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ================= TOP BRAND BAR ================= -->
+  <header class="brandbar">
+    <div class="brand">
+      <div class="brand-mark">pc</div>
+      <div class="brand-text">
+        <b>Producción</b>
+        <span id="brand-sub">Planta · <span id="dashboard-lines-count-sub">—</span> líneas</span>
+      </div>
     </div>
-    <div class="topbar-right">
+
+    <nav class="nav-pills">
+      <a class="nav-item" href="index.html" data-i18n="nav.capture">Captura</a>
+      <a class="nav-item" href="index.html#charts" data-i18n="nav.charts">Gráficas</a>
+      <a class="nav-item active" href="dashboard.html" aria-current="page" data-i18n="nav.dashboard">Tablero</a>
+    </nav>
+
+    <div class="brandbar-right">
+      <div class="shift-info">
+        <span id="shift-pill" class="status-pill status-active">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span id="shift-pill-text">—</span>
+        </span>
+      </div>
       <button type="button" id="sync-status" class="sync-status sync-off" title="">—</button>
       <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
+      <a class="admin-link" id="admin-link" href="admin.html" data-i18n-title="top.admin" data-i18n="top.admin" title="Configuración admin">Admin</a>
     </div>
+
+    <!-- Mobile/tablet kebab toggle (CSS-shown <1024px) -->
+    <button type="button" id="kebab-btn" class="kebab-btn" aria-label="Más opciones" aria-expanded="false">⋯</button>
   </header>
 
   <main class="dashboard-main">
@@ -37,29 +82,45 @@
 
     <section class="dashboard-summary" id="dashboard-summary">
       <div class="ds-tile">
-        <div class="ds-label" data-i18n="dashboard.totalProduction">Producción total</div>
+        <div class="ds-label">
+          <span data-i18n="dashboard.totalProduction">Producción total</span>
+          <svg class="ds-icon" aria-hidden="true"><use href="#ico-factory"/></svg>
+        </div>
         <div class="ds-body">
           <span id="ds-total-good" class="ds-value">0</span>
           <span class="ds-unit">piezas</span>
+          <span id="ds-total-good-delta" class="ds-delta flat">—</span>
         </div>
       </div>
       <div class="ds-tile">
-        <div class="ds-label" data-i18n="dashboard.totalScrap">Rechazos</div>
+        <div class="ds-label">
+          <span data-i18n="dashboard.totalScrap">Rechazos</span>
+          <svg class="ds-icon ds-icon-danger" aria-hidden="true"><use href="#ico-error"/></svg>
+        </div>
         <div class="ds-body">
           <span id="ds-total-scrap" class="ds-value">0</span>
           <span class="ds-unit">piezas</span>
+          <span id="ds-total-scrap-delta" class="ds-delta flat">—</span>
         </div>
       </div>
       <div class="ds-tile">
-        <div class="ds-label" data-i18n="dashboard.linesActive">Líneas activas</div>
+        <div class="ds-label">
+          <span data-i18n="dashboard.linesActive">Líneas activas</span>
+          <svg class="ds-icon" aria-hidden="true"><use href="#ico-timeline"/></svg>
+        </div>
         <div class="ds-body">
           <span id="ds-active-lines" class="ds-value">0 / 0</span>
         </div>
       </div>
       <div class="ds-tile">
-        <div class="ds-label" data-i18n="dashboard.avgPace">Ritmo promedio</div>
+        <div class="ds-label">
+          <span data-i18n="dashboard.avgPace">Ritmo promedio</span>
+          <svg class="ds-icon ds-icon-warning" aria-hidden="true"><use href="#ico-speed"/></svg>
+        </div>
         <div class="ds-body">
           <span id="ds-avg-pace" class="ds-value">—</span>
+          <span class="ds-unit">pzs/hr</span>
+          <span id="ds-avg-pace-delta" class="ds-delta flat">—</span>
         </div>
       </div>
     </section>
@@ -99,10 +160,29 @@
     </a>
   </nav>
 
-  <script src="i18n.js?v=78"></script>
-  <script src="supabase-config.js?v=78"></script>
-  <script src="sync.js?v=78"></script>
-  <script src="app.js?v=78"></script>
-  <script src="dashboard.js?v=78"></script>
+  <script>
+    // Kebab toggle: opens .brandbar-right as slide-down panel on mobile/tablet
+    (function(){
+      var k = document.getElementById('kebab-btn');
+      var bb = document.querySelector('.brandbar');
+      if(!k || !bb) return;
+      k.addEventListener('click', function(){
+        var open = bb.classList.toggle('menu-open');
+        k.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', function(e){
+        if(!bb.classList.contains('menu-open')) return;
+        if(bb.contains(e.target)) return;
+        bb.classList.remove('menu-open');
+        k.setAttribute('aria-expanded', 'false');
+      });
+    })();
+  </script>
+
+  <script src="i18n.js?v=79"></script>
+  <script src="supabase-config.js?v=79"></script>
+  <script src="sync.js?v=79"></script>
+  <script src="app.js?v=79"></script>
+  <script src="dashboard.js?v=79"></script>
 </body>
 </html>

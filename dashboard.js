@@ -39,6 +39,22 @@
     const d = new Date();
     return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
   }
+  function yesterdayKey() {
+    const d = new Date(Date.now() - 86400000);
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+  }
+  function deltaPct(today, yest) {
+    if (yest == null || yest === 0) return null;
+    return Math.round(((today - yest) / yest) * 100);
+  }
+  function lineOee(session, shift, hourlyTarget) {
+    const pace = pacePct(session, shift, hourlyTarget);
+    if (pace == null) return null;
+    const t = totals(session);
+    const denom = t.good + t.scrap;
+    const qual = denom > 0 ? t.good / denom : 1;
+    return Math.max(0, Math.min(100, Math.round((pace / 100) * qual * 100)));
+  }
   function getCss(name) {
     try { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
     catch (_) { return null; }
@@ -217,35 +233,35 @@
     const big = document.createElement("div");
     big.className = "line-card-big";
     const count = document.createElement("div");
-    count.className = "line-card-count";
+    count.className = "line-card-count " + paceClass(pct);
     count.textContent = t.good.toLocaleString();
     big.appendChild(count);
-    const pace = document.createElement("div");
-    pace.className = "line-card-pace " + paceClass(pct);
-    pace.textContent = pct == null ? "—" : pct + "%";
-    big.appendChild(pace);
+    const target = document.createElement("span");
+    target.className = "line-card-target muted";
+    target.textContent = tt("dashboard.lineCardTarget", { n: ctx.hourlyTarget.toLocaleString() });
+    big.appendChild(target);
     card.appendChild(big);
-
-    const meta = document.createElement("div");
-    meta.className = "line-card-meta muted";
-    meta.innerHTML =
-      '<span>' + tt("metric.shiftScrap") + ': <strong>' + t.scrap.toLocaleString() + '</strong></span>';
-    card.appendChild(meta);
 
     const spark = document.createElement("canvas");
     spark.className = "line-card-spark";
     card.appendChild(spark);
     requestAnimationFrame(() => drawSparkline(spark, session));
 
+    const meta = document.createElement("div");
+    meta.className = "line-card-meta";
     const last = lastCapture(session);
+    let leftText = "—";
     if (last) {
-      const lastDiv = document.createElement("div");
-      lastDiv.className = "line-card-last muted";
       const lastTs = new Date(last.ts);
       const timeStr = lastTs.toLocaleTimeString(getLocale(), { hour: "numeric", minute: "2-digit" });
-      lastDiv.textContent = tt("dashboard.lastCapture", { qty: last.qty.toLocaleString(), time: timeStr });
-      card.appendChild(lastDiv);
+      leftText = tt("dashboard.lineCardLast", { time: timeStr });
     }
+    const oee = lineOee(session, shift, ctx.hourlyTarget);
+    const oeeText = oee == null ? "OEE —" : tt("dashboard.lineCardOee", { pct: oee });
+    meta.innerHTML =
+      '<span class="line-card-meta-left">' + leftText + '</span>' +
+      '<span class="line-card-meta-right">' + oeeText + '</span>';
+    card.appendChild(meta);
 
     return card;
   }
@@ -265,7 +281,7 @@
     return " idle";
   }
 
-  function renderSummary(ctx, sessions) {
+  function reduceTotals(ctx, sessions) {
     let good = 0, scrap = 0, paceSum = 0, paceCount = 0, active = 0;
     for (const line of ctx.lines) {
       const s = pickSessionForLine(sessions, line.id);
@@ -278,16 +294,57 @@
       const pct = pacePct(s, shift, ctx.hourlyTarget);
       if (pct != null) { paceSum += pct; paceCount++; }
     }
-    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    setText("ds-total-good", good.toLocaleString());
-    setText("ds-total-scrap", scrap.toLocaleString());
-    setText("ds-active-lines", active + " / " + ctx.lines.length);
-    setText("ds-avg-pace", paceCount ? Math.round(paceSum / paceCount) + "%" : "—");
-    const avgPace = paceCount ? Math.round(paceSum / paceCount) : null;
-    const tile = document.getElementById("ds-avg-pace");
-    if (tile) {
-      tile.className = "ds-value " + paceClass(avgPace);
+    return { good, scrap, active, avgPace: paceCount ? Math.round(paceSum / paceCount) : null };
+  }
+
+  function setDelta(id, delta, invert) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove("up", "down", "flat", "delta-up", "delta-down", "delta-flat");
+    if (delta == null) {
+      el.classList.add("flat");
+      el.textContent = "—";
+      return;
     }
+    const arrow = delta > 0 ? "↑" : (delta < 0 ? "↓" : "—");
+    el.textContent = arrow + " " + Math.abs(delta) + "%";
+    // For metrics where lower is better (scrap), invert color semantic
+    let cls;
+    if (delta === 0) cls = "flat";
+    else if (invert) cls = delta > 0 ? "down" : "up";
+    else cls = delta > 0 ? "up" : "down";
+    el.classList.add(cls);
+  }
+
+  function renderSummary(ctx, sessions) {
+    const today = reduceTotals(ctx, sessions);
+    const yIso = yesterdayKey();
+    const ySessions = (load(STORAGE.SESSIONS, []) || []).filter(s => s && s.date === yIso);
+    const yest = reduceTotals(ctx, ySessions);
+
+    const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    setText("ds-total-good", today.good.toLocaleString());
+    setText("ds-total-scrap", today.scrap.toLocaleString());
+    setText("ds-active-lines", today.active + " / " + ctx.lines.length);
+    setText("ds-avg-pace", today.avgPace != null ? today.avgPace + "%" : "—");
+
+    setDelta("ds-total-good-delta", deltaPct(today.good, yest.good), false);
+    setDelta("ds-total-scrap-delta", deltaPct(today.scrap, yest.scrap), true);
+    setDelta("ds-avg-pace-delta", deltaPct(today.avgPace, yest.avgPace), false);
+
+    const paceTile = document.getElementById("ds-avg-pace");
+    if (paceTile) paceTile.className = "ds-value " + paceClass(today.avgPace);
+  }
+
+  function renderShiftPill(ctx, sessions) {
+    const r = reduceTotals(ctx, sessions);
+    const text = tt("dashboard.shiftPill", {
+      active: r.active,
+      total: ctx.lines.length,
+      oee: r.avgPace != null ? r.avgPace : "—"
+    });
+    const el = document.getElementById("shift-pill-text");
+    if (el) el.textContent = text;
   }
 
   function render() {
@@ -322,9 +379,12 @@
     }
 
     renderSummary(ctx, allSessions);
+    renderShiftPill(ctx, allSessions);
 
     const countEl = document.getElementById("dashboard-lines-count");
     if (countEl) countEl.textContent = ctx.lines.length;
+    const countSub = document.getElementById("dashboard-lines-count-sub");
+    if (countSub) countSub.textContent = ctx.lines.length;
 
     const dateEl = document.getElementById("dashboard-date");
     if (dateEl) {
