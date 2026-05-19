@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Captura — responsive demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Shared tokens (Ocean Teal) + base capture-screen styles.
+   ============================================================ */
+:root{
+  --bg:#f0f5f7; --paper:#fff; --paper-3:#eaf0f3;
+  --ink:#0c1a26; --ink-2:#1e3a4d; --text:#1a2e3d; --muted:#5d7282; --muted-2:#8da0ad;
+  --line:#dbe5ec; --line-2:#c6d3dc; --divider:#e6edf1;
+  --accent:#0d9488; --accent-2:#14b8a6; --accent-soft:#ccfbf1;
+  --success:#059669; --success-soft:#d1fae5;
+  --warning:#ea580c; --warning-soft:#ffedd5;
+  --danger:#be123c; --danger-soft:#ffe4e6;
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Geist',ui-sans-serif,system-ui,sans-serif;color:var(--text);background:var(--bg);min-height:100dvh;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em}
+button{font-family:inherit;cursor:pointer}
+.app-shell{min-height:100dvh;display:flex;flex-direction:column;container-type:inline-size}
+.muted{color:var(--muted)}
+
+/* ============================================================
+   BRAND BAR — shared base
+   ============================================================ */
+.brandbar{
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;
+  padding:14px 24px;background:var(--bg);position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);
+}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--ink),var(--ink-2));display:flex;align-items:center;justify-content:center;color:var(--paper);font-family:'Geist Mono',monospace;font-weight:700;font-size:13px;letter-spacing:-0.04em;flex-shrink:0;box-shadow:0 8px 20px -8px rgba(9,9,11,0.5),inset 0 1px 0 rgba(255,255,255,0.1)}
+.brand-text{display:flex;flex-direction:column;gap:1px;line-height:1.15;min-width:0}
+.brand-text b{font-size:14px;font-weight:600;letter-spacing:-0.02em;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-text span{font-size:11px;color:var(--muted);font-family:'Geist Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-pills{justify-self:center;display:inline-flex;background:var(--paper);padding:4px;border-radius:12px;box-shadow:0 0 0 1px var(--line);gap:2px}
+.nav-pills .nav-item{border:none;background:transparent;color:var(--muted);font:600 12px/1 'Geist',sans-serif;padding:9px 18px;border-radius:8px;cursor:pointer;letter-spacing:-0.005em;transition:all 200ms var(--ease-out);white-space:nowrap}
+.nav-pills .nav-item:hover{color:var(--ink);background:var(--paper-3)}
+.nav-pills .nav-item.active{background:var(--ink);color:var(--paper);box-shadow:0 4px 10px -4px rgba(9,9,11,0.3),inset 0 1px 0 rgba(255,255,255,0.1)}
+
+.brandbar-right{display:flex;align-items:center;gap:8px;justify-content:flex-end;min-width:0}
+
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--paper);padding:7px 12px;border-radius:10px;box-shadow:0 0 0 1px var(--line);font-size:12px;color:var(--ink);font-weight:600;white-space:nowrap;min-width:0}
+.chip .shift-name{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip-status{font-size:10px;font-weight:700;padding:3px 8px 3px 18px;border-radius:999px;position:relative;text-transform:lowercase;background:var(--warning-soft);color:var(--warning);letter-spacing:-0.005em}
+.chip-status::before{content:"";position:absolute;left:7px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:currentColor}
+.chip-pct{font-family:'Geist Mono',monospace;font-size:11px;font-weight:700;color:var(--ink)}
+.chip-select{display:inline-flex;align-items:center;gap:6px;background:var(--paper);padding:4px 4px 4px 12px;border-radius:10px;box-shadow:0 0 0 1px var(--line);min-height:36px}
+.chip-select label{font-family:'Geist Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-weight:600}
+.chip-select select{border:none;background:transparent;font:600 12px 'Geist',sans-serif;color:var(--ink);padding:6px 10px;cursor:pointer}
+.chip-alert{display:inline-flex;align-items:baseline;gap:6px;background:var(--paper);padding:8px 12px;border-radius:10px;box-shadow:0 0 0 1px var(--line)}
+.chip-alert .lbl{font-family:'Geist Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);font-weight:600}
+.chip-alert .val{font-family:'Geist Mono',monospace;font-size:12px;color:var(--ink);font-weight:600}
+.chip-alert .sub{font-family:'Geist Mono',monospace;font-size:10px;color:var(--muted)}
+
+.btn-icon{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;background:var(--paper);box-shadow:0 0 0 1px var(--line);color:var(--ink);border:none;font:600 12px 'Geist Mono',monospace;cursor:pointer;flex-shrink:0}
+.btn-icon:hover{background:var(--paper-3)}
+.btn-dark{display:inline-flex;align-items:center;justify-content:center;padding:0 16px;height:40px;border-radius:10px;background:var(--ink);color:var(--paper);text-decoration:none;font:600 12px 'Geist',sans-serif;border:none;cursor:pointer;flex-shrink:0;letter-spacing:-0.005em;box-shadow:inset 0 1px 0 rgba(255,255,255,0.1)}
+.btn-dark:hover{background:var(--ink-2)}
+
+/* OEE donut */
+.oee{position:relative;width:32px;height:32px;flex-shrink:0}
+.oee svg{width:100%;height:100%;transform:rotate(-90deg)}
+.oee .bg{stroke:var(--paper-3);stroke-width:4;fill:none}
+.oee .arc{stroke:var(--warning);stroke-width:4;fill:none;stroke-linecap:round;stroke-dasharray:0,100}
+.oee .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 9px 'Geist Mono',monospace;color:var(--ink)}
+
+/* Hamburger */
+.hamburger{width:40px;height:40px;border-radius:10px;background:var(--paper);box-shadow:0 0 0 1px var(--line);color:var(--ink);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0}
+.hamburger::before,.hamburger::after,.hamburger i{content:"";display:block;width:18px;height:2px;background:currentColor;border-radius:1px}
+.hamburger i{margin:3px 0}
+
+/* ============================================================
+   PAGE
+   ============================================================ */
+.page{flex:1;padding:20px 24px 40px;max-width:1320px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:18px;container-type:inline-size}
+.page-head{display:flex;flex-direction:column;gap:6px;padding:4px 4px 6px}
+.page-title-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.page-title{font-size:clamp(22px,4cqi,32px);font-weight:600;letter-spacing:-0.03em;line-height:1.1;color:var(--ink);margin:0}
+.page-subtitle{color:var(--muted);font-size:14px;max-width:60ch}
+.clock-block{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.date-label{color:var(--muted);font-family:'Geist Mono',monospace;font-size:11px;font-weight:500}
+.clock{font-family:'Geist Mono',monospace;font-size:clamp(20px,3.4cqi,28px);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.04em;line-height:1;color:var(--ink)}
+
+.capture-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:16px;align-items:stretch}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.col-hero .counter-card{flex:1}
+.col-side .chart-card{flex:1;display:flex;flex-direction:column}
+.col-side .chart-card .chart-body{flex:1;min-height:240px;display:flex;align-items:center;justify-content:center;color:var(--muted);font:500 12px 'Geist Mono',monospace}
+
+@container (max-width:900px){
+  .capture-grid{grid-template-columns:1fr}
+}
+
+/* Cards */
+.card,.counter-card,.chart-card,.metric{
+  background:var(--paper);border-radius:18px;box-shadow:0 0 0 1px var(--line),0 12px 28px -20px rgba(15,15,20,0.10);padding:20px 22px
+}
+
+/* Counter card hero */
+.counter-card{padding:clamp(28px,5cqi,48px) clamp(20px,4cqi,36px) clamp(24px,5cqi,40px);text-align:center;display:flex;flex-direction:column;gap:22px;position:relative;overflow:hidden;align-items:center;justify-content:center;min-height:clamp(320px,42cqi,460px)}
+.counter-card::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,var(--accent-soft),transparent 70%);pointer-events:none}
+.counter-card::after{content:"";position:absolute;width:280px;height:280px;top:-60px;right:-60px;background:radial-gradient(circle,rgba(13,148,136,0.10),transparent 70%);border-radius:50%;pointer-events:none}
+.counter-card > *{position:relative}
+.card-label{font-family:'Geist Mono',monospace;color:var(--accent);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;font-weight:600;background:var(--accent-soft);padding:6px 14px;border-radius:999px;align-self:center;width:max-content}
+.counter{font-size:clamp(72px,18cqi,200px);line-height:0.92;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-0.06em;background:linear-gradient(180deg,var(--ink) 0%,var(--ink-2) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.counter-sub{color:var(--muted);font-size:13px;font-style:italic}
+
+.btn-capture{
+  font:600 16px 'Geist',sans-serif;color:#fff;border:none;border-radius:14px;cursor:pointer;
+  padding:0 32px;
+  height:56px;
+  min-width:0;
+  width:min(100%,360px);
+  background:linear-gradient(160deg,var(--accent) 0%,var(--accent-2) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.25),0 12px 28px -10px rgba(13,148,136,0.55);
+  transition:transform 140ms var(--ease-spring),box-shadow 220ms var(--ease-out);
+  letter-spacing:0.01em;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+}
+.btn-capture:hover{transform:translateY(-1px);background:linear-gradient(160deg,#0a7c72 0%,var(--accent) 100%)}
+.btn-capture:active{transform:translateY(1px) scale(0.99)}
+.btn-capture .plus{width:22px;height:22px;border-radius:7px;background:rgba(255,255,255,0.22);display:inline-flex;align-items:center;justify-content:center;font:400 16px 'Geist',sans-serif}
+
+/* Hour card */
+.hour-card{padding:18px 22px}
+.hour-head{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:12px}
+.hour-head .h{color:var(--ink);font-weight:600;letter-spacing:-0.01em}
+.hour-head .cd{font-family:'Geist Mono',monospace;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;font-size:12px}
+.bar{height:12px;background:var(--paper-3);border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,0.06)}
+.bar > i{display:block;height:100%;width:62%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:999px;box-shadow:0 0 14px rgba(13,148,136,0.4)}
+
+/* Chart card */
+.chart-card{padding:18px 22px}
+.chart-card .title{font:600 14px 'Geist',sans-serif;color:var(--ink);letter-spacing:-0.01em;margin-bottom:10px}
+
+/* Metric tiles */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.metric{padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+.metric-label{font-family:'Geist Mono',monospace;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;font-weight:600}
+.metric-value{font-size:clamp(28px,3.6cqi,40px);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-0.04em;line-height:1;color:var(--ink)}
+.metric-sub{font-family:'Geist Mono',monospace;font-size:10px;color:var(--muted);font-weight:500}
+.metric.accent .metric-value{color:var(--accent)}
+
+@container (max-width:600px){
+  .metrics{grid-template-columns:1fr}
+  .page{padding:14px 14px 32px}
+  .page-title-row{align-items:flex-start}
+  .clock-block{align-items:flex-start}
+  .brandbar{padding:12px 14px}
+}
+
+/* Drawer (used by dir-a + dir-d) */
+.drawer{position:absolute;top:60px;left:14px;right:14px;background:var(--paper);border-radius:14px;box-shadow:0 0 0 1px var(--line),0 30px 60px -20px rgba(15,15,20,0.25);padding:10px;display:none;flex-direction:column;gap:6px;z-index:60}
+.drawer.open{display:flex}
+.drawer .row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px}
+.drawer .row:hover{background:var(--paper-3)}
+.drawer .row.full{justify-content:space-between}
+.drawer hr{border:none;border-top:1px solid var(--divider);margin:4px 0}
+
+/* ============================================================
+   DIRECTION A — Compact header w/ hamburger
+   Mobile / tablet: hide right controls, show hamburger → drawer
+   ============================================================ */
+.dir-a .hamburger{display:none;align-items:center;justify-content:center;flex-direction:column}
+.dir-a .brandbar-right{display:flex}
+@container (max-width:900px){
+  .dir-a .brandbar{grid-template-columns:auto 1fr auto}
+  .dir-a .nav-pills{justify-self:end;margin-right:8px}
+  .dir-a .brandbar-right{display:none}
+  .dir-a .hamburger{display:flex}
+}
+@container (max-width:520px){
+  .dir-a .nav-pills{justify-self:end;margin-right:0}
+  .dir-a .nav-pills .nav-item{padding:9px 14px;font-size:11px}
+}
+
+/* ============================================================
+   DIRECTION B — Bottom tab bar (iOS-style)
+   Top bar slim: brand + clock + kebab. Nav becomes bottom tab bar
+   on mobile + tablet. Capture button floats as FAB on mobile.
+   ============================================================ */
+.dir-b .tabbar{display:none;position:sticky;bottom:0;left:0;right:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:50;justify-content:space-around;gap:6px}
+.dir-b .tabbar a{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;padding:6px 8px;border-radius:10px;text-decoration:none;color:var(--muted);font:600 11px 'Geist',sans-serif}
+.dir-b .tabbar a.active{color:var(--accent)}
+.dir-b .tabbar .ic{width:20px;height:20px;border-radius:6px;background:currentColor;opacity:0.85}
+.dir-b .kebab{display:none}
+@container (max-width:900px){
+  .dir-b .nav-pills{display:none}
+  .dir-b .brandbar{grid-template-columns:auto 1fr auto}
+  .dir-b .brandbar-right{display:none}
+  .dir-b .kebab{display:inline-flex}
+  .dir-b .tabbar{display:flex}
+  .dir-b .page{padding-bottom:96px}
+}
+@container (max-width:600px){
+  .dir-b .btn-capture{position:fixed;bottom:80px;right:14px;left:14px;width:auto;border-radius:18px;height:56px;z-index:40}
+  .dir-b .counter-card .counter-actions{visibility:hidden}
+}
+.dir-b .counter-actions{display:flex;justify-content:center;gap:10px}
+
+/* ============================================================
+   DIRECTION C — Two-zone header
+   Row 1: brand + nav + admin. Row 2: shift chip + status + alert + sync + lang.
+   On mobile row 2 → horizontal scroll chip strip.
+   ============================================================ */
+.dir-c .brandbar{grid-template-columns:auto 1fr auto;padding-bottom:8px}
+.dir-c .context-bar{display:flex;align-items:center;gap:8px;padding:0 24px 14px;border-bottom:1px solid var(--divider);overflow-x:auto;scrollbar-width:none}
+.dir-c .context-bar::-webkit-scrollbar{display:none}
+.dir-c .context-bar > *{flex-shrink:0}
+@container (max-width:900px){
+  .dir-c .brandbar > .brandbar-right > *:not(.btn-dark):not(.hamburger){display:none}
+  .dir-c .brandbar > .brandbar-right > .btn-dark[data-keep]{display:inline-flex}
+}
+@container (max-width:600px){
+  .dir-c .context-bar{padding:0 14px 12px}
+  .dir-c .page-title{font-size:24px}
+}
+
+/* ============================================================
+   DIRECTION D — Hybrid sidebar (rail + drawer)
+   Desktop: 64px icon rail left. Tablet/mobile: hamburger → drawer.
+   ============================================================ */
+.dir-d .app-shell{flex-direction:row}
+.dir-d .rail{width:64px;background:var(--paper);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px 8px;gap:6px;align-items:center;flex-shrink:0}
+.dir-d .rail .brand-mark{margin-bottom:12px}
+.dir-d .rail .rail-item{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--muted);font:600 11px 'Geist Mono',monospace;background:transparent;border:none;cursor:pointer}
+.dir-d .rail .rail-item.active{background:var(--accent-soft);color:var(--accent)}
+.dir-d .rail .rail-item .ic{width:20px;height:20px;border-radius:6px;background:currentColor;opacity:0.85}
+.dir-d .rail-spacer{flex:1}
+.dir-d .main-col{flex:1;display:flex;flex-direction:column;min-width:0;container-type:inline-size}
+.dir-d .brandbar{grid-template-columns:1fr auto;gap:14px}
+.dir-d .brand,.dir-d .nav-pills{display:none}
+.dir-d .brand-title-inline{font:600 16px 'Geist',sans-serif;color:var(--ink);letter-spacing:-0.02em}
+@container (max-width:900px){
+  .dir-d .rail{display:none}
+  .dir-d .brandbar{grid-template-columns:auto 1fr auto}
+  .dir-d .brand{display:flex}
+  .dir-d .brandbar-right > *:not(.btn-dark[data-admin]):not(.hamburger){display:none}
+  .dir-d .hamburger{display:flex}
+}
+
+/* ============================================================
+   DIRECTION E — Adaptive segments (single-row at all sizes)
+   Long shift label truncates. Status / select / alert → icon-only on mobile.
+   ============================================================ */
+.dir-e .brandbar{grid-template-columns:auto 1fr auto;gap:10px}
+.dir-e .chip .shift-name{max-width:140px}
+@container (max-width:900px){
+  .dir-e .chip .shift-name{max-width:90px}
+  .dir-e .chip-select label,.dir-e .chip-alert .lbl{display:none}
+  .dir-e .chip-select{padding:4px 4px 4px 8px}
+  .dir-e .chip-select select{padding:6px 8px;font-size:11px}
+  .dir-e .chip-alert{padding:6px 10px}
+  .dir-e .brand-text span{display:none}
+  .dir-e .btn-dark[data-tablero]{display:none}
+}
+@container (max-width:600px){
+  .dir-e .chip .shift-name{max-width:60px}
+  .dir-e .chip-pct{display:none}
+  .dir-e .chip-status{padding:3px 8px;text-indent:-9999px;width:14px;height:14px;overflow:hidden}
+  .dir-e .chip-status::before{left:50%;margin-left:-3px}
+  .dir-e .nav-pills .nav-item{padding:8px 12px;font-size:11px}
+  .dir-e .brand-mark{width:36px;height:36px}
+}
+
+</style>
+</head>
+<body>
+<div class="app-shell" id="shell">
+
+  <!-- Brand bar -->
+  <header class="brandbar">
+    <div class="brand">
+      <div class="brand-mark">pc</div>
+      <div class="brand-text">
+        <b>Producción</b>
+        <span>L-02 · Turno actual</span>
+      </div>
+    </div>
+
+    <nav class="nav-pills">
+      <button class="nav-item active">Captura</button>
+      <button class="nav-item">Gráficas</button>
+    </nav>
+
+    <div class="brandbar-right">
+      <span class="chip">
+        <span class="shift-name">#1 60ml Neomed Syringe</span>
+        <span class="chip-status">fuera</span>
+        <div class="oee" title="OEE"><svg viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="15"></circle><circle class="arc" cx="18" cy="18" r="15" style="stroke-dasharray:0 100"></circle></svg><div class="pct">0%</div></div>
+      </span>
+      <span class="chip-select"><label>Estado</label><select><option>En operación</option><option>Inactivo</option></select></span>
+      <span class="chip-alert"><span class="lbl">Próxima</span><span class="val">10:00</span><span class="sub">en 18 min</span></span>
+      <button class="btn-icon" title="Sync">↻</button>
+      <button class="btn-icon" title="Idioma">EN</button>
+      <a class="btn-dark" data-tablero href="#">Tablero</a>
+      <a class="btn-dark" data-admin data-keep href="#">Admin</a>
+    </div>
+
+    <button class="hamburger" id="ham" title="Menú"><i></i></button>
+    <button class="btn-icon kebab" id="kebab" title="Más" style="font-size:18px">⋯</button>
+  </header>
+
+  <!-- Direction-C only — secondary context bar -->
+  <div class="context-bar" id="ctxbar" style="display:none">
+    <span class="chip">
+      <span class="shift-name">#1 60ml Neomed Syringe</span>
+      <span class="chip-status">fuera</span>
+      <div class="oee"><svg viewBox="0 0 36 36"><circle class="bg" cx="18" cy="18" r="15"></circle><circle class="arc" cx="18" cy="18" r="15" style="stroke-dasharray:0 100"></circle></svg><div class="pct">0%</div></div>
+    </span>
+    <span class="chip-select"><label>Estado</label><select><option>En operación</option></select></span>
+    <span class="chip-alert"><span class="lbl">Próxima</span><span class="val">10:00</span><span class="sub">en 18 min</span></span>
+    <button class="btn-icon">↻</button>
+    <button class="btn-icon">EN</button>
+    <a class="btn-dark" href="#">Tablero</a>
+  </div>
+
+  <!-- Drawer (dir-a + dir-d) -->
+  <div class="drawer" id="drawer">
+    <div class="row full"><span>#1 60ml Neomed Syringe</span><span class="chip-status">fuera</span></div>
+    <hr>
+    <div class="row full"><span class="muted" style="font:600 10px/1 'Geist Mono',monospace;text-transform:uppercase;letter-spacing:0.1em">Estado</span>
+      <select><option>En operación</option><option>Inactivo</option></select>
+    </div>
+    <div class="row full"><span class="muted" style="font:600 10px/1 'Geist Mono',monospace;text-transform:uppercase;letter-spacing:0.1em">Próxima alerta</span>
+      <span style="font-family:'Geist Mono',monospace;font-weight:600">10:00 <span class="muted" style="font-size:11px">en 18 min</span></span>
+    </div>
+    <hr>
+    <div class="row"><button class="btn-icon">↻</button><span>Sincronización</span></div>
+    <div class="row"><button class="btn-icon">EN</button><span>Idioma</span></div>
+    <a class="btn-dark" href="#" style="margin-top:6px;justify-content:center">Tablero</a>
+    <a class="btn-dark" href="#" style="background:transparent;color:var(--ink);box-shadow:0 0 0 1px var(--line);margin-top:4px;justify-content:center">Admin</a>
+  </div>
+
+  <!-- Direction D only — rail (rendered when dir-d active) -->
+  <div class="main-col">
+
+  <!-- Page -->
+  <main class="page">
+    <div class="page-head">
+      <div class="page-title-row">
+        <h1 class="page-title">Captura del turno</h1>
+        <div class="clock-block">
+          <span class="date-label">domingo, 17 de mayo</span>
+          <span class="clock">9:58 PM</span>
+        </div>
+      </div>
+      <p class="page-subtitle">Registra piezas conforme avance la producción. Las alertas se disparan cada hora.</p>
+    </div>
+
+    <div class="capture-grid">
+      <div class="col col-hero">
+        <section class="counter-card">
+          <span class="card-label">Producción del turno</span>
+          <div class="counter">482</div>
+          <div class="counter-sub">vas +4 sobre meta</div>
+          <div class="counter-actions">
+            <button class="btn-capture"><span class="plus">＋</span> Capturar producción</button>
+          </div>
+        </section>
+      </div>
+      <div class="col col-side">
+        <section class="card hour-card">
+          <div class="hour-head">
+            <div class="h">Hora 10:00 → 10:59</div>
+            <div class="cd">18 min restantes</div>
+          </div>
+          <div class="bar"><i></i></div>
+        </section>
+        <section class="chart-card">
+          <div class="title">Tendencia por hora</div>
+          <div class="chart-body">(gráfica)</div>
+        </section>
+      </div>
+    </div>
+
+    <section class="metrics">
+      <div class="metric accent">
+        <div class="metric-label">Última hora</div>
+        <div class="metric-value">62</div>
+        <div class="metric-sub">+4 sobre meta</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Meta por hora</div>
+        <div class="metric-value">60</div>
+        <div class="metric-sub">basado en turno</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Rechazos del turno</div>
+        <div class="metric-value">3</div>
+        <div class="metric-sub">0.6% del total</div>
+      </div>
+    </section>
+
+  </main>
+
+  </div><!-- /main-col -->
+
+  <!-- Direction B only — bottom tab bar -->
+  <nav class="tabbar" id="tabbar">
+    <a class="active" href="#"><span class="ic"></span>Captura</a>
+    <a href="#"><span class="ic"></span>Gráficas</a>
+    <a href="#"><span class="ic"></span>Tablero</a>
+    <a href="#"><span class="ic"></span>Admin</a>
+  </nav>
+
+</div>
+
+<script>
+(function(){
+  const params = new URLSearchParams(location.search);
+  const dir = (params.get('dir') || 'a').toLowerCase();
+  const shell = document.getElementById('shell');
+  shell.classList.add('dir-' + dir);
+
+  // Direction C: render context bar
+  if(dir === 'c'){
+    document.getElementById('ctxbar').style.display = 'flex';
+    // hide most brandbar-right children except admin
+    const br = document.querySelector('.brandbar-right');
+    [...br.children].forEach(el => {
+      if(el.dataset && el.dataset.admin !== undefined) return;
+      el.style.display = 'none';
+    });
+  }
+
+  // Direction D: build the rail outside main-col
+  if(dir === 'd'){
+    const rail = document.createElement('aside');
+    rail.className = 'rail';
+    rail.innerHTML = `
+      <div class="brand-mark">pc</div>
+      <button class="rail-item active" title="Captura"><span class="ic"></span></button>
+      <button class="rail-item" title="Gráficas"><span class="ic"></span></button>
+      <div class="rail-spacer"></div>
+      <button class="rail-item" title="Idioma">EN</button>
+      <a class="rail-item" href="#" title="Admin"><span class="ic"></span></a>
+    `;
+    shell.insertBefore(rail, shell.firstChild);
+    // Add the inline brand title for desktop brandbar
+    const bb = document.querySelector('.brandbar');
+    if(!bb.querySelector('.brand-title-inline')){
+      const h = document.createElement('div');
+      h.className = 'brand-title-inline';
+      h.textContent = 'Captura del turno';
+      bb.insertBefore(h, bb.firstChild);
+    }
+  }
+
+  // Hamburger toggle (dir-a + dir-d)
+  const ham = document.getElementById('ham');
+  const drawer = document.getElementById('drawer');
+  ham?.addEventListener('click', () => drawer?.classList.toggle('open'));
+
+  // Tabbar — dir-b only
+  if(dir !== 'b') document.getElementById('tabbar').style.display = 'none';
+})();
+</script>
+</body>
+</html>

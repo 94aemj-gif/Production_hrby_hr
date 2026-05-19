@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Palettes · 5 options</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:'Geist',system-ui,sans-serif;color:#0a0a0a;background:#f4f4f5;min-height:100dvh;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em}
+.wrap{max-width:1480px;margin:0 auto;padding:40px 28px 80px}
+header{margin-bottom:32px}
+h1{font-size:32px;font-weight:600;letter-spacing:-0.03em;margin-bottom:6px}
+p.lede{color:#71717a;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:22px}
+
+/* ============ generic preview card ============ */
+.opt{border-radius:24px;overflow:hidden;background:var(--p-paper,#fff);box-shadow:0 0 0 1px #e4e4e7,0 12px 28px -20px rgba(15,15,20,0.12);display:flex;flex-direction:column;transition:transform 220ms cubic-bezier(.34,1.56,.64,1),box-shadow 220ms}
+.opt:hover{transform:translateY(-3px);box-shadow:0 0 0 1px #d4d4d8,0 24px 48px -16px rgba(15,15,20,0.18)}
+.opt-head{padding:18px 22px;border-bottom:1px solid #f0f0f2;display:flex;justify-content:space-between;align-items:center;background:#fff}
+.opt-name{display:flex;flex-direction:column;gap:2px}
+.opt-name b{font-size:16px;font-weight:600;letter-spacing:-0.01em}
+.opt-name span{font-size:12px;color:#71717a;font-family:'Geist Mono',monospace}
+.opt-letter{font-family:'Geist Mono',monospace;font-size:18px;font-weight:700;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--p-accent);color:#fff}
+
+/* mini app preview */
+.mini{background:var(--p-bg);padding:18px;display:flex;flex-direction:column;gap:14px}
+.mini-bar{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mini-bar .br{display:flex;align-items:center;gap:8px}
+.mini-bar .mk{width:28px;height:28px;border-radius:8px;background:var(--p-ink);color:var(--p-paper);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:11px;font-weight:700;letter-spacing:-0.04em}
+.mini-bar .br b{font-size:13px;color:var(--p-ink);font-weight:600}
+.mini-pills{display:inline-flex;background:var(--p-paper);border-radius:10px;padding:3px;box-shadow:0 0 0 1px var(--p-line);gap:2px}
+.mini-pills a{font-size:11px;font-weight:600;color:var(--p-muted);padding:6px 12px;border-radius:7px;text-decoration:none}
+.mini-pills a.active{background:var(--p-ink);color:var(--p-paper)}
+.mini-badge{display:inline-flex;align-items:center;gap:6px;background:var(--p-success-soft);color:var(--p-success);font-size:10px;font-weight:700;padding:3px 9px 3px 18px;border-radius:999px;position:relative;text-transform:lowercase;font-family:'Geist',sans-serif}
+.mini-badge::before{content:"";position:absolute;left:7px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:currentColor}
+.mini-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:10px}
+.mini-hero{background:var(--p-paper);border-radius:18px;padding:22px 20px 18px;box-shadow:0 0 0 1px var(--p-line);text-align:center;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:10px;justify-content:center}
+.mini-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,var(--p-accent-soft),transparent 70%);pointer-events:none}
+.mini-hero > *{position:relative}
+.mini-label{font-family:'Geist Mono',monospace;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--p-accent);background:var(--p-accent-soft);padding:4px 10px;border-radius:999px;align-self:center;width:max-content}
+.mini-num{font-family:'Geist',sans-serif;font-size:54px;font-weight:600;letter-spacing:-0.05em;color:var(--p-ink);font-variant-numeric:tabular-nums;line-height:1;background:linear-gradient(180deg,var(--p-ink),var(--p-ink-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.mini-cap{background:var(--p-accent);color:#fff;font-family:'Geist',sans-serif;font-weight:600;font-size:11px;border:none;padding:10px 18px;border-radius:10px;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,0.25),0 6px 14px -4px var(--p-accent-shadow);width:max-content;margin:6px auto 0}
+.mini-side{display:flex;flex-direction:column;gap:10px}
+.mini-card{background:var(--p-paper);border-radius:14px;padding:14px 16px;box-shadow:0 0 0 1px var(--p-line)}
+.mini-card .k{font-family:'Geist Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--p-muted);font-weight:600;margin-bottom:8px}
+.mini-bar-bg{height:8px;background:var(--p-paper-3);border-radius:999px;overflow:hidden}
+.mini-bar-fill{height:100%;width:62%;background:linear-gradient(90deg,var(--p-accent),var(--p-accent-2));border-radius:999px}
+.mini-tag{display:inline-block;font-family:'Geist Mono',monospace;font-size:9px;font-weight:700;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:0.06em;margin-right:4px}
+.mini-tag.s{color:var(--p-success);background:var(--p-success-soft)}
+.mini-tag.w{color:var(--p-warning);background:var(--p-warning-soft)}
+.mini-tag.d{color:var(--p-danger);background:var(--p-danger-soft)}
+.mini-tag.a{color:var(--p-accent);background:var(--p-accent-soft)}
+.mini-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mini-tile{background:var(--p-paper);border-radius:12px;padding:12px 14px;box-shadow:0 0 0 1px var(--p-line)}
+.mini-tile .k{font-family:'Geist Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--p-muted);font-weight:600;margin-bottom:6px}
+.mini-tile .v{font-family:'Geist',sans-serif;font-size:22px;font-weight:600;letter-spacing:-0.03em;color:var(--p-ink);font-variant-numeric:tabular-nums;line-height:1}
+
+/* swatches strip */
+.sw-strip{display:flex;height:36px}
+.sw-strip i{flex:1;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600;color:rgba(255,255,255,0.6)}
+.sw-strip i.dark{color:rgba(0,0,0,0.5)}
+
+/* ============ Palette A · Coral & Mint (current) ============ */
+.A{--p-bg:#f4f4f5;--p-paper:#ffffff;--p-paper-3:#f6f6f7;--p-ink:#09090b;--p-ink-2:#27272a;--p-muted:#71717a;--p-line:#e4e4e7;--p-accent:#ff5a3c;--p-accent-2:#ff7a5e;--p-accent-soft:#fff0ec;--p-accent-shadow:rgba(255,90,60,0.45);--p-success:#0d9f6e;--p-success-soft:#dcfaee;--p-warning:#d97706;--p-warning-soft:#fdf2e0;--p-danger:#c0282c;--p-danger-soft:#fde2e2}
+/* ============ Palette B · Indigo & Lime ============ */
+.B{--p-bg:#fafafa;--p-paper:#ffffff;--p-paper-3:#f4f4f5;--p-ink:#0a0a1a;--p-ink-2:#1e1e3a;--p-muted:#71717a;--p-line:#e4e4e7;--p-accent:#4f46e5;--p-accent-2:#6366f1;--p-accent-soft:#eef2ff;--p-accent-shadow:rgba(79,70,229,0.5);--p-success:#65a30d;--p-success-soft:#ecfccb;--p-warning:#eab308;--p-warning-soft:#fef9c3;--p-danger:#dc2626;--p-danger-soft:#fee2e2}
+/* ============ Palette C · Ocean Teal ============ */
+.C{--p-bg:#f0f5f7;--p-paper:#ffffff;--p-paper-3:#eaf0f3;--p-ink:#0c1a26;--p-ink-2:#1e3a4d;--p-muted:#5d7282;--p-line:#dbe5ec;--p-accent:#0d9488;--p-accent-2:#14b8a6;--p-accent-soft:#ccfbf1;--p-accent-shadow:rgba(13,148,136,0.5);--p-success:#059669;--p-success-soft:#d1fae5;--p-warning:#ea580c;--p-warning-soft:#ffedd5;--p-danger:#be123c;--p-danger-soft:#ffe4e6}
+/* ============ Palette D · Rose & Plum (cream bg) ============ */
+.D{--p-bg:#faf6f3;--p-paper:#ffffff;--p-paper-3:#f4ece8;--p-ink:#2a1626;--p-ink-2:#4a2541;--p-muted:#8b6b80;--p-line:#ecd9e2;--p-accent:#be185d;--p-accent-2:#db2777;--p-accent-soft:#fce7f3;--p-accent-shadow:rgba(190,24,93,0.5);--p-success:#15803d;--p-success-soft:#dcfce7;--p-warning:#b45309;--p-warning-soft:#fef3c7;--p-danger:#991b1b;--p-danger-soft:#fee2e2}
+/* ============ Palette E · Mono Linear (single blue) ============ */
+.E{--p-bg:#fafafa;--p-paper:#ffffff;--p-paper-3:#f5f5f5;--p-ink:#0a0a0a;--p-ink-2:#262626;--p-muted:#737373;--p-line:#e5e5e5;--p-accent:#2563eb;--p-accent-2:#3b82f6;--p-accent-soft:#dbeafe;--p-accent-shadow:rgba(37,99,235,0.5);--p-success:#16a34a;--p-success-soft:#dcfce7;--p-warning:#ca8a04;--p-warning-soft:#fef9c3;--p-danger:#dc2626;--p-danger-soft:#fee2e2}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Paletas · elige una</h1>
+    <p class="lede">Misma estructura (C layout). Solo cambia color. Pasa el cursor por encima.</p>
+  </header>
+
+  <div class="grid">
+
+    <!-- ============ A ============ -->
+    <article class="opt A">
+      <div class="opt-head">
+        <div class="opt-name"><b>Coral &amp; Mint</b><span>actual · cálido moderno</span></div>
+        <span class="opt-letter">A</span>
+      </div>
+      <div class="mini">
+        <div class="mini-bar">
+          <div class="br"><span class="mk">pc</span><b>Producción · L-02</b></div>
+          <div class="mini-pills"><a class="active">Captura</a><a>Gráficas</a></div>
+          <span class="mini-badge">activo</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-hero">
+            <span class="mini-label">Producción del turno</span>
+            <div class="mini-num">482</div>
+            <button class="mini-cap">＋ Capturar</button>
+          </div>
+          <div class="mini-side">
+            <div class="mini-card"><div class="k">Hora 10:00 → 10:59</div><div class="mini-bar-bg"><div class="mini-bar-fill"></div></div></div>
+            <div class="mini-card"><span class="mini-tag s">captura</span><span class="mini-tag w">alerta</span><span class="mini-tag d">rechazo</span><span class="mini-tag a">ajuste</span></div>
+          </div>
+        </div>
+        <div class="mini-tiles">
+          <div class="mini-tile"><div class="k">Última h</div><div class="v">62</div></div>
+          <div class="mini-tile"><div class="k">Meta h</div><div class="v">60</div></div>
+          <div class="mini-tile"><div class="k">Rechazos</div><div class="v">3</div></div>
+        </div>
+      </div>
+      <div class="sw-strip"><i style="background:#f4f4f5;color:#71717a">bg</i><i style="background:#09090b">ink</i><i style="background:#ff5a3c">accent</i><i style="background:#0d9f6e">success</i><i style="background:#d97706">warn</i><i style="background:#c0282c">danger</i></div>
+    </article>
+
+    <!-- ============ B ============ -->
+    <article class="opt B">
+      <div class="opt-head">
+        <div class="opt-name"><b>Indigo &amp; Lime</b><span>tech limpio</span></div>
+        <span class="opt-letter">B</span>
+      </div>
+      <div class="mini">
+        <div class="mini-bar">
+          <div class="br"><span class="mk">pc</span><b>Producción · L-02</b></div>
+          <div class="mini-pills"><a class="active">Captura</a><a>Gráficas</a></div>
+          <span class="mini-badge">activo</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-hero">
+            <span class="mini-label">Producción del turno</span>
+            <div class="mini-num">482</div>
+            <button class="mini-cap">＋ Capturar</button>
+          </div>
+          <div class="mini-side">
+            <div class="mini-card"><div class="k">Hora 10:00 → 10:59</div><div class="mini-bar-bg"><div class="mini-bar-fill"></div></div></div>
+            <div class="mini-card"><span class="mini-tag s">captura</span><span class="mini-tag w">alerta</span><span class="mini-tag d">rechazo</span><span class="mini-tag a">ajuste</span></div>
+          </div>
+        </div>
+        <div class="mini-tiles">
+          <div class="mini-tile"><div class="k">Última h</div><div class="v">62</div></div>
+          <div class="mini-tile"><div class="k">Meta h</div><div class="v">60</div></div>
+          <div class="mini-tile"><div class="k">Rechazos</div><div class="v">3</div></div>
+        </div>
+      </div>
+      <div class="sw-strip"><i style="background:#fafafa;color:#71717a">bg</i><i style="background:#0a0a1a">ink</i><i style="background:#4f46e5">accent</i><i style="background:#65a30d">success</i><i style="background:#eab308">warn</i><i style="background:#dc2626">danger</i></div>
+    </article>
+
+    <!-- ============ C ============ -->
+    <article class="opt C">
+      <div class="opt-head">
+        <div class="opt-name"><b>Ocean Teal</b><span>fábrica calma</span></div>
+        <span class="opt-letter">C</span>
+      </div>
+      <div class="mini">
+        <div class="mini-bar">
+          <div class="br"><span class="mk">pc</span><b>Producción · L-02</b></div>
+          <div class="mini-pills"><a class="active">Captura</a><a>Gráficas</a></div>
+          <span class="mini-badge">activo</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-hero">
+            <span class="mini-label">Producción del turno</span>
+            <div class="mini-num">482</div>
+            <button class="mini-cap">＋ Capturar</button>
+          </div>
+          <div class="mini-side">
+            <div class="mini-card"><div class="k">Hora 10:00 → 10:59</div><div class="mini-bar-bg"><div class="mini-bar-fill"></div></div></div>
+            <div class="mini-card"><span class="mini-tag s">captura</span><span class="mini-tag w">alerta</span><span class="mini-tag d">rechazo</span><span class="mini-tag a">ajuste</span></div>
+          </div>
+        </div>
+        <div class="mini-tiles">
+          <div class="mini-tile"><div class="k">Última h</div><div class="v">62</div></div>
+          <div class="mini-tile"><div class="k">Meta h</div><div class="v">60</div></div>
+          <div class="mini-tile"><div class="k">Rechazos</div><div class="v">3</div></div>
+        </div>
+      </div>
+      <div class="sw-strip"><i style="background:#f0f5f7;color:#5d7282">bg</i><i style="background:#0c1a26">ink</i><i style="background:#0d9488">accent</i><i style="background:#059669">success</i><i style="background:#ea580c">warn</i><i style="background:#be123c">danger</i></div>
+    </article>
+
+    <!-- ============ D ============ -->
+    <article class="opt D">
+      <div class="opt-head">
+        <div class="opt-name"><b>Rose &amp; Plum</b><span>cálido editorial</span></div>
+        <span class="opt-letter">D</span>
+      </div>
+      <div class="mini">
+        <div class="mini-bar">
+          <div class="br"><span class="mk">pc</span><b>Producción · L-02</b></div>
+          <div class="mini-pills"><a class="active">Captura</a><a>Gráficas</a></div>
+          <span class="mini-badge">activo</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-hero">
+            <span class="mini-label">Producción del turno</span>
+            <div class="mini-num">482</div>
+            <button class="mini-cap">＋ Capturar</button>
+          </div>
+          <div class="mini-side">
+            <div class="mini-card"><div class="k">Hora 10:00 → 10:59</div><div class="mini-bar-bg"><div class="mini-bar-fill"></div></div></div>
+            <div class="mini-card"><span class="mini-tag s">captura</span><span class="mini-tag w">alerta</span><span class="mini-tag d">rechazo</span><span class="mini-tag a">ajuste</span></div>
+          </div>
+        </div>
+        <div class="mini-tiles">
+          <div class="mini-tile"><div class="k">Última h</div><div class="v">62</div></div>
+          <div class="mini-tile"><div class="k">Meta h</div><div class="v">60</div></div>
+          <div class="mini-tile"><div class="k">Rechazos</div><div class="v">3</div></div>
+        </div>
+      </div>
+      <div class="sw-strip"><i style="background:#faf6f3;color:#8b6b80">bg</i><i style="background:#2a1626">ink</i><i style="background:#be185d">accent</i><i style="background:#15803d">success</i><i style="background:#b45309">warn</i><i style="background:#991b1b">danger</i></div>
+    </article>
+
+    <!-- ============ E ============ -->
+    <article class="opt E">
+      <div class="opt-head">
+        <div class="opt-name"><b>Mono Linear</b><span>minimal · azul electric</span></div>
+        <span class="opt-letter">E</span>
+      </div>
+      <div class="mini">
+        <div class="mini-bar">
+          <div class="br"><span class="mk">pc</span><b>Producción · L-02</b></div>
+          <div class="mini-pills"><a class="active">Captura</a><a>Gráficas</a></div>
+          <span class="mini-badge">activo</span>
+        </div>
+        <div class="mini-grid">
+          <div class="mini-hero">
+            <span class="mini-label">Producción del turno</span>
+            <div class="mini-num">482</div>
+            <button class="mini-cap">＋ Capturar</button>
+          </div>
+          <div class="mini-side">
+            <div class="mini-card"><div class="k">Hora 10:00 → 10:59</div><div class="mini-bar-bg"><div class="mini-bar-fill"></div></div></div>
+            <div class="mini-card"><span class="mini-tag s">captura</span><span class="mini-tag w">alerta</span><span class="mini-tag d">rechazo</span><span class="mini-tag a">ajuste</span></div>
+          </div>
+        </div>
+        <div class="mini-tiles">
+          <div class="mini-tile"><div class="k">Última h</div><div class="v">62</div></div>
+          <div class="mini-tile"><div class="k">Meta h</div><div class="v">60</div></div>
+          <div class="mini-tile"><div class="k">Rechazos</div><div class="v">3</div></div>
+        </div>
+      </div>
+      <div class="sw-strip"><i style="background:#fafafa;color:#737373">bg</i><i style="background:#0a0a0a">ink</i><i style="background:#2563eb">accent</i><i style="background:#16a34a">success</i><i style="background:#ca8a04">warn</i><i style="background:#dc2626">danger</i></div>
+    </article>
+
+  </div>
+</div>
+</body>
+</html>

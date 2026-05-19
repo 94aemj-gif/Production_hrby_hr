@@ -6,7 +6,7 @@
   <title data-i18n="page.title.capture">Registro de Producción</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f0f5f7" />
-  <link rel="stylesheet" href="styles.css?v=73" />
+  <link rel="stylesheet" href="styles.css?v=76" />
 </head>
 <body class="app-shell">
 
@@ -72,64 +72,69 @@
           <span id="clock" class="clock">--:--</span>
         </div>
       </div>
-      <p class="page-subtitle">Registra piezas conforme avance la producción. Las alertas se disparan cada hora.</p>
     </div>
 
-    <div class="capture-grid">
-      <!-- HERO COLUMN -->
-      <div class="col col-hero">
-        <section class="counter-card" id="counter-card">
-          <span class="card-label" data-i18n="counter.cardLabel">Producción del Turno (Piezas)</span>
-          <div id="counter" class="counter">0</div>
-          <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque CAPTURAR para iniciar</div>
-          <div id="last-capture" class="last-capture hidden">
-            <span class="muted" data-i18n="counter.lastShort">Última:</span> <span id="last-capture-text">—</span>
+    <div class="bento-grid">
+      <!-- HERO: counter + inline hour ribbon -->
+      <section class="counter-card bento-hero" id="counter-card">
+        <span class="card-label" data-i18n="counter.cardLabel">Producción del turno</span>
+        <div id="counter" class="counter">0</div>
+        <div id="counter-empty" class="counter-empty hidden" data-i18n="counter.tapToStart">Toque CAPTURAR para iniciar</div>
+        <div id="last-capture" class="last-capture hidden">
+          <span class="muted" data-i18n="counter.lastShort">Última:</span> <span id="last-capture-text">—</span>
+        </div>
+        <div class="counter-actions">
+          <button id="btn-capture" class="btn btn-capture" data-i18n="btn.capture" data-i18n-aria-label="btn.captureAria" aria-label="Capturar producción">Capturar</button>
+          <button id="btn-undo" class="btn btn-ghost hidden" data-i18n="btn.undo" data-i18n-aria-label="btn.undoAria" aria-label="Deshacer última captura">Deshacer</button>
+        </div>
+        <div id="hour-progress" class="hour-progress hour-progress-inline">
+          <div class="hour-progress-head">
+            <span id="hour-progress-label" class="muted" data-i18n="counter.currentHourLabel">Hora actual</span>
+            <span id="hour-progress-countdown" class="hour-progress-cd">—</span>
           </div>
-          <div class="counter-actions">
-            <button id="btn-capture" class="btn btn-capture" data-i18n="btn.capture" data-i18n-aria-label="btn.captureAria" aria-label="Capturar producción">Capturar</button>
-            <button id="btn-undo" class="btn btn-ghost hidden" data-i18n="btn.undo" data-i18n-aria-label="btn.undoAria" aria-label="Deshacer última captura">Deshacer</button>
+          <div class="hour-progress-bar">
+            <div id="hour-progress-fill" class="hour-progress-fill"></div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      <!-- SIDE COLUMN -->
-      <div class="col col-side">
-        <section class="card hour-card">
-          <div id="hour-progress" class="hour-progress">
-            <div class="hour-progress-head">
-              <span id="hour-progress-label" class="muted" data-i18n="counter.currentHourLabel">Hora actual</span>
-              <span id="hour-progress-countdown" class="hour-progress-cd">—</span>
-            </div>
-            <div class="hour-progress-bar">
-              <div id="hour-progress-fill" class="hour-progress-fill"></div>
-            </div>
-          </div>
-        </section>
+      <!-- BENTO SIDE: OEE / Chart / Scrap -->
+      <section class="card bento-tile bento-oee">
+        <span class="bento-label">OEE actual</span>
+        <span id="bento-oee-pct" class="bento-big">—</span>
+        <div class="bento-oee-bar" aria-hidden="true">
+          <div id="bento-oee-bar-fill" class="bento-oee-bar-fill"></div>
+        </div>
+      </section>
 
-        <section class="chart-card collapsible" id="chart-section" data-collapsed="false">
-          <button type="button" class="collapse-toggle" id="chart-toggle" aria-expanded="true" aria-controls="hour-chart">
-            <span class="section-title" data-i18n="chart.hourlyTrend">Tendencia por Hora</span>
-            <span class="collapse-icon" aria-hidden="true">▾</span>
-          </button>
-          <canvas id="hour-chart" width="600" height="160"></canvas>
-        </section>
-      </div>
+      <section class="card chart-card bento-tile bento-chart collapsible" id="chart-section" data-collapsed="false">
+        <button type="button" class="collapse-toggle" id="chart-toggle" aria-expanded="true" aria-controls="hour-chart">
+          <span class="section-title" data-i18n="chart.hourlyTrend">Tendencia por hora</span>
+          <span class="collapse-icon" aria-hidden="true">▾</span>
+        </button>
+        <canvas id="hour-chart" width="600" height="120"></canvas>
+      </section>
+
+      <section class="card bento-tile bento-scrap">
+        <span class="bento-label" data-i18n="metric.shiftScrap">Rechazos del turno</span>
+        <span id="scrap-count" class="bento-big">0</span>
+      </section>
     </div>
 
-    <!-- METRIC TILES ROW -->
-    <section class="metrics">
-      <div class="metric">
-        <div class="metric-label" data-i18n="metric.lastHour">Última Hora</div>
-        <div id="metric-hour" class="metric-value metric-hour">0</div>
-        <div id="metric-hour-range" class="metric-sub muted">—</div>
+    <!-- HORIZONTAL METRICS STRIP -->
+    <section class="metrics-strip">
+      <div class="metric-strip-item">
+        <span class="metric-strip-label" data-i18n="metric.lastHour">Última hora</span>
+        <span id="metric-hour" class="metric-strip-value">0</span>
+        <span id="metric-hour-range" class="metric-strip-sub muted">—</span>
       </div>
-      <div class="metric">
-        <div class="metric-label" data-i18n="metric.targetHour">Meta por Hora</div>
-        <div id="metric-target" class="metric-value metric-target">0</div>
+      <div class="metric-strip-item">
+        <span class="metric-strip-label" data-i18n="metric.targetHour">Meta por hora</span>
+        <span id="metric-target" class="metric-strip-value">0</span>
       </div>
-      <div class="metric">
-        <div class="metric-label" data-i18n="metric.shiftScrap">Rechazos del Turno</div>
-        <div id="scrap-count" class="metric-value metric-target">0</div>
+      <div class="metric-strip-item">
+        <span class="metric-strip-label">Eficiencia</span>
+        <span id="metric-efficiency" class="metric-strip-value">—</span>
       </div>
     </section>
 
@@ -192,23 +197,25 @@
       </div>
     </section>
 
-    <section class="chart-card">
-      <div class="section-title" data-i18n="charts.hourlyVsTarget">Producción por Hora vs Meta</div>
-      <canvas id="chart-hourly" width="600" height="170"></canvas>
-    </section>
+    <div class="charts-grid">
+      <section class="chart-card">
+        <div class="section-title" data-i18n="charts.hourlyVsTarget">Producción por hora vs meta</div>
+        <canvas id="chart-hourly" width="600" height="170"></canvas>
+      </section>
 
-    <section class="chart-card">
-      <div class="section-title" data-i18n="charts.cumulativeVsTarget">Acumulado del Turno vs Meta Acumulada</div>
-      <canvas id="chart-cumulative" width="600" height="170"></canvas>
-    </section>
+      <section class="chart-card">
+        <div class="section-title" data-i18n="charts.cumulativeVsTarget">Acumulado del turno vs meta acumulada</div>
+        <canvas id="chart-cumulative" width="600" height="170"></canvas>
+      </section>
 
-    <section class="chart-card">
-      <div class="section-title" data-i18n="charts.scrapByHour">Rechazos por Hora</div>
-      <canvas id="chart-scrap" width="600" height="140"></canvas>
-    </section>
+      <section class="chart-card chart-card-wide">
+        <div class="section-title" data-i18n="charts.scrapByHour">Rechazos por hora</div>
+        <canvas id="chart-scrap" width="600" height="140"></canvas>
+      </section>
+    </div>
 
     <section class="chart-card" id="heatmap-card">
-      <div class="section-title" data-i18n="charts.heatmap">Mapa de Calor — Producción por Hora (14 días)</div>
+      <div class="section-title" data-i18n="charts.heatmap">Mapa de calor: producción por hora (14 días)</div>
       <div id="heatmap" class="heatmap" aria-hidden="true"></div>
       <div class="heatmap-legend">
         <span class="muted" data-i18n="charts.heatmapLegendLess">menos</span>
@@ -419,9 +426,9 @@
     })();
   </script>
 
-  <script src="i18n.js?v=73"></script>
-  <script src="supabase-config.js?v=73"></script>
-  <script src="sync.js?v=73"></script>
-  <script src="app.js?v=73"></script>
+  <script src="i18n.js?v=76"></script>
+  <script src="supabase-config.js?v=76"></script>
+  <script src="sync.js?v=76"></script>
+  <script src="app.js?v=76"></script>
 </body>
 </html>

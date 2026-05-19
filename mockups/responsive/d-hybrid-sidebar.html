@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mockup D · Hybrid Sidebar (Rail + Drawer)</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Geist',ui-sans-serif,system-ui,sans-serif;color:#0c1a26;background:#e2ebef;min-height:100dvh;padding:32px 24px 64px;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em}
+.wrap{max-width:1380px;margin:0 auto}
+.head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;gap:24px;flex-wrap:wrap}
+.head h1{font-size:32px;font-weight:600;letter-spacing:-0.03em;line-height:1.05}
+.head h1 .letter{font-family:'Geist Mono',monospace;color:#0d9488;background:#ccfbf1;padding:4px 10px;border-radius:8px;font-size:18px;margin-right:10px;vertical-align:4px;font-weight:700}
+.head .meta{color:#5d7282;font-size:14px}
+.head .back{color:#5d7282;text-decoration:none;font:600 13px 'Geist Mono',monospace;letter-spacing:0.04em}
+.head .back:hover{color:#0d9488}
+.sub{color:#5d7282;font-size:15px;margin:0 0 32px;max-width:74ch;line-height:1.55}
+.sub b{color:#0c1a26;font-weight:600}
+.frames{display:flex;flex-direction:column;gap:36px}
+.frame{display:flex;flex-direction:column;gap:10px}
+.frame-head{display:flex;align-items:baseline;gap:14px}
+.frame-head .label{font-family:'Geist Mono',monospace;font-size:11px;color:#0c1a26;background:#fff;padding:4px 10px;border-radius:6px;box-shadow:0 0 0 1px #dbe5ec;font-weight:700;text-transform:uppercase;letter-spacing:0.1em}
+.frame-head .size{font-family:'Geist Mono',monospace;font-size:11px;color:#5d7282}
+.frame-body{background:#fff;border-radius:16px;box-shadow:0 0 0 1px #dbe5ec,0 12px 32px -20px rgba(15,15,20,0.16);overflow:hidden}
+.frame iframe{display:block;border:none;background:#f0f5f7}
+.frame-desktop iframe{width:1280px;height:780px}
+.frame-tablet iframe{width:768px;height:980px}
+.frame-mobile iframe{width:390px;height:760px}
+.frame-body{width:max-content;max-width:100%}
+@media (max-width:1400px){
+  .frame-desktop iframe{width:100%}
+  .frame-desktop .frame-body{width:auto}
+}
+@media (max-width:820px){
+  .frame-tablet iframe{width:100%}
+  .frame-tablet .frame-body{width:auto}
+}
+@media (max-width:440px){
+  .frame-mobile iframe{width:100%}
+  .frame-mobile .frame-body{width:auto}
+}
+.cta{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:14px;padding:18px 22px;box-shadow:0 0 0 1px #dbe5ec;margin-top:32px;gap:16px;flex-wrap:wrap}
+.cta p{color:#5d7282;font-size:14px}
+.cta b{color:#0c1a26;font-weight:600}
+.cta-btn{background:#0d9488;color:#fff;padding:12px 22px;border-radius:10px;text-decoration:none;font:600 13px 'Geist',sans-serif;letter-spacing:-0.005em}
+.cta-btn:hover{background:#0a7c72}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1><span class="letter">D</span>Hybrid Sidebar (Rail + Drawer)</h1>
+    <a class="back" href="index.html">← todas las opciones</a>
+  </div>
+  <p class="sub">En desktop: <b>rail vertical de 64px</b> con iconos (Captura · Gráficas · EN · Admin). En tablet/mobile: el rail se oculta y todo va a un drawer abierto por hamburger. Brand bar superior se simplifica al título de la página actual. Patrón admin/SaaS.</p>
+
+  <div class="frames">
+    <div class="frame frame-desktop">
+      <div class="frame-head"><span class="label">Desktop</span><span class="size">1280 × 780</span></div>
+      <div class="frame-body"><iframe src="_capture.html?dir=d" loading="lazy"></iframe></div>
+    </div>
+    <div class="frame frame-tablet">
+      <div class="frame-head"><span class="label">Tablet</span><span class="size">768 × 980</span></div>
+      <div class="frame-body"><iframe src="_capture.html?dir=d" loading="lazy"></iframe></div>
+    </div>
+    <div class="frame frame-mobile">
+      <div class="frame-head"><span class="label">Mobile</span><span class="size">390 × 760</span></div>
+      <div class="frame-body"><iframe src="_capture.html?dir=d" loading="lazy"></iframe></div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <p>Si esta dirección funciona — vuelve y dime <b>"D"</b>. Aplicamos al app real.</p>
+    <a class="cta-btn" href="index.html">Ver otras opciones</a>
+  </div>
+</div>
+</body>
+</html>
