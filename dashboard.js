@@ -177,21 +177,23 @@
     head.className = "line-card-head";
     const name = document.createElement("div");
     name.className = "line-card-name";
-    name.textContent = line.label || line.id;
+    const dot = document.createElement("span");
+    const status = session ? (session.currentStatus || "Running") : "Idle";
+    dot.className = "status-dot-inline" + statusDotClass(status);
+    dot.setAttribute("aria-hidden", "true");
+    name.appendChild(dot);
+    name.appendChild(document.createTextNode(" " + (line.label || line.id)));
     head.appendChild(name);
 
+    const pill = document.createElement("span");
     if (session) {
-      const status = session.currentStatus || "Running";
-      const pill = document.createElement("span");
       pill.className = "status-pill " + statusPillClass(status);
       pill.textContent = statusLabel(status);
-      head.appendChild(pill);
     } else {
-      const pill = document.createElement("span");
       pill.className = "status-pill status-paused";
       pill.textContent = tt("dashboard.noActivity");
-      head.appendChild(pill);
     }
+    head.appendChild(pill);
     card.appendChild(head);
 
     if (!session) {
@@ -255,6 +257,13 @@
     if (status === "Breakdown")   return "status-paused status-breakdown";
     return "status-paused";
   }
+  function statusDotClass(status) {
+    if (status === "Running")     return "";
+    if (status === "Idle")        return " idle";
+    if (status === "Maintenance") return " warn";
+    if (status === "Breakdown")   return " down";
+    return " idle";
+  }
 
   function renderSummary(ctx, sessions) {
     let good = 0, scrap = 0, paceSum = 0, paceCount = 0, active = 0;
@@ -303,13 +312,19 @@
     } else {
       if (emptyEl) emptyEl.classList.add("hidden");
       grid.innerHTML = "";
+      const filter = currentFilter();
       for (const line of ctx.lines) {
         const s = pickSessionForLine(allSessions, line.id);
+        if (filter === "active" && !s) continue;
+        if (filter === "idle" && s) continue;
         grid.appendChild(buildLineCard(line, s, ctx));
       }
     }
 
     renderSummary(ctx, allSessions);
+
+    const countEl = document.getElementById("dashboard-lines-count");
+    if (countEl) countEl.textContent = ctx.lines.length;
 
     const dateEl = document.getElementById("dashboard-date");
     if (dateEl) {
@@ -331,7 +346,21 @@
     el.classList.add("sync-ok"); el.textContent = tt("sync.ok");
   }
 
+  let _filter = "all";
+  function currentFilter() { return _filter; }
+  function bindFilterChips() {
+    const chips = document.querySelectorAll(".lines-filter .filter-chip");
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        _filter = chip.getAttribute("data-filter") || "all";
+        chips.forEach(c => c.classList.toggle("active", c === chip));
+        render();
+      });
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
+    bindFilterChips();
     render();
     renderSyncStatus();
     if (window.i18n && window.i18n.bindToggle) {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n="page.title.dashboard">Tablero</title>
   <meta name="theme-color" content="#f5f7fb" />
-  <link rel="stylesheet" href="styles.css?v=76" />
+  <link rel="stylesheet" href="styles.css?v=78" />
 </head>
 <body class="dashboard-body app-shell">
   <header class="topbar">
@@ -21,24 +21,57 @@
   </header>
 
   <main class="dashboard-main">
+    <div class="page-head dashboard-head">
+      <div>
+        <h1 class="page-title dashboard-page-title">Tablero de Producción</h1>
+        <div class="page-meta">
+          <span class="live-dot"></span>
+          <span><span id="dashboard-lines-count">—</span> líneas configuradas · Actualizado en tiempo real</span>
+        </div>
+      </div>
+      <div class="page-actions">
+        <button type="button" class="action-btn" id="dashboard-date-btn">Hoy</button>
+        <button type="button" class="action-btn primary" id="dashboard-export-btn">Exportar</button>
+      </div>
+    </div>
+
     <section class="dashboard-summary" id="dashboard-summary">
       <div class="ds-tile">
         <div class="ds-label" data-i18n="dashboard.totalProduction">Producción total</div>
-        <div id="ds-total-good" class="ds-value">0</div>
+        <div class="ds-body">
+          <span id="ds-total-good" class="ds-value">0</span>
+          <span class="ds-unit">piezas</span>
+        </div>
       </div>
       <div class="ds-tile">
         <div class="ds-label" data-i18n="dashboard.totalScrap">Rechazos</div>
-        <div id="ds-total-scrap" class="ds-value">0</div>
+        <div class="ds-body">
+          <span id="ds-total-scrap" class="ds-value">0</span>
+          <span class="ds-unit">piezas</span>
+        </div>
       </div>
       <div class="ds-tile">
         <div class="ds-label" data-i18n="dashboard.linesActive">Líneas activas</div>
-        <div id="ds-active-lines" class="ds-value">0 / 0</div>
+        <div class="ds-body">
+          <span id="ds-active-lines" class="ds-value">0 / 0</span>
+        </div>
       </div>
       <div class="ds-tile">
         <div class="ds-label" data-i18n="dashboard.avgPace">Ritmo promedio</div>
-        <div id="ds-avg-pace" class="ds-value">—</div>
+        <div class="ds-body">
+          <span id="ds-avg-pace" class="ds-value">—</span>
+        </div>
       </div>
     </section>
+
+    <div class="lines-head">
+      <span class="lines-title">Estado por línea</span>
+      <div class="lines-filter" role="tablist">
+        <button type="button" class="filter-chip active" data-filter="all">Todas</button>
+        <button type="button" class="filter-chip" data-filter="active">Activas</button>
+        <button type="button" class="filter-chip" data-filter="idle">En paro</button>
+      </div>
+    </div>
 
     <div id="dashboard-grid" class="dashboard-grid"></div>
     <div id="dashboard-empty" class="dashboard-empty muted hidden" data-i18n="dashboard.empty">
@@ -66,10 +99,10 @@
     </a>
   </nav>
 
-  <script src="i18n.js?v=76"></script>
-  <script src="supabase-config.js?v=76"></script>
-  <script src="sync.js?v=76"></script>
-  <script src="app.js?v=76"></script>
-  <script src="dashboard.js?v=76"></script>
+  <script src="i18n.js?v=78"></script>
+  <script src="supabase-config.js?v=78"></script>
+  <script src="sync.js?v=78"></script>
+  <script src="app.js?v=78"></script>
+  <script src="dashboard.js?v=78"></script>
 </body>
 </html>

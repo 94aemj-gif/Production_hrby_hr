@@ -4686,3 +4686,161 @@ body.app-shell:has(#admin-lock:not(.hidden)) .bottom-tabbar { display: none !imp
   letter-spacing: 0 !important;
 }
 
+
+/* ============================================================
+   ===  EDITORIAL v4 — page-head + lines-head + filter chips
+   ===  (Tablero structural)
+   ============================================================ */
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+.page-head .page-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-summary { gap: 12px; }
+.dashboard-summary .ds-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dashboard-summary .ds-body {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.dashboard-summary .ds-value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.dashboard-summary .ds-unit {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.lines-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 12px;
+}
+.lines-title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.lines-filter {
+  display: flex;
+  gap: 4px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px;
+}
+.filter-chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  transition: all 180ms var(--ease-out);
+  min-height: 32px;
+}
+.filter-chip:hover { color: var(--ink); }
+.filter-chip.active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Line-card status dot inline */
+.line-card .line-card-name { display: flex; align-items: center; gap: 2px; }
+.status-dot-inline {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.status-dot-inline.idle { background: var(--muted); }
+.status-dot-inline.warn { background: var(--warning); }
+.status-dot-inline.down {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+/* Desktop force 4-up summary even at narrow widths if room */
+@media (min-width: 760px) {
+  .dashboard-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 759px) and (min-width: 480px) {
+  .dashboard-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 479px) {
+  .dashboard-summary {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Line-card last + meta as footer row */
+.line-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+.line-card-meta strong { color: var(--ink); font-weight: 700; }
+
+
+/* KPI row + unit (Gráficas) */
+.kpi-tile .kpi-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.kpi-tile .kpi-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-tile .kpi-value {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--ink);
+}
+.kpi-tile.kpi-featured .kpi-value,
+.page .kpi-tile:first-child .kpi-value { color: var(--accent); }
+.kpi-tile .kpi-unit {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
