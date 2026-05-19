@@ -914,18 +914,9 @@
     const lastHour = getLastCompletedHour(fresh);
     setText("metric-hour", lastHour.value.toLocaleString());
     setText("metric-hour-range", lastHour.label);
-    const hourEl = $("metric-hour");
-    if (hourEl && config.hourlyTarget > 0 && lastHour.value > 0) {
-      const pct = (lastHour.value / config.hourlyTarget) * 100;
-      hourEl.style.color = pct >= 90 ? "var(--green)" : pct >= 60 ? "var(--blue)" : "var(--red)";
-    } else if (hourEl) {
-      hourEl.style.color = "var(--muted)";
-    }
 
     const shiftEff = computeShiftEfficiency(fresh);
     setText("metric-efficiency", shiftEff.pct + "%");
-    const effEl = $("metric-efficiency");
-    if (effEl) effEl.style.color = shiftEff.pct >= 90 ? "var(--green)" : shiftEff.pct >= 60 ? "var(--blue)" : "var(--accent)";
     setText("metric-efficiency-sub", tt(shiftEff.completedHours === 1 ? "metric.hrComplete" : "metric.hrsComplete", { n: shiftEff.completedHours }));
 
     const oeePct = computeOEE(fresh);

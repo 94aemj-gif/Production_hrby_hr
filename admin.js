@@ -714,4 +714,8 @@
   window.addEventListener("languagechange", () => {
     renderEntities();
   });
+
+  if (window.i18n && window.i18n.bindToggle) {
+    window.i18n.bindToggle(document.getElementById("lang-toggle"));
+  }
 })();
