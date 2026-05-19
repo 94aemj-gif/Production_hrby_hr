@@ -59,7 +59,8 @@
   body.shell-tablero .admin-link { padding: 8px 16px; background: var(--ink); color: var(--paper); border-radius: 10px; font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; line-height: 1; }
 
   body.shell-tablero .page { padding: 28px 40px 56px; max-width: 1200px; margin: 0 auto; }
-  body.shell-tablero .page-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 24px; }
+  body.shell-tablero .page-head { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 24px; text-align: left; }
+  body.shell-tablero .page-head > div:first-child { flex: 1 1 auto; min-width: 0; }
   body.shell-tablero .page-title { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; margin: 0; color: var(--ink); line-height: 1.1; }
   body.shell-tablero .page-meta { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin-top: 4px; }
   body.shell-tablero .actions { display: flex; gap: 10px; }
@@ -290,11 +291,11 @@
     })();
   </script>
 
-  <script src="seed.js?v=93"></script>
-  <script src="i18n.js?v=93"></script>
-  <script src="supabase-config.js?v=93"></script>
-  <script src="sync.js?v=93"></script>
-  <script src="app.js?v=93"></script>
-  <script src="dashboard.js?v=93"></script>
+  <script src="seed.js?v=94"></script>
+  <script src="i18n.js?v=94"></script>
+  <script src="supabase-config.js?v=94"></script>
+  <script src="sync.js?v=94"></script>
+  <script src="app.js?v=94"></script>
+  <script src="dashboard.js?v=94"></script>
 </body>
 </html>

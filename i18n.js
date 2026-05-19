@@ -389,6 +389,7 @@
 
       // v6 mockup additions
       "capture.pageTitle": "Captura del turno",
+      "capture.metaShiftActive": "Turno activo",
       "bento.oeeNow": "OEE actual",
       "metric.efficiency": "Eficiencia turno",
       "metric.targetSub": "configurada en Admin",
@@ -779,6 +780,7 @@
 
       // v6 mockup additions
       "capture.pageTitle": "Shift capture",
+      "capture.metaShiftActive": "Shift active",
       "bento.oeeNow": "OEE now",
       "metric.efficiency": "Shift efficiency",
       "metric.targetSub": "set in Admin",
