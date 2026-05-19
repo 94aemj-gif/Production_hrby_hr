@@ -1,52 +1,4 @@
-:root {
-  /* ===== Design tokens (v=50) ===== */
-  /* Palette tokens are defined in the TEAL-BENTO :root block below. */
-  /* Spacing — 4px base, numeric scale */
-  --space-1:  4px;
-  --space-2:  8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-
-  /* Touch target minimum (WCAG 2.5.5 / Material) */
-  --touch-min: 44px;
-
-  /* Type families — system stack only, honest about what's actually loaded */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, monospace;
-
-  /* Typography */
-  --text-xs:   11px;
-  --text-sm:   13px;
-  --text-base: 15px;
-  --text-md:   18px;
-  --text-lg:   22px;
-  --text-xl:   32px;
-  --text-2xl:  56px;
-
-  --weight-regular:  400;
-  --weight-medium:   500;
-  --weight-semibold: 600;
-  --weight-bold:     700;
-
-  --letter-spacing-label: 0.14em;
-  --letter-spacing-tight: -0.01em;
-
-  /* Radius */
-  --radius-sm:   8px;
-  --radius-md:  12px;
-  --radius-lg:  16px;
-  --radius-xl:  20px;
-  --radius-pill: 999px;
-
-  /* Animation */
-  --t-fast: 0.12s;
-  --t-base: 0.18s;
-}
+/* Tokens consolidated into tokens.css (loads after this file). */
 
 * { box-sizing: border-box; }
 
@@ -1297,18 +1249,8 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 /* ============ Modernization layer (v=32) ============
- * Softer shadows, larger radii, more airy padding. Overrides earlier
- * card/button rules without restructuring layout. Palette unchanged.
+ * Tokens for shadows/radius/border-soft moved to tokens.css.
  */
-:root {
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.03);
-  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 18px 38px rgba(15, 23, 42, 0.08), 0 4px 10px rgba(15, 23, 42, 0.04);
-  --shadow-press: 0 1px 2px rgba(15, 23, 42, 0.06) inset;
-  --border-soft: rgba(15, 23, 42, 0.06);
-  --radius-card: 18px;
-  --radius-btn: 12px;
-}
 
 /* --- Cards: shadow-elevated, bigger radius, more padding --- */
 .counter-card,
@@ -2571,54 +2513,7 @@ input.invalid {
    hero counter, side-col chart fill, teal btn-capture.
    ============================================================ */
 
-:root {
-  /* Ocean Teal palette — wins over earlier :root */
-  --bg:       #f0f5f7;
-  --bg-2:     #e2ebef;
-  --paper:    #fbfdfd;        /* tinted toward teal hue, satisfies no-pure-white */
-  --paper-2:  #f8fafb;
-  --paper-3:  #eaf0f3;
-  --panel:    var(--paper);
-  --panel-2:  #eaf0f3;
-
-  --ink:    #0c1a26;
-  --ink-2:  #1e3a4d;
-  --text:   #1a2e3d;
-  --text-2: #3e5566;
-  --muted:  #5d7282;
-  --muted-2:#8da0ad;
-
-  --line:    #dbe5ec;
-  --line-2:  #c6d3dc;
-  --divider: #e6edf1;
-  --border:  #dbe5ec;
-
-  --accent:      #0d9488;
-  --accent-2:    #14b8a6;
-  --accent-soft: #ccfbf1;
-  --accent-line: #99f0e1;
-
-  --success:      #059669;
-  --success-2:    #047857;
-  --success-soft: #d1fae5;
-  --success-line: #a7f3d0;
-
-  --warning:      #ea580c;
-  --warning-soft: #ffedd5;
-  --warning-line: #fdba74;
-
-  --danger:       #be123c;
-  --danger-soft:  #ffe4e6;
-  --danger-line:  #fda4af;
-
-  /* Legacy aliases — old refs render in new palette */
-  --green: var(--success);
-  --blue:  var(--accent);
-  --red:   var(--danger);
-
-  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-}
+/* Ocean Teal palette moved to tokens.css :root. */
 
 html, body {
   background: var(--bg);
@@ -4447,9 +4342,7 @@ body.app-shell:has(#admin-lock:not(.hidden)) .bottom-tabbar { display: none !imp
    ===  chart-card section-title separator.
    ===  Applies across Captura, Gráficas, Tablero, Admin.
    ============================================================ */
-:root {
-  --info: #3b82f6;
-}
+/* --info moved to tokens.css. */
 
 /* Label normalize: drop uppercase + extreme letter-spacing */
 .card-label,
