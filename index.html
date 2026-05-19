@@ -6,7 +6,7 @@
   <title data-i18n="page.title.capture">Registro de Producción</title>
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#f0f5f7" />
-  <link rel="stylesheet" href="styles.css?v=76" />
+  <link rel="stylesheet" href="styles.css?v=78" />
 </head>
 <body class="app-shell">
 
@@ -66,7 +66,13 @@
 
     <div class="page-head">
       <div class="page-title-row">
-        <h1 class="page-title">Captura del turno</h1>
+        <div>
+          <h1 class="page-title">Captura del turno</h1>
+          <div class="page-meta">
+            <span class="live-dot"></span>
+            <span id="capture-meta-text">Turno activo</span>
+          </div>
+        </div>
         <div class="clock-block">
           <span id="date-label" class="date-label">—</span>
           <span id="clock" class="clock">--:--</span>
@@ -179,21 +185,37 @@
     </section>
 
     <section class="kpi-grid">
-      <div class="kpi-tile">
-        <div class="kpi-label" data-i18n="kpi.oee">OEE</div>
-        <div id="kpi-oee" class="kpi-value">—</div>
+      <div class="kpi-tile kpi-featured">
+        <div class="kpi-head"><span class="kpi-label" data-i18n="kpi.oee">OEE</span></div>
+        <div class="kpi-row">
+          <span id="kpi-oee" class="kpi-value">—</span>
+          <span class="kpi-unit">%</span>
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-oee-fill" style="background: var(--accent);"></div></div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-label" data-i18n="kpi.availability">Disponibilidad</div>
-        <div id="kpi-avail" class="kpi-value">—</div>
+        <div class="kpi-head"><span class="kpi-label" data-i18n="kpi.availability">Disponibilidad</span></div>
+        <div class="kpi-row">
+          <span id="kpi-avail" class="kpi-value">—</span>
+          <span class="kpi-unit">%</span>
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-avail-fill" style="background: var(--info);"></div></div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-label" data-i18n="kpi.performance">Rendimiento</div>
-        <div id="kpi-perf" class="kpi-value">—</div>
+        <div class="kpi-head"><span class="kpi-label" data-i18n="kpi.performance">Rendimiento</span></div>
+        <div class="kpi-row">
+          <span id="kpi-perf" class="kpi-value">—</span>
+          <span class="kpi-unit">%</span>
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-perf-fill" style="background: var(--warning);"></div></div>
       </div>
       <div class="kpi-tile">
-        <div class="kpi-label" data-i18n="kpi.quality">Calidad</div>
-        <div id="kpi-qual" class="kpi-value">—</div>
+        <div class="kpi-head"><span class="kpi-label" data-i18n="kpi.quality">Calidad</span></div>
+        <div class="kpi-row">
+          <span id="kpi-qual" class="kpi-value">—</span>
+          <span class="kpi-unit">%</span>
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-qual-fill" style="background: var(--accent);"></div></div>
       </div>
     </section>
 
@@ -426,9 +448,9 @@
     })();
   </script>
 
-  <script src="i18n.js?v=76"></script>
-  <script src="supabase-config.js?v=76"></script>
-  <script src="sync.js?v=76"></script>
-  <script src="app.js?v=76"></script>
+  <script src="i18n.js?v=78"></script>
+  <script src="supabase-config.js?v=78"></script>
+  <script src="sync.js?v=78"></script>
+  <script src="app.js?v=78"></script>
 </body>
 </html>

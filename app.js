@@ -1274,10 +1274,16 @@
     const iso = chartsViewDate || todayKey();
     const s = pickSessionForChartsDate(iso);
     const empty = $("charts-empty");
+    const setKpiBar = (id, pct) => {
+      const el = $(id);
+      if (el) el.style.transform = "scaleX(" + (Math.max(0, Math.min(100, pct || 0)) / 100) + ")";
+    };
     if (!s) {
       if (empty) empty.classList.remove("hidden");
       setText("kpi-oee", "—"); setText("kpi-avail", "—");
       setText("kpi-perf", "—"); setText("kpi-qual", "—");
+      setKpiBar("kpi-oee-fill", 0); setKpiBar("kpi-avail-fill", 0);
+      setKpiBar("kpi-perf-fill", 0); setKpiBar("kpi-qual-fill", 0);
       const cvs = ["chart-hourly", "chart-cumulative", "chart-scrap"];
       for (const id of cvs) {
         const cv = $(id);
@@ -1290,10 +1296,14 @@
     }
     if (empty) empty.classList.add("hidden");
     const oeeStats = computeOEEBreakdown(s);
-    setText("kpi-oee", oeeStats.oee + "%");
-    setText("kpi-avail", oeeStats.availability + "%");
-    setText("kpi-perf", oeeStats.performance + "%");
-    setText("kpi-qual", oeeStats.quality + "%");
+    setText("kpi-oee", String(oeeStats.oee));
+    setText("kpi-avail", String(oeeStats.availability));
+    setText("kpi-perf", String(oeeStats.performance));
+    setText("kpi-qual", String(oeeStats.quality));
+    setKpiBar("kpi-oee-fill", oeeStats.oee);
+    setKpiBar("kpi-avail-fill", oeeStats.availability);
+    setKpiBar("kpi-perf-fill", oeeStats.performance);
+    setKpiBar("kpi-qual-fill", oeeStats.quality);
     drawShiftChart($("chart-hourly"), s);
     drawCumulativeChart($("chart-cumulative"), s);
     drawScrapChart($("chart-scrap"), s);
