@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup · Captura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-25..200" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f0f5f7;
+    --paper: #fbfdfd;
+    --paper-2: #f8fafb;
+    --paper-3: #eaf0f3;
+    --line: #dbe5ec;
+    --line-2: #c6d3dc;
+    --ink: #0c1a26;
+    --ink-2: #1e3a4d;
+    --muted: #5d7282;
+    --accent: #0d9488;
+    --accent-2: #14b8a6;
+    --accent-soft: #ccfbf1;
+    --success: #059669;
+    --warning: #ea580c;
+    --danger: #be123c;
+    --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; }
+
+  /* Top bar */
+  .topbar {
+    height: 56px;
+    padding: 0 32px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .brand-dot { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; color: var(--paper); }
+  .brand-name { color: var(--ink); font-size: 16px; }
+  .brand-sub { color: var(--muted); font-size: 12px; font-weight: 500; font-family: var(--mono); }
+  .nav-pills { display: flex; gap: 4px; }
+  .nav-pill { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .nav-pill.active { background: var(--ink); color: var(--paper); }
+  .topbar-actions { display: flex; gap: 12px; align-items: center; }
+  .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: var(--muted); cursor: pointer; }
+  .icon-btn:hover { background: var(--paper-3); color: var(--ink); }
+  .shift-pill { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-family: var(--mono); color: var(--ink); }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px rgba(5,150,105,0.18); }
+  .admin-link { padding: 8px 16px; background: var(--ink); color: var(--paper); border-radius: 10px; font-size: 13px; font-weight: 600; }
+
+  /* Page */
+  .page { padding: 28px 40px 56px; max-width: 1280px; margin: 0 auto; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+  .page-title { font-size: 32px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+  .page-meta { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .clock-block { text-align: right; font-family: var(--mono); }
+  .clock-date { font-size: 12px; color: var(--muted); }
+  .clock-time { font-size: 28px; font-weight: 600; letter-spacing: -0.04em; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* Bento grid */
+  .bento { display: grid; grid-template-columns: 7fr 5fr; gap: 20px; align-items: stretch; }
+  .hero { grid-column: 1; grid-row: 1 / span 3; background: var(--paper); border-radius: 22px; box-shadow: 0 0 0 1px var(--line), 0 12px 28px -20px rgba(15,15,20,0.1); padding: 36px 40px 32px; display: flex; flex-direction: column; align-items: flex-start; min-height: 540px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 50% at 50% 0%, var(--accent-soft), transparent 70%); pointer-events: none; }
+  .hero > * { position: relative; }
+  .kicker { font-family: var(--mono); color: var(--accent); font-size: 12px; letter-spacing: 0; font-weight: 600; background: var(--accent-soft); padding: 7px 16px; border-radius: 999px; margin: 0; }
+  .counter { font-size: clamp(120px, 14vw, 200px); line-height: 0.92; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.06em; margin: auto 0; }
+  .counter-row { display: flex; gap: 14px; align-items: center; }
+  .btn { padding: 18px 48px; border: none; border-radius: 16px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; min-height: 56px; }
+  .btn-primary { background: var(--accent); color: var(--paper); box-shadow: 0 6px 18px -8px rgba(15,23,42,0.18); }
+  .btn-ghost { background: transparent; border: 1px solid var(--line-2); color: var(--ink); }
+  .hour-ribbon { align-self: stretch; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .ribbon-head { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
+  .ribbon-cd { font-family: var(--mono); }
+  .ribbon-bar { height: 8px; background: var(--paper-3); border-radius: 999px; overflow: hidden; }
+  .ribbon-fill { height: 100%; width: 64%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; }
+
+  .tile { background: var(--paper); border-radius: 22px; box-shadow: 0 0 0 1px var(--line), 0 12px 28px -20px rgba(15,15,20,0.1); padding: 22px 24px; display: flex; flex-direction: column; gap: 8px; }
+  .tile-label { font-family: var(--mono); color: var(--muted); font-size: 12px; letter-spacing: 0; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .tile-icon { color: var(--accent); }
+  .tile-big { font-family: var(--sans); font-size: 44px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; line-height: 1; color: var(--ink); }
+  .tile-delta { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 2px; padding: 3px 8px; border-radius: 999px; }
+  .delta-up { color: var(--success); background: rgba(5,150,105,0.12); }
+  .delta-down { color: var(--danger); background: rgba(190,18,60,0.12); }
+  .tile-bar { height: 6px; background: var(--paper-3); border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .tile-bar-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+  .tile-oee { grid-column: 2; grid-row: 1; }
+  .tile-chart { grid-column: 2; grid-row: 2; flex: 1; }
+  .tile-chart canvas, .tile-chart .fake-chart { flex: 1; min-height: 160px; }
+  .tile-scrap { grid-column: 2; grid-row: 3; }
+
+  /* fake sparkline */
+  .fake-chart { width: 100%; height: 100%; }
+
+  /* metrics strip */
+  .strip { margin-top: 20px; background: var(--paper); border-radius: 22px; box-shadow: 0 0 0 1px var(--line), 0 8px 20px -16px rgba(15,15,20,0.08); display: grid; grid-template-columns: repeat(3, 1fr); padding: 20px 28px; }
+  .strip-item { padding: 0 24px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+  .strip-item:first-child { border-left: 0; padding-left: 0; }
+  .strip-label { font-family: var(--mono); color: var(--muted); font-size: 12px; letter-spacing: 0; font-weight: 600; }
+  .strip-value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
+  .strip-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .strip-value.up { color: var(--success); }
+  .strip-value.down { color: var(--danger); }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-dot"><span class="material-symbols-outlined" style="font-size: 18px;">precision_manufacturing</span></div>
+      <div>
+        <div class="brand-name">Producción</div>
+        <div class="brand-sub">L-02 · Turno actual</div>
+      </div>
+      <div class="nav-pills" style="margin-left: 32px;">
+        <div class="nav-pill active">Captura</div>
+        <div class="nav-pill">Gráficas</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="shift-pill"><span class="live-dot"></span> activo · OEE 85%</div>
+      <div class="icon-btn"><span class="material-symbols-outlined">sync</span></div>
+      <div class="icon-btn"><span class="material-symbols-outlined">translate</span></div>
+      <a class="admin-link" href="#">Tablero</a>
+      <a class="admin-link" href="#">Admin</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">Captura del turno</h1>
+        <div class="page-meta">
+          <span class="live-dot"></span>
+          <span>Próxima alerta en 27 min · Última captura hace 4 min</span>
+        </div>
+      </div>
+      <div class="clock-block">
+        <div class="clock-date">vie 17 may 2026</div>
+        <div class="clock-time">14:32</div>
+      </div>
+    </div>
+
+    <div class="bento">
+      <section class="hero">
+        <span class="kicker">Producción del turno</span>
+        <div class="counter">128</div>
+        <div class="counter-row">
+          <button class="btn btn-primary">Capturar</button>
+          <button class="btn btn-ghost">Deshacer</button>
+        </div>
+        <div class="hour-ribbon">
+          <div class="ribbon-head">
+            <span>Hora actual · 14:00 PM</span>
+            <span class="ribbon-cd">27 min para capturar</span>
+          </div>
+          <div class="ribbon-bar"><div class="ribbon-fill"></div></div>
+        </div>
+      </section>
+
+      <section class="tile tile-oee">
+        <div class="tile-label">
+          <span>OEE actual</span>
+          <span class="material-symbols-outlined tile-icon">analytics</span>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 10px;">
+          <span class="tile-big" style="color: var(--accent);">85%</span>
+          <span class="tile-delta delta-up"><span class="material-symbols-outlined" style="font-size: 14px;">arrow_upward</span>2.1%</span>
+        </div>
+        <div class="tile-bar"><div class="tile-bar-fill" style="width: 85%;"></div></div>
+      </section>
+
+      <section class="tile tile-chart">
+        <div class="tile-label"><span>Tendencia por hora</span></div>
+        <svg class="fake-chart" viewBox="0 0 200 80" preserveAspectRatio="none">
+          <path d="M0 60 L20 50 L40 55 L60 35 L80 70 L100 40 L120 32 L140 28 L160 35 L180 30 L200 25" fill="none" stroke="#0d9488" stroke-width="2" />
+          <path d="M0 60 L20 50 L40 55 L60 35 L80 70 L100 40 L120 32 L140 28 L160 35 L180 30 L200 25 L200 80 L0 80 Z" fill="rgba(13,148,136,0.1)" />
+          <line x1="0" x2="200" y1="42" y2="42" stroke="#dbe5ec" stroke-dasharray="3 3" stroke-width="0.8" />
+        </svg>
+      </section>
+
+      <section class="tile tile-scrap">
+        <div class="tile-label">
+          <span>Rechazos del turno</span>
+          <span class="material-symbols-outlined tile-icon" style="color: var(--danger);">error</span>
+        </div>
+        <span class="tile-big" style="color: var(--danger);">3</span>
+        <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">2.3% del lote · meta &lt;5%</div>
+      </section>
+    </div>
+
+    <section class="strip">
+      <div class="strip-item">
+        <span class="strip-label">Última hora</span>
+        <span class="strip-value up">118</span>
+        <span class="strip-sub">14:00 PM – 15:00 PM</span>
+      </div>
+      <div class="strip-item">
+        <span class="strip-label">Meta por hora</span>
+        <span class="strip-value">150</span>
+        <span class="strip-sub">configurada en Admin</span>
+      </div>
+      <div class="strip-item">
+        <span class="strip-label">Eficiencia turno</span>
+        <span class="strip-value up">79%</span>
+        <span class="strip-sub">↑ 4% vs ayer</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

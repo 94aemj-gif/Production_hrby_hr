@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup · Tablero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-25..200" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f0f5f7;
+    --paper: #fbfdfd;
+    --paper-2: #f8fafb;
+    --paper-3: #eaf0f3;
+    --line: #dbe5ec;
+    --line-2: #c6d3dc;
+    --ink: #0c1a26;
+    --muted: #5d7282;
+    --accent: #0d9488;
+    --accent-2: #14b8a6;
+    --accent-soft: #ccfbf1;
+    --success: #059669;
+    --warning: #ea580c;
+    --danger: #be123c;
+    --info: #3b82f6;
+    --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; }
+
+  .topbar { height: 56px; padding: 0 32px; background: var(--paper); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+  .brand-dot { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; color: var(--paper); }
+  .nav-pills { display: flex; gap: 4px; margin-left: 32px; }
+  .nav-pill { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .nav-pill.active { background: var(--ink); color: var(--paper); }
+  .topbar-actions { display: flex; gap: 12px; align-items: center; }
+  .shift-pill { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-family: var(--mono); }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px rgba(5,150,105,0.18); }
+  .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: var(--muted); cursor: pointer; }
+  .icon-btn:hover { background: var(--paper-3); color: var(--ink); }
+  .admin-link { padding: 8px 16px; background: var(--ink); color: var(--paper); border-radius: 10px; font-size: 13px; font-weight: 600; }
+
+  .page { padding: 28px 40px 56px; max-width: 1400px; margin: 0 auto; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 24px; }
+  .page-title { font-size: 32px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+  .page-meta { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; }
+  .btn { padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-family: inherit; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+
+  /* Summary tiles */
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .ds-tile { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+  .ds-label { font-family: var(--mono); color: var(--muted); font-size: 12px; letter-spacing: 0; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .ds-icon { color: var(--accent); }
+  .ds-body { display: flex; align-items: baseline; gap: 8px; }
+  .ds-value { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .ds-unit { font-size: 14px; color: var(--muted); }
+  .ds-delta { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: auto; }
+  .delta-up { color: var(--success); background: rgba(5,150,105,0.12); }
+  .delta-down { color: var(--danger); background: rgba(190,18,60,0.12); }
+
+  /* Line grid */
+  .lines-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .lines-title { font-family: var(--mono); font-size: 13px; letter-spacing: 0; color: var(--muted); font-weight: 600; }
+  .lines-filter { display: flex; gap: 6px; }
+  .filter-chip { padding: 4px 10px; border-radius: 999px; font-size: 12px; color: var(--muted); cursor: pointer; }
+  .filter-chip.active { background: var(--ink); color: var(--paper); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; min-height: 196px; }
+  .card-head { display: flex; justify-content: space-between; align-items: flex-start; }
+  .card-name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+  .status-dot.idle { background: var(--muted); }
+  .status-dot.warn { background: var(--warning); }
+  .status-dot.down { background: var(--danger); box-shadow: 0 0 0 3px rgba(190,18,60,0.18); }
+  .card-meta { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .card-pill { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 700; font-family: var(--mono); }
+  .pill-ahead { background: rgba(5,150,105,0.14); color: var(--success); }
+  .pill-ok { background: rgba(13,148,136,0.12); color: var(--accent); }
+  .pill-warn { background: rgba(234,88,12,0.14); color: var(--warning); }
+  .pill-behind { background: rgba(190,18,60,0.14); color: var(--danger); }
+  .pill-na { background: var(--paper-3); color: var(--muted); }
+
+  .card-big-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .card-count { font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -0.02em; color: var(--success); }
+  .card-count.behind { color: var(--danger); }
+  .card-target { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .card-spark { height: 32px; }
+  .card-spark svg { width: 100%; height: 100%; display: block; }
+  .card-meta-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-family: var(--mono); padding-top: 8px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-dot"><span class="material-symbols-outlined" style="font-size: 18px;">precision_manufacturing</span></div>
+      <div>
+        <div style="font-size: 16px;">Producción</div>
+        <div style="color: var(--muted); font-size: 12px; font-weight: 500; font-family: var(--mono);">Planta · 4 líneas</div>
+      </div>
+      <div class="nav-pills">
+        <div class="nav-pill">Captura</div>
+        <div class="nav-pill">Gráficas</div>
+        <div class="nav-pill active">Tablero</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="shift-pill"><span class="live-dot"></span> 3 de 4 activas · OEE 82%</div>
+      <a class="admin-link" href="#">Admin</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">Tablero de Producción</h1>
+        <div class="page-meta">
+          <span class="live-dot"></span>
+          <span>4 líneas configuradas · Actualizado en tiempo real</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn"><span class="material-symbols-outlined" style="font-size: 18px;">calendar_today</span>Hoy</button>
+        <button class="btn"><span class="material-symbols-outlined" style="font-size: 18px;">file_download</span>Exportar</button>
+      </div>
+    </div>
+
+    <section class="summary">
+      <div class="ds-tile">
+        <div class="ds-label"><span>Producción total</span><span class="material-symbols-outlined ds-icon">factory</span></div>
+        <div class="ds-body">
+          <span class="ds-value">2,847</span>
+          <span class="ds-unit">piezas</span>
+          <span class="ds-delta delta-up">↑ 12%</span>
+        </div>
+      </div>
+      <div class="ds-tile">
+        <div class="ds-label"><span>Rechazos</span><span class="material-symbols-outlined ds-icon" style="color: var(--danger);">error</span></div>
+        <div class="ds-body">
+          <span class="ds-value" style="color: var(--danger);">28</span>
+          <span class="ds-unit">piezas</span>
+          <span class="ds-delta delta-down">↓ 8%</span>
+        </div>
+      </div>
+      <div class="ds-tile">
+        <div class="ds-label"><span>Líneas activas</span><span class="material-symbols-outlined ds-icon">timeline</span></div>
+        <div class="ds-body">
+          <span class="ds-value">3<span style="color: var(--muted); font-size: 18px; font-weight: 500;"> / 4</span></span>
+        </div>
+      </div>
+      <div class="ds-tile">
+        <div class="ds-label"><span>Ritmo promedio</span><span class="material-symbols-outlined ds-icon" style="color: var(--warning);">speed</span></div>
+        <div class="ds-body">
+          <span class="ds-value">142</span>
+          <span class="ds-unit">pzs/hr</span>
+          <span class="ds-delta delta-up">↑ 4%</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="lines-head">
+      <span class="lines-title">Estado por línea</span>
+      <div class="lines-filter">
+        <span class="filter-chip active">Todas</span>
+        <span class="filter-chip">Activas</span>
+        <span class="filter-chip">En paro</span>
+      </div>
+    </div>
+
+    <section class="grid">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-name"><span class="status-dot"></span>L-01 Ensamble</div>
+            <div class="card-meta">Operador: 12345 · Turno T1</div>
+          </div>
+          <span class="card-pill pill-ahead">↑ adelantada</span>
+        </div>
+        <div class="card-big-row">
+          <span class="card-count">842</span>
+          <span class="card-target">/ 800 meta</span>
+        </div>
+        <div class="card-spark">
+          <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+            <path d="M0 24 L10 22 L20 18 L30 14 L40 16 L50 10 L60 12 L70 6 L80 8 L90 4 L100 6" fill="none" stroke="#059669" stroke-width="2" />
+            <path d="M0 24 L10 22 L20 18 L30 14 L40 16 L50 10 L60 12 L70 6 L80 8 L90 4 L100 6 L100 32 L0 32 Z" fill="rgba(5,150,105,0.15)" />
+          </svg>
+        </div>
+        <div class="card-meta-row"><span>Última: 14:32</span><span>OEE 88%</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-name"><span class="status-dot"></span>L-02 Soldadura</div>
+            <div class="card-meta">Operador: 12378 · Turno T1</div>
+          </div>
+          <span class="card-pill pill-ok">en meta</span>
+        </div>
+        <div class="card-big-row">
+          <span class="card-count" style="color: var(--accent);">128</span>
+          <span class="card-target">/ 150 meta hora</span>
+        </div>
+        <div class="card-spark">
+          <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+            <path d="M0 18 L10 16 L20 20 L30 14 L40 18 L50 12 L60 16 L70 10 L80 14 L90 12 L100 10" fill="none" stroke="#0d9488" stroke-width="2" />
+            <path d="M0 18 L10 16 L20 20 L30 14 L40 18 L50 12 L60 16 L70 10 L80 14 L90 12 L100 10 L100 32 L0 32 Z" fill="rgba(13,148,136,0.15)" />
+          </svg>
+        </div>
+        <div class="card-meta-row"><span>Última: 14:31</span><span>OEE 85%</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-name"><span class="status-dot warn"></span>L-03 Pintura</div>
+            <div class="card-meta">Operador: 12401 · Turno T1</div>
+          </div>
+          <span class="card-pill pill-warn">↓ atrasada</span>
+        </div>
+        <div class="card-big-row">
+          <span class="card-count" style="color: var(--warning);">68</span>
+          <span class="card-target">/ 100 meta hora</span>
+        </div>
+        <div class="card-spark">
+          <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+            <path d="M0 14 L10 18 L20 16 L30 22 L40 20 L50 24 L60 22 L70 26 L80 20 L90 24 L100 22" fill="none" stroke="#ea580c" stroke-width="2" />
+            <path d="M0 14 L10 18 L20 16 L30 22 L40 20 L50 24 L60 22 L70 26 L80 20 L90 24 L100 22 L100 32 L0 32 Z" fill="rgba(234,88,12,0.15)" />
+          </svg>
+        </div>
+        <div class="card-meta-row"><span>Última: 14:28</span><span>OEE 72%</span></div>
+      </div>
+
+      <div class="card" style="opacity: 0.7;">
+        <div class="card-head">
+          <div>
+            <div class="card-name"><span class="status-dot idle"></span>L-04 Empaque</div>
+            <div class="card-meta">Sin operador asignado</div>
+          </div>
+          <span class="card-pill pill-na">inactiva</span>
+        </div>
+        <div class="card-big-row">
+          <span class="card-count" style="color: var(--muted);">0</span>
+          <span class="card-target">esperando turno</span>
+        </div>
+        <div class="card-spark">
+          <svg viewBox="0 0 100 32" preserveAspectRatio="none">
+            <line x1="0" x2="100" y1="16" y2="16" stroke="#c6d3dc" stroke-dasharray="3 3" stroke-width="1"/>
+          </svg>
+        </div>
+        <div class="card-meta-row"><span>Última sesión: ayer</span><span>—</span></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

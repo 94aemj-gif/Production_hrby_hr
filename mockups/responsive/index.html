@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Responsive mockups — 5 opciones</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Geist',ui-sans-serif,system-ui,sans-serif;color:#0c1a26;background:#e2ebef;min-height:100dvh;padding:40px 24px 80px;-webkit-font-smoothing:antialiased;letter-spacing:-0.005em}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:36px;font-weight:600;letter-spacing:-0.03em;line-height:1.05;margin-bottom:8px}
+.lede{color:#5d7282;font-size:16px;margin-bottom:8px;max-width:74ch;line-height:1.55}
+.lede b{color:#0c1a26;font-weight:600}
+.standards{background:#fff;border-radius:14px;padding:18px 22px;margin:24px 0 32px;box-shadow:0 0 0 1px #dbe5ec}
+.standards h3{font:600 12px 'Geist Mono',monospace;color:#0d9488;text-transform:uppercase;letter-spacing:0.14em;margin-bottom:10px}
+.standards ul{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 18px;list-style:none}
+.standards li{color:#3e5566;font-size:13px}
+.standards li b{color:#0c1a26;font-weight:600;font-family:'Geist Mono',monospace;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-top:8px}
+a.card{background:#fff;border-radius:18px;padding:22px 24px;text-decoration:none;color:inherit;box-shadow:0 0 0 1px #dbe5ec,0 12px 28px -20px rgba(15,15,20,0.12);transition:transform 220ms cubic-bezier(.34,1.56,.64,1),box-shadow 220ms;display:flex;flex-direction:column;gap:12px;position:relative;overflow:hidden}
+a.card::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 80% 40% at 100% 0%,rgba(13,148,136,0.08),transparent 60%);pointer-events:none}
+a.card > *{position:relative}
+a.card:hover{transform:translateY(-3px);box-shadow:0 0 0 1px #c6d3dc,0 24px 48px -16px rgba(15,15,20,0.18)}
+a.card .head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+a.card h2{font-size:18px;font-weight:600;letter-spacing:-0.02em;line-height:1.2}
+a.card .letter{font-family:'Geist Mono',monospace;color:#0d9488;background:#ccfbf1;padding:6px 10px;border-radius:8px;font-size:14px;font-weight:700;flex-shrink:0}
+a.card p{color:#5d7282;font-size:13px;line-height:1.45;flex:1}
+a.card .tags{display:flex;gap:6px;flex-wrap:wrap}
+a.card .tag{font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;padding:4px 8px;border-radius:6px;background:#eaf0f3;color:#5d7282}
+a.card .tag.hot{background:#ffedd5;color:#ea580c}
+a.card .arrow{color:#5d7282;font-family:'Geist Mono',monospace;font-size:13px;align-self:flex-end;font-weight:600}
+.note{margin-top:36px;color:#5d7282;font-size:13px;text-align:center;font-family:'Geist Mono',monospace}
+.note a{color:#0d9488;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Responsive — 5 direcciones</h1>
+  <p class="lede">Misma capa visual (Ocean Teal, mismas cards, mismo botón Capturar). Solo cambia <b>la estrategia del header</b> y cómo se adapta a tablet/mobile. Abre cada uno, ve las 3 vistas apiladas (desktop · tablet · mobile), y dime la letra.</p>
+
+  <div class="standards">
+    <h3>Estandarización aplicada a las 5</h3>
+    <ul>
+      <li><b>Breakpoints</b> · 480 / 768 / 1024 / 1280</li>
+      <li><b>Container max-width</b> · 1320 px</li>
+      <li><b>Type scale</b> · clamp() en title + counter + metric</li>
+      <li><b>Tap targets</b> · ≥ 44×44px</li>
+      <li><b>Capture btn</b> · full-width mobile, min(100%, 360px) desktop</li>
+      <li><b>Card padding</b> · 20 / 24 / 28 px (mobile/tablet/desktop)</li>
+      <li><b>Card radius</b> · 16 / 18 / 22 px</li>
+      <li><b>Spacing</b> · escala 4/8/12/16/24/32/48/64</li>
+    </ul>
+  </div>
+
+  <div class="grid">
+
+    <a class="card" href="a-compact-header.html">
+      <div class="head"><h2>Compact Header + Hamburger</h2><span class="letter">A</span></div>
+      <p>En mobile/tablet los controles operativos van a un menú desplegable. Patrón familiar y limpio. Bueno cuando hay muchos botones.</p>
+      <div class="tags"><span class="tag">conservador</span><span class="tag">familiar</span></div>
+      <div class="arrow">ver mockup →</div>
+    </a>
+
+    <a class="card" href="b-bottom-tabbar.html">
+      <div class="head"><h2>Bottom Tab Bar (iOS)</h2><span class="letter">B</span></div>
+      <p>Top bar mínimo. Tab bar fijo abajo + botón Capturar como FAB flotante en mobile. Óptimo para operador con una sola mano.</p>
+      <div class="tags"><span class="tag hot">mobile-first</span><span class="tag">nativo</span></div>
+      <div class="arrow">ver mockup →</div>
+    </a>
+
+    <a class="card" href="c-two-zone.html">
+      <div class="head"><h2>Two-Zone Header</h2><span class="letter">C</span></div>
+      <p>Dos filas: identidad arriba, estado operativo abajo. En mobile la fila 2 se vuelve scroll horizontal de chips. Información ordenada.</p>
+      <div class="tags"><span class="tag">jerárquico</span><span class="tag">SaaS</span></div>
+      <div class="arrow">ver mockup →</div>
+    </a>
+
+    <a class="card" href="d-hybrid-sidebar.html">
+      <div class="head"><h2>Hybrid Sidebar (Rail + Drawer)</h2><span class="letter">D</span></div>
+      <p>Rail vertical de 64px en desktop, drawer en mobile. Patrón admin clásico. Más espacio para el contenido en desktop.</p>
+      <div class="tags"><span class="tag">admin</span><span class="tag">desktop-rich</span></div>
+      <div class="arrow">ver mockup →</div>
+    </a>
+
+    <a class="card" href="e-adaptive-segments.html">
+      <div class="head"><h2>Adaptive Segments</h2><span class="letter">E</span></div>
+      <p>Una sola fila en todos los tamaños. Cada chip se reduce a icono cuando baja el viewport. Nada se oculta. Mínimo cambio, máxima densidad.</p>
+      <div class="tags"><span class="tag hot">denso</span><span class="tag">always-visible</span></div>
+      <div class="arrow">ver mockup →</div>
+    </a>
+
+  </div>
+
+  <p class="note">App real intacta en <a href="../../index.html">/index.html</a> · estos son solo prototipos visuales.</p>
+</div>
+</body>
+</html>

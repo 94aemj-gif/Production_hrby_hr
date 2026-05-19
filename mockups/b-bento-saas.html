@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mockup B · Bento SaaS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f4f5;
+  --paper:#ffffff;
+  --ink:#0a0a0a;
+  --ink-2:#3f3f46;
+  --muted:#71717a;
+  --muted-2:#a1a1aa;
+  --line:#e4e4e7;
+  --line-2:#d4d4d8;
+  --accent:#ff5a3c;        /* coral */
+  --accent-2:#ff7a5e;
+  --accent-soft:#fff0ec;
+  --success:#0d9f6e;
+  --success-soft:#dcfaee;
+  --warn:#d97706;
+  --warn-soft:#fdf2e0;
+  --shadow:0 1px 0 rgba(0,0,0,0.02), 0 24px 48px -24px rgba(0,0,0,0.10);
+  --shadow-lift:0 1px 0 rgba(0,0,0,0.03), 0 28px 56px -24px rgba(0,0,0,0.16);
+  --radius:24px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:'Geist',sans-serif;-webkit-font-smoothing:antialiased;min-height:100dvh;letter-spacing:-0.005em}
+.shell{padding:18px;min-height:100dvh}
+.frame{background:var(--paper);border-radius:28px;box-shadow:var(--shadow);padding:14px;display:grid;grid-template-columns:240px 1fr;gap:14px;min-height:calc(100dvh - 36px)}
+.side{background:var(--bg);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 8px;margin-bottom:16px}
+.brand .mark{width:32px;height:32px;border-radius:10px;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;letter-spacing:-0.04em}
+.brand .name{font-size:14px;font-weight:600}
+.brand .sub{font-size:11px;color:var(--muted);font-family:'Geist Mono',monospace;letter-spacing:0.04em}
+.nav{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.nav a{font-family:inherit;text-decoration:none;color:var(--muted);padding:10px 12px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px}
+.nav a .ic{width:18px;height:18px;border-radius:6px;background:var(--line);display:inline-block}
+.nav a.active{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,0.04)}
+.nav a.active .ic{background:var(--accent)}
+.side .footer{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--paper)}
+.side .footer .av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ff9b85,#ff5a3c)}
+.side .footer .who{font-size:12px}
+.side .footer .who b{display:block;font-size:13px;font-weight:600}
+.side .footer .who span{color:var(--muted)}
+.main{display:flex;flex-direction:column;gap:14px;min-width:0}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 0}
+.shift{display:flex;align-items:center;gap:12px}
+.shift .h{font-size:18px;font-weight:600;letter-spacing:-0.02em}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;background:var(--success-soft);color:var(--success)}
+.chip i{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 0 currentColor;animation:p 2s ease-in-out infinite}
+@keyframes p{50%{box-shadow:0 0 0 4px transparent;opacity:.7}}
+.topright{display:flex;align-items:center;gap:10px}
+.clock{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink);background:var(--bg);padding:8px 14px;border-radius:10px;font-weight:500}
+.alert{display:inline-flex;align-items:baseline;gap:8px;font-size:12px;padding:8px 14px;background:var(--warn-soft);color:var(--warn);border-radius:10px;font-weight:500}
+.alert b{font-family:'Geist Mono',monospace;font-weight:600}
+.admin{background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;text-decoration:none}
+.grid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;flex:1;min-height:0}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--paper);border-radius:var(--radius);padding:28px;box-shadow:0 0 0 1px var(--line)}
+.card.hero{padding:36px;background:linear-gradient(180deg,var(--paper),var(--accent-soft));box-shadow:0 0 0 1px var(--line),0 24px 48px -28px rgba(255,90,60,0.4);position:relative;overflow:hidden;flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:380px}
+.card.hero::after{content:"";position:absolute;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(255,90,60,0.18),transparent 70%);top:-40px;right:-40px}
+.kicker{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:600;font-family:'Geist Mono',monospace}
+.hero .top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1}
+.hero .top .tag{font-size:11px;font-weight:600;background:var(--paper);color:var(--accent);padding:6px 12px;border-radius:999px;box-shadow:0 0 0 1px var(--accent-soft)}
+.bignum{font-family:'Geist',sans-serif;font-size:clamp(96px,12vw,180px);font-weight:600;line-height:1;letter-spacing:-0.06em;color:var(--ink);font-variant-numeric:tabular-nums;margin:24px 0 8px;position:relative;z-index:1}
+.bignum sup{font-size:0.22em;color:var(--muted);font-weight:500;margin-left:8px;letter-spacing:0;vertical-align:0.6em}
+.sub{color:var(--muted);font-size:14px;position:relative;z-index:1}
+.cta{margin-top:auto;display:flex;gap:10px;position:relative;z-index:1;padding-top:28px}
+.btn{font-family:inherit;border:none;cursor:pointer;font-weight:600;font-size:15px;padding:18px 28px;border-radius:14px;letter-spacing:-0.005em;display:inline-flex;align-items:center;gap:10px;transition:transform 120ms}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 8px 20px -6px rgba(255,90,60,0.5),inset 0 1px 0 rgba(255,255,255,0.25);flex:1;justify-content:center}
+.btn-primary:hover{background:var(--accent-2)}
+.btn-ghost{background:var(--bg);color:var(--ink)}
+.btn-ghost:hover{background:var(--line)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tile{background:var(--paper);border-radius:var(--radius);padding:24px;box-shadow:0 0 0 1px var(--line);display:flex;flex-direction:column;gap:14px;min-height:140px}
+.tile .k{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:600;font-family:'Geist Mono',monospace}
+.tile .v{font-family:'Geist',sans-serif;font-size:44px;font-weight:600;line-height:1;letter-spacing:-0.04em;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:auto}
+.tile .d{font-size:12px;color:var(--success);font-weight:500;display:flex;align-items:center;gap:6px}
+.tile .d.warn{color:var(--warn)}
+.tile.full{grid-column:1/-1;padding:22px 24px}
+.hour-card{padding:24px 28px;display:flex;flex-direction:column;gap:14px}
+.hour-head{display:flex;justify-content:space-between;align-items:baseline}
+.hour-head .h{font-size:15px;font-weight:600}
+.hour-head .left{font-family:'Geist Mono',monospace;font-size:13px;color:var(--accent);font-weight:600}
+.bar{height:10px;background:var(--bg);border-radius:999px;overflow:hidden}
+.bar > i{display:block;height:100%;width:62%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:999px;box-shadow:0 0 12px rgba(255,90,60,0.4)}
+.legend{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-family:'Geist Mono',monospace}
+.log{flex:1;display:flex;flex-direction:column;gap:10px;min-height:0}
+.log .item{display:grid;grid-template-columns:60px 84px 1fr;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:13px}
+.log .item:hover{background:var(--bg)}
+.log .item .t{font-family:'Geist Mono',monospace;color:var(--muted);font-size:12px}
+.log .item .tag{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;padding:3px 8px;border-radius:999px;text-align:center;background:var(--success-soft);color:var(--success)}
+.log .item .tag.alert{background:var(--warn-soft);color:var(--warn)}
+.log .item .tag.scrap{background:#fde2e2;color:#c0282c}
+.log .item .m{color:var(--ink-2)}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+@media (max-width:880px){.frame{grid-template-columns:1fr}.side{flex-direction:row;align-items:center;padding:14px}.brand{margin:0 auto 0 0}.nav{flex-direction:row;margin:0}.side .footer{display:none}.shell{padding:10px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="frame">
+    <aside class="side">
+      <div class="brand"><span class="mark">pc</span><div><div class="name">Production</div><div class="sub">L-02 · línea 2</div></div></div>
+      <nav class="nav">
+        <a class="active" href="#"><span class="ic"></span>Captura</a>
+        <a href="#"><span class="ic"></span>Gráficas</a>
+        <a href="#"><span class="ic"></span>Bitácora</a>
+        <a href="#"><span class="ic"></span>Historial</a>
+      </nav>
+      <div class="footer"><div class="av"></div><div class="who"><b>OP-1204</b><span>Turno A</span></div></div>
+    </aside>
+    <section class="main">
+      <header class="topbar">
+        <div class="shift"><span class="h">Turno Matutino</span><span class="chip"><i></i>activo</span></div>
+        <div class="topright">
+          <span class="clock">10:42</span>
+          <span class="alert">próxima alerta <b>11:00</b></span>
+          <a class="admin" href="#">Admin</a>
+        </div>
+      </header>
+      <div class="grid">
+        <div class="col">
+          <article class="card hero">
+            <div class="top">
+              <div>
+                <div class="kicker">Producción del turno</div>
+                <div class="bignum">482<sup>/720</sup></div>
+                <div class="sub">37 piezas en la hora actual · vas 4 sobre meta</div>
+              </div>
+              <span class="tag">+4 ▲</span>
+            </div>
+            <div class="cta">
+              <button class="btn btn-primary">＋  Capturar producción</button>
+              <button class="btn btn-ghost">↶ Deshacer</button>
+            </div>
+          </article>
+          <article class="card hour-card">
+            <div class="hour-head"><div class="h">Hora 10:00 → 10:59</div><div class="left">18 min restantes</div></div>
+            <div class="bar"><i></i></div>
+            <div class="legend"><span>37 / 60 piezas</span><span>62%</span></div>
+          </article>
+        </div>
+        <div class="col">
+          <div class="tiles">
+            <div class="tile"><div class="k">Última hora</div><div class="v">62</div><div class="d">▲ +4 sobre meta</div></div>
+            <div class="tile"><div class="k">Meta hora</div><div class="v">60</div><div class="d" style="color:var(--muted)">basado en turno</div></div>
+            <div class="tile"><div class="k">Rechazos</div><div class="v">3</div><div class="d warn">0.6% del total</div></div>
+            <div class="tile"><div class="k">OEE</div><div class="v">87<span style="font-size:24px;color:var(--muted)">%</span></div><div class="d">▲ excelente</div></div>
+          </div>
+          <article class="card" style="flex:1;padding:24px;display:flex;flex-direction:column;gap:14px;min-height:0">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <div class="kicker">Actividad reciente</div>
+              <span style="font-size:11px;color:var(--muted);font-family:'Geist Mono',monospace">últimas 8</span>
+            </div>
+            <div class="log">
+              <div class="item"><span class="t">10:34</span><span class="tag">captura</span><span class="m">+18 piezas · OP-1204</span></div>
+              <div class="item"><span class="t">10:14</span><span class="tag">captura</span><span class="m">+22 piezas · OP-1204</span></div>
+              <div class="item"><span class="t">10:00</span><span class="tag alert">alerta</span><span class="m">Registro de hora 10:00</span></div>
+              <div class="item"><span class="t">09:48</span><span class="tag scrap">rechazo</span><span class="m">3 piezas · acabado</span></div>
+              <div class="item"><span class="t">09:30</span><span class="tag">captura</span><span class="m">+24 piezas · OP-1204</span></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

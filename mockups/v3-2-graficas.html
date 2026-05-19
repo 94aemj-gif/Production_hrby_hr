@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup · Gráficas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-25..200" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f0f5f7;
+    --paper: #fbfdfd;
+    --paper-2: #f8fafb;
+    --paper-3: #eaf0f3;
+    --line: #dbe5ec;
+    --line-2: #c6d3dc;
+    --ink: #0c1a26;
+    --muted: #5d7282;
+    --accent: #0d9488;
+    --accent-2: #14b8a6;
+    --accent-soft: #ccfbf1;
+    --success: #059669;
+    --warning: #ea580c;
+    --danger: #be123c;
+    --info: #3b82f6;
+    --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; }
+
+  .topbar { height: 56px; padding: 0 32px; background: var(--paper); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+  .brand-dot { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; color: var(--paper); }
+  .brand-name { font-size: 16px; }
+  .brand-sub { color: var(--muted); font-size: 12px; font-weight: 500; font-family: var(--mono); }
+  .nav-pills { display: flex; gap: 4px; margin-left: 32px; }
+  .nav-pill { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .nav-pill.active { background: var(--ink); color: var(--paper); }
+  .topbar-actions { display: flex; gap: 12px; align-items: center; }
+  .shift-pill { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-family: var(--mono); }
+  .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px rgba(5,150,105,0.18); }
+  .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: var(--muted); cursor: pointer; }
+  .icon-btn:hover { background: var(--paper-3); color: var(--ink); }
+  .admin-link { padding: 8px 16px; background: var(--ink); color: var(--paper); border-radius: 10px; font-size: 13px; font-weight: 600; }
+
+  .page { padding: 28px 40px 56px; max-width: 1280px; margin: 0 auto; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 24px; }
+  .page-title { font-size: 32px; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+  .page-meta { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .actions { display: flex; gap: 10px; }
+  .btn { padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+  .btn:hover { background: var(--paper-3); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+  .btn-primary:hover { background: var(--accent); filter: brightness(0.92); }
+
+  /* Weekstrip — compact inline date row */
+  .weekstrip { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
+  .ws-month { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); font-weight: 700; flex-shrink: 0; min-width: 96px; }
+  .ws-days { display: flex; gap: 6px; flex: 1; overflow-x: auto; }
+  .ws-day { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 4px 8px; border-radius: 10px; background: transparent; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; color: var(--ink); position: relative; line-height: 1.1; }
+  .ws-day .ws-dow { font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+  .ws-day:hover { background: var(--paper-3); }
+  .ws-day.has-data .ws-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); }
+  .ws-day.selected { background: var(--accent); color: var(--paper); }
+  .ws-day.selected .ws-dow, .ws-day.selected .ws-dot { color: var(--paper); background: var(--paper); }
+  .ws-day.today { box-shadow: inset 0 0 0 1px var(--accent); }
+  .ws-nav { display: flex; gap: 4px; flex-shrink: 0; }
+  .ws-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; cursor: pointer; color: var(--muted); border: 1px solid transparent; }
+  .ws-icon:hover { background: var(--paper-3); color: var(--ink); }
+
+  /* KPI cards */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .kpi-head { display: flex; justify-content: space-between; align-items: center; }
+  .kpi-label { font-family: var(--mono); color: var(--muted); font-size: 12px; letter-spacing: 0; font-weight: 600; }
+  .kpi-icon { color: var(--accent); }
+  .kpi-body { display: flex; align-items: baseline; gap: 8px; }
+  .kpi-value { font-family: var(--sans); font-size: 36px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .kpi-value.featured { color: var(--accent); }
+  .kpi-unit { font-size: 14px; color: var(--muted); font-weight: 600; }
+  .kpi-delta { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 2px; padding: 3px 8px; border-radius: 999px; }
+  .delta-up { color: var(--success); background: rgba(5,150,105,0.12); }
+  .delta-down { color: var(--danger); background: rgba(190,18,60,0.12); }
+  .delta-flat { color: var(--muted); background: var(--paper-3); }
+  .kpi-bar { height: 4px; background: var(--paper-3); border-radius: 999px; overflow: hidden; }
+  .kpi-bar-fill { height: 100%; border-radius: 999px; }
+
+  /* Charts grid */
+  .charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .chart-card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 20px 22px; display: flex; flex-direction: column; }
+  .chart-card.wide { grid-column: 1 / -1; }
+  .chart-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .chart-title { font-family: var(--mono); font-size: 13px; letter-spacing: 0; color: var(--ink); font-weight: 600; }
+  .chart-pill { font-size: 11px; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-family: var(--mono); font-weight: 600; }
+  .chart-canvas { height: 240px; }
+  .chart-canvas svg { width: 100%; height: 100%; display: block; }
+  .chart-legend { display: flex; gap: 14px; font-size: 11px; color: var(--muted); font-family: var(--mono); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--paper-3); }
+  .legend-key { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-swatch { width: 14px; height: 3px; border-radius: 2px; }
+  .legend-swatch.dashed { background: repeating-linear-gradient(to right, var(--muted) 0, var(--muted) 3px, transparent 3px, transparent 6px); height: 2px; }
+
+  /* Heatmap — compact rows with day labels on left, hour ticks on bottom */
+  .hm-wrap { display: grid; grid-template-columns: 36px 1fr; gap: 6px; }
+  .hm-days { display: flex; flex-direction: column; justify-content: space-between; padding: 1px 0; font-family: var(--mono); font-size: 9px; color: var(--muted); text-align: right; line-height: 16px; }
+  .hm-days span { height: 16px; }
+  .heatmap-card .heatmap { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; align-content: start; }
+  .hm-cell { height: 16px; border-radius: 2px; background: var(--accent); }
+  .hm-hours { display: grid; grid-template-columns: repeat(8, 1fr); margin-top: 8px; padding-left: 42px; font-family: var(--mono); font-size: 9px; color: var(--muted); }
+  .hm-hours span { text-align: center; }
+  .hm-cell.lvl-0 { background: var(--paper-3); }
+  .hm-cell.lvl-1 { background: var(--accent); opacity: 0.25; }
+  .hm-cell.lvl-2 { background: var(--accent); opacity: 0.5; }
+  .hm-cell.lvl-3 { background: var(--accent); opacity: 0.75; }
+  .hm-cell.lvl-4 { background: var(--accent); opacity: 1; }
+  .hm-legend { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-bottom: 12px; font-size: 11px; color: var(--muted); }
+  .hm-legend-swatches { display: flex; gap: 3px; }
+  .hm-legend-swatches .hm-cell { width: 12px; height: 12px; }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-dot"><span class="material-symbols-outlined" style="font-size: 18px;">precision_manufacturing</span></div>
+      <div>
+        <div class="brand-name">Producción</div>
+        <div class="brand-sub">L-02 · Turno actual</div>
+      </div>
+      <div class="nav-pills">
+        <div class="nav-pill">Captura</div>
+        <div class="nav-pill active">Gráficas</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="shift-pill"><span class="live-dot"></span> activo · OEE 85%</div>
+      <div class="icon-btn"><span class="material-symbols-outlined">sync</span></div>
+      <a class="admin-link" href="#">Tablero</a>
+      <a class="admin-link" href="#">Admin</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">Gráficas en Vivo</h1>
+        <div class="page-meta">
+          <span class="live-dot"></span>
+          <span>Producción L-02 · Turno actual · Actualizado hace 2 min</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn"><span class="material-symbols-outlined" style="font-size: 18px;">calendar_today</span>Hoy <span class="material-symbols-outlined" style="font-size: 18px;">expand_more</span></button>
+        <button class="btn btn-primary"><span class="material-symbols-outlined" style="font-size: 18px;">file_download</span>Exportar CSV</button>
+      </div>
+    </div>
+
+    <section class="weekstrip">
+      <div class="ws-month">mayo 2026</div>
+      <div class="ws-days">
+        <div class="ws-day has-data"><span class="ws-dow">lun</span>11<span class="ws-dot"></span></div>
+        <div class="ws-day has-data"><span class="ws-dow">mar</span>12<span class="ws-dot"></span></div>
+        <div class="ws-day has-data"><span class="ws-dow">mié</span>13<span class="ws-dot"></span></div>
+        <div class="ws-day has-data"><span class="ws-dow">jue</span>14<span class="ws-dot"></span></div>
+        <div class="ws-day has-data"><span class="ws-dow">vie</span>15<span class="ws-dot"></span></div>
+        <div class="ws-day"><span class="ws-dow">sáb</span>16</div>
+        <div class="ws-day"><span class="ws-dow">dom</span>17</div>
+        <div class="ws-day has-data"><span class="ws-dow">lun</span>18<span class="ws-dot"></span></div>
+        <div class="ws-day has-data"><span class="ws-dow">mar</span>19<span class="ws-dot"></span></div>
+        <div class="ws-day has-data"><span class="ws-dow">mié</span>20<span class="ws-dot"></span></div>
+        <div class="ws-day has-data"><span class="ws-dow">jue</span>21<span class="ws-dot"></span></div>
+        <div class="ws-day selected today"><span class="ws-dow">vie</span>22<span class="ws-dot"></span></div>
+        <div class="ws-day"><span class="ws-dow">sáb</span>23</div>
+        <div class="ws-day"><span class="ws-dow">dom</span>24</div>
+      </div>
+      <div class="ws-nav">
+        <div class="ws-icon" title="Hoy"><span class="material-symbols-outlined">today</span></div>
+        <div class="ws-icon"><span class="material-symbols-outlined">chevron_left</span></div>
+        <div class="ws-icon"><span class="material-symbols-outlined">chevron_right</span></div>
+      </div>
+    </section>
+
+    <section class="kpis">
+      <div class="kpi">
+        <div class="kpi-head">
+          <span class="kpi-label">OEE</span>
+          <span class="material-symbols-outlined kpi-icon">analytics</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value featured">84.2</span>
+          <span class="kpi-unit">%</span>
+          <span class="kpi-delta delta-up" style="margin-left: auto;"><span class="material-symbols-outlined" style="font-size: 14px;">arrow_upward</span>2.1%</span>
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width: 84%; background: var(--accent);"></div></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-head">
+          <span class="kpi-label">Disponibilidad</span>
+          <span class="material-symbols-outlined kpi-icon" style="color: var(--info);">timer</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">91.5</span>
+          <span class="kpi-unit">%</span>
+          <span class="kpi-delta delta-down" style="margin-left: auto;"><span class="material-symbols-outlined" style="font-size: 14px;">arrow_downward</span>0.5%</span>
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width: 91%; background: var(--info);"></div></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-head">
+          <span class="kpi-label">Rendimiento</span>
+          <span class="material-symbols-outlined kpi-icon" style="color: var(--warning);">speed</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">88.7</span>
+          <span class="kpi-unit">%</span>
+          <span class="kpi-delta delta-up" style="margin-left: auto;"><span class="material-symbols-outlined" style="font-size: 14px;">arrow_upward</span>1.8%</span>
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width: 88%; background: var(--warning);"></div></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-head">
+          <span class="kpi-label">Calidad</span>
+          <span class="material-symbols-outlined kpi-icon">verified</span>
+        </div>
+        <div class="kpi-body">
+          <span class="kpi-value">99.1</span>
+          <span class="kpi-unit">%</span>
+          <span class="kpi-delta delta-flat" style="margin-left: auto;"><span class="material-symbols-outlined" style="font-size: 14px;">remove</span>0.0%</span>
+        </div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width: 99%; background: var(--accent);"></div></div>
+      </div>
+    </section>
+
+    <section class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-head">
+          <span class="chart-title">Producción por hora vs meta</span>
+          <span class="chart-pill">9 horas · meta 150/hr</span>
+        </div>
+        <div class="chart-canvas">
+          <svg viewBox="0 0 440 240" preserveAspectRatio="none">
+            <!-- Y-axis grid + ticks (0, 50, 100, 150, 200 pcs) -->
+            <g font-size="9" fill="#5d7282" font-family="JetBrains Mono">
+              <line x1="40" x2="430" y1="20"  y2="20"  stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="65"  y2="65"  stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="110" y2="110" stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="155" y2="155" stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="200" y2="200" stroke="#dbe5ec" stroke-width="1"/>
+              <text x="32" y="23"  text-anchor="end">200</text>
+              <text x="32" y="68"  text-anchor="end">150</text>
+              <text x="32" y="113" text-anchor="end">100</text>
+              <text x="32" y="158" text-anchor="end">50</text>
+              <text x="32" y="203" text-anchor="end">0</text>
+            </g>
+            <!-- Meta reference line at y=65 (150 pcs) -->
+            <line x1="40" x2="430" y1="65" y2="65" stroke="#5d7282" stroke-dasharray="4 4" stroke-width="1.2" opacity="0.6"/>
+            <text x="426" y="58" font-size="9" fill="#5d7282" font-family="JetBrains Mono" text-anchor="end">meta 150</text>
+            <!-- Bars: 9 hours, bar width 28, gap ~14 -->
+            <g fill="#0d9488">
+              <rect x="56"  y="110" width="28" height="90" rx="3"/>
+              <rect x="98"  y="92"  width="28" height="108" rx="3"/>
+              <rect x="140" y="119" width="28" height="81" rx="3"/>
+              <rect x="182" y="56"  width="28" height="144" rx="3"/>
+              <rect x="224" y="155" width="28" height="45" rx="3" fill="#be123c"/>
+              <rect x="266" y="74"  width="28" height="126" rx="3"/>
+              <rect x="308" y="65"  width="28" height="135" rx="3"/>
+              <rect x="350" y="83"  width="28" height="117" rx="3"/>
+              <rect x="392" y="92"  width="28" height="108" rx="3"/>
+            </g>
+            <!-- X-axis labels (hours) -->
+            <g font-size="10" fill="#5d7282" font-family="JetBrains Mono" text-anchor="middle">
+              <text x="70"  y="222">8h</text>
+              <text x="112" y="222">9h</text>
+              <text x="154" y="222">10h</text>
+              <text x="196" y="222">11h</text>
+              <text x="238" y="222">12h</text>
+              <text x="280" y="222">13h</text>
+              <text x="322" y="222">14h</text>
+              <text x="364" y="222">15h</text>
+              <text x="406" y="222">16h</text>
+            </g>
+            <!-- Y-axis title -->
+            <text x="14" y="115" font-size="9" fill="#5d7282" font-family="JetBrains Mono" transform="rotate(-90 14 115)" text-anchor="middle">piezas</text>
+          </svg>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-key"><span class="legend-swatch" style="background: #0d9488;"></span>real</span>
+          <span class="legend-key"><span class="legend-swatch" style="background: #be123c;"></span>bajo meta</span>
+          <span class="legend-key"><span class="legend-swatch dashed"></span>meta 150/hr</span>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <span class="chart-title">Acumulado vs meta acumulada</span>
+          <span class="chart-pill">2,840 / 3,000 piezas</span>
+        </div>
+        <div class="chart-canvas">
+          <svg viewBox="0 0 440 240" preserveAspectRatio="none">
+            <!-- Y-axis grid + ticks (0, 1k, 2k, 3k) -->
+            <g font-size="9" fill="#5d7282" font-family="JetBrains Mono">
+              <line x1="40" x2="430" y1="20"  y2="20"  stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="80"  y2="80"  stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="140" y2="140" stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="200" y2="200" stroke="#dbe5ec" stroke-width="1"/>
+              <text x="32" y="23"  text-anchor="end">3k</text>
+              <text x="32" y="83"  text-anchor="end">2k</text>
+              <text x="32" y="143" text-anchor="end">1k</text>
+              <text x="32" y="203" text-anchor="end">0</text>
+            </g>
+            <!-- Meta acumulada (linear: 0 -> 3000 across shift) -->
+            <line x1="40" x2="430" y1="200" y2="20" stroke="#5d7282" stroke-dasharray="4 4" stroke-width="1.5" opacity="0.6"/>
+            <!-- Real cumulative area + line -->
+            <path d="M40 200 L88 180 L136 158 L184 132 L232 108 L280 88 L328 64 L376 46 L430 32 L430 200 Z" fill="rgba(13,148,136,0.15)" />
+            <path d="M40 200 L88 180 L136 158 L184 132 L232 108 L280 88 L328 64 L376 46 L430 32" fill="none" stroke="#0d9488" stroke-width="2.5" />
+            <!-- End label -->
+            <circle cx="430" cy="32" r="3.5" fill="#0d9488"/>
+            <text x="424" y="22" font-size="10" fill="#0d9488" font-family="JetBrains Mono" font-weight="700" text-anchor="end">2,840</text>
+            <!-- X-axis labels -->
+            <g font-size="10" fill="#5d7282" font-family="JetBrains Mono" text-anchor="middle">
+              <text x="40"  y="222">8h</text>
+              <text x="136" y="222">10h</text>
+              <text x="232" y="222">12h</text>
+              <text x="328" y="222">14h</text>
+              <text x="430" y="222">16h</text>
+            </g>
+            <text x="14" y="115" font-size="9" fill="#5d7282" font-family="JetBrains Mono" transform="rotate(-90 14 115)" text-anchor="middle">piezas</text>
+          </svg>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-key"><span class="legend-swatch" style="background: #0d9488;"></span>real acumulado</span>
+          <span class="legend-key"><span class="legend-swatch dashed"></span>meta lineal 3,000</span>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <span class="chart-title">Rechazos por hora</span>
+          <span class="chart-pill" style="background: rgba(190,18,60,0.12); color: var(--danger);">3 totales · 2.3%</span>
+        </div>
+        <div class="chart-canvas">
+          <svg viewBox="0 0 440 240" preserveAspectRatio="none">
+            <!-- Y-axis grid (0, 2, 4, 6, 8) -->
+            <g font-size="9" fill="#5d7282" font-family="JetBrains Mono">
+              <line x1="40" x2="430" y1="20"  y2="20"  stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="65"  y2="65"  stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="110" y2="110" stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="155" y2="155" stroke="#eaf0f3" stroke-width="1"/>
+              <line x1="40" x2="430" y1="200" y2="200" stroke="#dbe5ec" stroke-width="1"/>
+              <text x="32" y="23"  text-anchor="end">8</text>
+              <text x="32" y="68"  text-anchor="end">6</text>
+              <text x="32" y="113" text-anchor="end">4</text>
+              <text x="32" y="158" text-anchor="end">2</text>
+              <text x="32" y="203" text-anchor="end">0</text>
+            </g>
+            <!-- Bars: each pc = ~22px. Counts shown: 1, 0, 4, 2, 0, 1, 2, 1, 1 -->
+            <g fill="#be123c">
+              <rect x="56"  y="178" width="28" height="22" rx="3" opacity="0.4"/>
+              <rect x="98"  y="195" width="28" height="5"  rx="3" opacity="0.25"/>
+              <rect x="140" y="110" width="28" height="90" rx="3" opacity="0.85"/>
+              <rect x="182" y="155" width="28" height="45" rx="3" opacity="0.5"/>
+              <rect x="224" y="195" width="28" height="5"  rx="3" opacity="0.25"/>
+              <rect x="266" y="178" width="28" height="22" rx="3" opacity="0.4"/>
+              <rect x="308" y="155" width="28" height="45" rx="3" opacity="0.5"/>
+              <rect x="350" y="178" width="28" height="22" rx="3" opacity="0.4"/>
+              <rect x="392" y="178" width="28" height="22" rx="3" opacity="0.4"/>
+            </g>
+            <!-- Hour count labels above each bar -->
+            <g font-size="9" fill="#be123c" font-family="JetBrains Mono" text-anchor="middle" font-weight="700">
+              <text x="70"  y="174">1</text>
+              <text x="112" y="191">0</text>
+              <text x="154" y="106">4</text>
+              <text x="196" y="151">2</text>
+              <text x="238" y="191">0</text>
+              <text x="280" y="174">1</text>
+              <text x="322" y="151">2</text>
+              <text x="364" y="174">1</text>
+              <text x="406" y="174">1</text>
+            </g>
+            <!-- X-axis labels -->
+            <g font-size="10" fill="#5d7282" font-family="JetBrains Mono" text-anchor="middle">
+              <text x="70"  y="222">8h</text>
+              <text x="112" y="222">9h</text>
+              <text x="154" y="222">10h</text>
+              <text x="196" y="222">11h</text>
+              <text x="238" y="222">12h</text>
+              <text x="280" y="222">13h</text>
+              <text x="322" y="222">14h</text>
+              <text x="364" y="222">15h</text>
+              <text x="406" y="222">16h</text>
+            </g>
+            <text x="14" y="115" font-size="9" fill="#5d7282" font-family="JetBrains Mono" transform="rotate(-90 14 115)" text-anchor="middle">rechazos</text>
+          </svg>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-key"><span class="legend-swatch" style="background: #be123c;"></span>rechazos por hora · pico 10h con 4 pzs</span>
+        </div>
+      </div>
+
+      <div class="chart-card heatmap-card">
+        <div class="chart-head">
+          <span class="chart-title">Mapa de calor: producción por hora (14 días)</span>
+          <div class="hm-legend">
+            <span>menos</span>
+            <div class="hm-legend-swatches">
+              <div class="hm-cell lvl-0"></div>
+              <div class="hm-cell lvl-1"></div>
+              <div class="hm-cell lvl-2"></div>
+              <div class="hm-cell lvl-3"></div>
+              <div class="hm-cell lvl-4"></div>
+            </div>
+            <span>más</span>
+          </div>
+        </div>
+        <div class="hm-wrap">
+          <div class="hm-days" id="heatmap-days"></div>
+          <div class="heatmap" id="heatmap"></div>
+        </div>
+        <div class="hm-hours">
+          <span>0h</span><span>3h</span><span>6h</span><span>9h</span><span>12h</span><span>15h</span><span>18h</span><span>21h</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const hm = document.getElementById('heatmap');
+    const days = document.getElementById('heatmap-days');
+    const dayLabels = ['vie 9', 'sáb 10', 'dom 11', 'lun 12', 'mar 13', 'mié 14', 'jue 15', 'vie 16', 'sáb 17', 'dom 18', 'lun 19', 'mar 20', 'mié 21', 'jue 22'];
+    dayLabels.forEach((d, idx) => {
+      const s = document.createElement('span');
+      // Only show every other label to avoid clutter
+      s.textContent = (idx % 2 === 0) ? d : '';
+      days.appendChild(s);
+    });
+    for (let i = 0; i < 14 * 24; i++) {
+      const cell = document.createElement('div');
+      const h = i % 24;
+      const day = Math.floor(i / 24);
+      let lvl;
+      if (h < 6 || h >= 22) lvl = 0;
+      else if (h < 8 || h >= 20) lvl = 1;
+      else if (h < 10 || h >= 18) lvl = 2;
+      else lvl = Math.random() < 0.5 ? 3 : 4;
+      if (day < 2 || day == 6 || day == 7) lvl = Math.max(0, lvl - 2);
+      cell.className = 'hm-cell lvl-' + lvl;
+      hm.appendChild(cell);
+    }
+  </script>
+</body>
+</html>

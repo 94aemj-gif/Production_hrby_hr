@@ -725,17 +725,23 @@
   const OEE_RADIUS = 24;
   const OEE_CIRC = 2 * Math.PI * OEE_RADIUS;
   function updateOEEDonut(oeePct) {
+    const v = Math.max(0, Math.min(100, Number.isFinite(oeePct) ? oeePct : 0));
+    const len = (v / 100) * OEE_CIRC;
     const arc  = $("oee-arc");
     const txt  = $("oee-pct");
     const wrap = $("oee-donut");
-    if (!arc || !txt || !wrap) return;
-    const v = Math.max(0, Math.min(100, Number.isFinite(oeePct) ? oeePct : 0));
-    const len = (v / 100) * OEE_CIRC;
-    arc.style.strokeDasharray = len + " " + Math.max(0.001, OEE_CIRC - len);
-    arc.style.strokeDashoffset = "0";
-    txt.textContent = Math.round(v) + "%";
-    wrap.classList.remove("oee-low", "oee-mid", "oee-high");
-    wrap.classList.add(v < 50 ? "oee-low" : v < 85 ? "oee-mid" : "oee-high");
+    if (arc && txt && wrap) {
+      arc.style.strokeDasharray = len + " " + Math.max(0.001, OEE_CIRC - len);
+      arc.style.strokeDashoffset = "0";
+      txt.textContent = Math.round(v) + "%";
+      wrap.classList.remove("oee-low", "oee-mid", "oee-high");
+      wrap.classList.add(v < 50 ? "oee-low" : v < 85 ? "oee-mid" : "oee-high");
+    }
+    // Mirror into bento OEE tile (desktop)
+    const bentoPct = $("bento-oee-pct");
+    const bentoBar = $("bento-oee-bar-fill");
+    if (bentoPct) bentoPct.textContent = Math.round(v) + "%";
+    if (bentoBar) bentoBar.style.transform = "scaleX(" + (v / 100) + ")";
   }
 
   // ---- Production heatmap (charts view) ----
