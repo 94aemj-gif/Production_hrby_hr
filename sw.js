@@ -1,12 +1,17 @@
-const CACHE = "prod-v5";
+const CACHE = "prod-v6";
 const ASSETS = [
   "./",
   "./index.html",
   "./admin.html",
+  "./dashboard.html",
   "./app.js",
   "./admin.js",
+  "./dashboard.js",
   "./sync.js",
+  "./seed.js",
+  "./i18n.js",
   "./styles.css",
+  "./styles-v6.css",
   "./manifest.json",
 ];
 
