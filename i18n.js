@@ -24,6 +24,10 @@
       "dashboard.noActivity": "Sin actividad",
       "dashboard.noActivityHint": "Sin captura registrada hoy en esta línea.",
       "dashboard.lastCapture": "Última: +{qty} · {time}",
+      "dashboard.lineCardTarget": "/ {n} meta hora",
+      "dashboard.lineCardLast": "Última: {time}",
+      "dashboard.lineCardOee": "OEE {pct}%",
+      "dashboard.shiftPill": "{active} de {total} activas · OEE {oee}%",
 
       // Sidebar / nav
       "nav.capture": "Captura",
@@ -398,6 +402,10 @@
       "dashboard.noActivity": "No activity",
       "dashboard.noActivityHint": "No captures recorded today on this line.",
       "dashboard.lastCapture": "Last: +{qty} · {time}",
+      "dashboard.lineCardTarget": "/ {n} target /hr",
+      "dashboard.lineCardLast": "Last: {time}",
+      "dashboard.lineCardOee": "OEE {pct}%",
+      "dashboard.shiftPill": "{active} of {total} active · OEE {oee}%",
 
       "nav.capture": "Capture",
       "nav.charts": "Charts",
