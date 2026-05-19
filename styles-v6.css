@@ -342,6 +342,8 @@ body .admin {
 
 body.dashboard-body .dashboard-main { max-width: 1400px; }
 
+body.app-shell .page-head,
+body.dashboard-body .dashboard-head,
 body .page-head,
 body .dashboard-head {
   display: flex !important;
@@ -351,11 +353,47 @@ body .dashboard-head {
   margin-bottom: 24px;
   gap: 24px;
   text-align: left;
+  padding: 0 !important;
 }
 
-body .page-head > div:first-child { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-body .page-head .page-title-row { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; gap: 24px; }
-body .page-head .page-title-row > div:first-child { display: flex; flex-direction: column; gap: 4px; }
+body.app-shell .page-head > div:first-child,
+body .page-head > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.app-shell .page-head .page-title-row,
+body.app-shell .page .page-head .page-title-row,
+body.app-shell .page .page-title-row,
+body .page-head .page-title-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  justify-content: space-between !important;
+  align-items: flex-end !important;
+  width: 100%;
+  gap: 24px !important;
+}
+body.app-shell .page-head .page-title-row > div:first-child,
+body .page-head .page-title-row > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+body.app-shell .page-head .clock-block,
+body.app-shell .page .clock-block,
+body .page-head .clock-block {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  flex-shrink: 0;
+  gap: 2px !important;
+}
 
 body .page-title,
 body .dashboard-page-title {
@@ -1105,9 +1143,9 @@ body .heatmap-swatch[data-level="4"] { background: var(--accent); opacity: 1; }
 
 /* ---------- Tablero ---------- */
 body.dashboard-body .dashboard-summary {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 14px !important;
   margin-bottom: 20px;
 }
 body.dashboard-body .ds-tile {
@@ -1203,21 +1241,26 @@ body.dashboard-body .filter-chip.active {
 }
 
 body.dashboard-body .dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 14px !important;
 }
 
 body.dashboard-body .line-card {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-height: 196px;
-  box-shadow: none;
+  background: var(--paper) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+  padding: 16px 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  min-height: 196px !important;
+  box-shadow: none !important;
+  transition: box-shadow 0.18s ease, transform 0.12s ease;
+}
+body.dashboard-body .line-card:hover {
+  box-shadow: 0 6px 18px -10px rgba(13,70,80,0.18) !important;
+  transform: translateY(-1px);
 }
 body.dashboard-body .line-card-idle-card { opacity: 0.7; }
 
@@ -1692,8 +1735,23 @@ body .bottom-tabbar {
 @media (max-width: 760px) {
   body main.page,
   body .dashboard-main { padding: 20px 16px 80px; }
+  body.app-shell .page-head,
+  body.dashboard-body .dashboard-head,
   body .page-head,
   body .dashboard-head { flex-wrap: wrap; gap: 12px; }
+  body.app-shell .page-head .page-title-row,
+  body.app-shell .page .page-title-row,
+  body .page-head .page-title-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  body.app-shell .page-head .clock-block,
+  body .page-head .clock-block {
+    align-items: flex-start !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+  }
   body .page-title,
   body .dashboard-page-title { font-size: 24px; }
   body .clock-block .clock { font-size: 22px; }
