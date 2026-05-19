@@ -433,6 +433,8 @@
       "unit.pieces": "piezas",
       "unit.piecesPerHr": "pzs/hr",
       "brand.plantaSuffix": "líneas",
+      "aria.syncStatus": "Estado de sincronización",
+      "aria.monthPicker": "Elegir mes",
     },
 
     en: {
@@ -836,6 +838,8 @@
       "unit.pieces": "pcs",
       "unit.piecesPerHr": "pcs/hr",
       "brand.plantaSuffix": "lines",
+      "aria.syncStatus": "Sync status",
+      "aria.monthPicker": "Pick month",
     },
   };
 

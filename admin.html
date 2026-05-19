@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-25..200" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=101" />
-<link rel="stylesheet" href="tokens.css?v=101" />
+<link rel="stylesheet" href="styles.css?v=102" />
+<link rel="stylesheet" href="tokens.css?v=102" />
 <style>
   /* === Admin shell. Tokens come from tokens.css :root. === */
   body.shell-admin, body.shell-admin * { box-sizing: border-box; }
@@ -49,7 +49,7 @@
   body.shell-admin .sn-section:first-child { margin-top: 0; }
   body.shell-admin .sn-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 13px; color: var(--ink); cursor: pointer; font-weight: 500; background: transparent; border: none; width: 100%; text-align: left; font-family: inherit; text-decoration: none; }
   body.shell-admin .sn-link:hover { background: var(--paper-3); }
-  body.shell-admin .sn-link.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  body.shell-admin .sn-link.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
   body.shell-admin .sn-link .material-symbols-outlined { color: inherit; font-size: 18px; }
 
   body.shell-admin .page { padding: 20px 32px 90px; max-width: 1200px; margin: 0 auto; }
@@ -64,7 +64,7 @@
   body.shell-admin .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
   body.shell-admin .btn-primary:hover { filter: brightness(0.93); }
   body.shell-admin .btn-ghost { background: transparent; }
-  body.shell-admin .btn-danger { color: var(--danger); border-color: var(--line); }
+  body.shell-admin .btn-danger { color: var(--danger-ink); border-color: var(--line); }
   body.shell-admin .btn-warn { background: var(--warning); border-color: var(--warning); color: var(--paper); }
   body.shell-admin .btn-small { padding: 6px 12px; font-size: 12px; min-height: 32px; }
 
@@ -75,7 +75,7 @@
   body.shell-admin .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
   body.shell-admin .card-title { font-family: var(--mono); font-size: 13px; color: var(--ink); font-weight: 600; }
   body.shell-admin .card-pill { font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 700; font-family: var(--mono); background: var(--paper-3); color: var(--muted); }
-  body.shell-admin .card-pill.success { background: rgba(5,150,105,0.12); color: var(--success); }
+  body.shell-admin .card-pill.success { background: rgba(5,150,105,0.12); color: var(--success-ink); }
 
   body.shell-admin .field { display: flex; flex-direction: column; gap: 6px; }
   body.shell-admin .field-label { font-family: var(--mono); color: var(--muted); font-size: 12px; font-weight: 600; }
@@ -102,7 +102,7 @@
 
   body.shell-admin .admin-panel { display: none; }
   body.shell-admin .admin-panel.active { display: block; }
-  body.shell-admin .saved-flash { font-family: var(--mono); font-size: 12px; color: var(--success); opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
+  body.shell-admin .saved-flash { font-family: var(--mono); font-size: 12px; color: var(--success-ink); opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
   body.shell-admin .saved-flash.show { opacity: 1; }
   body.shell-admin .hidden { display: none !important; }
   body.shell-admin .text-helper { color: var(--muted); font-size: 12px; margin: -6px 0 12px; }
@@ -190,25 +190,25 @@
     </div>
     <div class="topbar-actions">
       <div class="shift-pill"><span class="live-dot"></span><span id="shift-pill-text">admin</span></div>
-      <button type="button" id="sync-status" class="sync-status sync-off" title=""><span class="material-symbols-outlined" style="font-size:18px;">sync</span></button>
+      <button type="button" id="sync-status" class="sync-status sync-off" data-i18n-aria-label="aria.syncStatus" aria-label="Estado de sincronización"><span class="material-symbols-outlined" style="font-size:18px;">sync</span></button>
       <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
     </div>
     <button type="button" id="kebab-btn" class="kebab-btn" data-i18n-aria-label="menu.more" aria-label="Más opciones" aria-expanded="false"><span class="material-symbols-outlined">more_horiz</span></button>
   </header>
 
   <div class="layout">
-    <aside class="sidenav">
+    <aside class="sidenav" role="tablist" aria-label="Admin sections">
       <div class="sn-section" data-i18n="admin.sn.general">General</div>
-      <button type="button" class="sn-link admin-tab" data-tab="config" role="tab"><span class="material-symbols-outlined">tune</span><span data-i18n="admin.tab.config">Configuración</span></button>
-      <button type="button" class="sn-link admin-tab" data-tab="catalogos" role="tab"><span class="material-symbols-outlined">factory</span><span data-i18n="admin.tab.catalogos">Catálogos</span></button>
-      <button type="button" class="sn-link admin-tab" data-tab="resumen" role="tab"><span class="material-symbols-outlined">summarize</span><span data-i18n="admin.tab.resumen">Resumen</span></button>
-      <button type="button" class="sn-link admin-tab" data-tab="datos" role="tab"><span class="material-symbols-outlined">database</span><span data-i18n="admin.tab.datos">Datos</span></button>
+      <button type="button" id="tab-config" class="sn-link admin-tab" data-tab="config" role="tab" aria-controls="panel-config" aria-selected="false"><span class="material-symbols-outlined">tune</span><span data-i18n="admin.tab.config">Configuración</span></button>
+      <button type="button" id="tab-catalogos" class="sn-link admin-tab" data-tab="catalogos" role="tab" aria-controls="panel-catalogos" aria-selected="false"><span class="material-symbols-outlined">factory</span><span data-i18n="admin.tab.catalogos">Catálogos</span></button>
+      <button type="button" id="tab-resumen" class="sn-link admin-tab" data-tab="resumen" role="tab" aria-controls="panel-resumen" aria-selected="false"><span class="material-symbols-outlined">summarize</span><span data-i18n="admin.tab.resumen">Resumen</span></button>
+      <button type="button" id="tab-datos" class="sn-link admin-tab" data-tab="datos" role="tab" aria-controls="panel-datos" aria-selected="false"><span class="material-symbols-outlined">database</span><span data-i18n="admin.tab.datos">Datos</span></button>
     </aside>
 
     <main class="page" id="admin-main">
 
       <!-- Panel: Configuración -->
-      <section class="admin-panel" data-panel="config" role="tabpanel">
+      <section id="panel-config" class="admin-panel" data-panel="config" role="tabpanel" aria-labelledby="tab-config">
         <div class="page-head">
           <div>
             <h1 class="page-title" data-i18n="admin.config.title">Configuración</h1>
@@ -291,7 +291,7 @@
       </section>
 
       <!-- Panel: Catálogos -->
-      <section class="admin-panel" data-panel="catalogos" role="tabpanel">
+      <section id="panel-catalogos" class="admin-panel" data-panel="catalogos" role="tabpanel" aria-labelledby="tab-catalogos">
         <div class="page-head">
           <div>
             <h1 class="page-title" data-i18n="admin.catalogs.title">Catálogos</h1>
@@ -373,7 +373,7 @@
       </section>
 
       <!-- Panel: Resumen -->
-      <section class="admin-panel" data-panel="resumen" role="tabpanel">
+      <section id="panel-resumen" class="admin-panel" data-panel="resumen" role="tabpanel" aria-labelledby="tab-resumen">
         <div class="page-head">
           <div>
             <h1 class="page-title" data-i18n="admin.resumen.title">Resumen</h1>
@@ -426,7 +426,7 @@
       </section>
 
       <!-- Panel: Datos -->
-      <section class="admin-panel" data-panel="datos" role="tabpanel">
+      <section id="panel-datos" class="admin-panel" data-panel="datos" role="tabpanel" aria-labelledby="tab-datos">
         <div class="page-head">
           <div>
             <h1 class="page-title" data-i18n="admin.datos.title">Datos</h1>
@@ -519,11 +519,11 @@
     })();
   </script>
 
-  <script src="seed.js?v=101"></script>
-  <script src="i18n.js?v=101"></script>
-  <script src="supabase-config.js?v=101"></script>
-  <script src="sync.js?v=101"></script>
-  <script src="app.js?v=101"></script>
-  <script src="admin.js?v=101"></script>
+  <script src="seed.js?v=102"></script>
+  <script src="i18n.js?v=102"></script>
+  <script src="supabase-config.js?v=102"></script>
+  <script src="sync.js?v=102"></script>
+  <script src="app.js?v=102"></script>
+  <script src="admin.js?v=102"></script>
 </body>
 </html>
