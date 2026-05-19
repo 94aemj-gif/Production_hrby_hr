@@ -111,7 +111,33 @@ body .brandbar .nav-pills,
 body .topbar .nav-pills {
   display: flex;
   gap: 4px;
-  margin-left: 8px;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* Brand block flex-shrinks before pills do */
+body .brandbar .brand {
+  min-width: 0;
+}
+body .brandbar .brand-text {
+  min-width: 0;
+}
+body .brandbar .brand-text b,
+body .brandbar .brand-name {
+  white-space: nowrap;
+}
+body .brandbar .brand-text #brand-sub,
+body .brandbar .brand-text .brand-sub {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 14ch;
+}
+
+/* Tight viewport: drop the sub-label to make room for 4 nav pills */
+@media (max-width: 1280px) and (min-width: 1024px) {
+  body .brandbar .brand-text #brand-sub,
+  body .brandbar .brand-text .brand-sub { display: none; }
 }
 
 body .brandbar .nav-pills .nav-item,
@@ -1572,9 +1598,7 @@ body.app-shell .admin-save-bar .save-status {
 }
 body.app-shell .admin-save-bar .save-actions { display: flex; gap: 10px; }
 
-/* Admin brandbar variant: no nav-pills, back button */
-body.app-shell main.admin ~ .brandbar .nav-pills,
-body.app-shell.admin-shell .brandbar .nav-pills { display: none; }
+/* Admin brandbar variant — keeps full 4-pill nav now that pills are unified */
 
 @media (max-width: 1023px) {
   body.app-shell main.admin {
