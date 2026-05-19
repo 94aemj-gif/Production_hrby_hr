@@ -412,6 +412,14 @@
       "admin.savebar.text": "Hay cambios sin guardar",
       "admin.savebar.discard": "Descartar",
       "admin.savebar.save": "Guardar cambios",
+      "dashboard.pace.ahead": "↑ adelantada",
+      "dashboard.pace.ok": "en meta",
+      "dashboard.pace.warn": "↓ atrasada",
+      "dashboard.pace.behind": "↓ atrasada",
+      "dashboard.pace.na": "sin datos",
+      "dashboard.pace.inactive": "inactiva",
+      "dashboard.lineCardTargetIdle": "esperando turno",
+      "dashboard.lastSessionYesterday": "Última sesión: ayer",
     },
 
     en: {
@@ -794,6 +802,14 @@
       "admin.savebar.text": "Unsaved changes",
       "admin.savebar.discard": "Discard",
       "admin.savebar.save": "Save changes",
+      "dashboard.pace.ahead": "↑ ahead",
+      "dashboard.pace.ok": "on target",
+      "dashboard.pace.warn": "↓ behind",
+      "dashboard.pace.behind": "↓ behind",
+      "dashboard.pace.na": "no data",
+      "dashboard.pace.inactive": "inactive",
+      "dashboard.lineCardTargetIdle": "waiting shift",
+      "dashboard.lastSessionYesterday": "Last session: yesterday",
     },
   };
 

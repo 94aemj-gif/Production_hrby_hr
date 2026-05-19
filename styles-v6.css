@@ -1333,6 +1333,12 @@ body.dashboard-body .line-card-count {
   letter-spacing: -0.02em;
   color: var(--success);
 }
+body.dashboard-body .line-card-count.pace-ahead  { color: var(--success); }
+body.dashboard-body .line-card-count.pace-ok     { color: var(--accent); }
+body.dashboard-body .line-card-count.pace-warn   { color: var(--warning); }
+body.dashboard-body .line-card-count.pace-behind { color: var(--danger); }
+body.dashboard-body .line-card-count.pace-na     { color: var(--muted); }
+/* legacy class aliases */
 body.dashboard-body .line-card-count.behind { color: var(--danger); }
 body.dashboard-body .line-card-count.warn { color: var(--warning); }
 body.dashboard-body .line-card-count.ok { color: var(--accent); }

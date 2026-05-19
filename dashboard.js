@@ -121,6 +121,21 @@
     return "pace-behind";
   }
 
+  function paceLabel(pct) {
+    if (pct == null) return tt("dashboard.pace.na");
+    if (pct >= 100) return tt("dashboard.pace.ahead");
+    if (pct >= 90)  return tt("dashboard.pace.ok");
+    if (pct >= 70)  return tt("dashboard.pace.warn");
+    return tt("dashboard.pace.behind");
+  }
+  function pacePillClass(pct) {
+    if (pct == null) return "pill-na";
+    if (pct >= 100) return "pill-ahead";
+    if (pct >= 90)  return "pill-ok";
+    if (pct >= 70)  return "pill-warn";
+    return "pill-behind";
+  }
+
   function pickSessionForLine(allTodaySessions, lineId) {
     const match = allTodaySessions.filter(s => s.lineId === lineId);
     if (!match.length) return null;
@@ -203,20 +218,43 @@
 
     const pill = document.createElement("span");
     if (session) {
-      pill.className = "status-pill " + statusPillClass(status);
-      pill.textContent = statusLabel(status);
+      const shiftPre = (ctx.shifts || []).find(s => s.id === session.shiftId);
+      const pctPre = pacePct(session, shiftPre, ctx.hourlyTarget);
+      pill.className = "line-card-pill " + pacePillClass(pctPre);
+      pill.textContent = paceLabel(pctPre);
     } else {
-      pill.className = "status-pill status-paused";
-      pill.textContent = tt("dashboard.noActivity");
+      pill.className = "line-card-pill pill-na";
+      pill.textContent = tt("dashboard.pace.inactive");
     }
     head.appendChild(pill);
     card.appendChild(head);
 
     if (!session) {
-      const empty = document.createElement("div");
-      empty.className = "line-card-empty muted";
-      empty.textContent = tt("dashboard.noActivityHint");
-      card.appendChild(empty);
+      const subtitleIdle = document.createElement("div");
+      subtitleIdle.className = "line-card-subtitle muted";
+      subtitleIdle.textContent = tt("dashboard.noActivityHint");
+      card.appendChild(subtitleIdle);
+      const bigIdle = document.createElement("div");
+      bigIdle.className = "line-card-big";
+      const countIdle = document.createElement("div");
+      countIdle.className = "line-card-count pace-na";
+      countIdle.textContent = "0";
+      bigIdle.appendChild(countIdle);
+      const targetIdle = document.createElement("span");
+      targetIdle.className = "line-card-target muted";
+      targetIdle.textContent = tt("dashboard.lineCardTargetIdle");
+      bigIdle.appendChild(targetIdle);
+      card.appendChild(bigIdle);
+      const sparkIdle = document.createElement("canvas");
+      sparkIdle.className = "line-card-spark";
+      card.appendChild(sparkIdle);
+      requestAnimationFrame(() => drawSparkline(sparkIdle, null));
+      const metaIdle = document.createElement("div");
+      metaIdle.className = "line-card-meta";
+      metaIdle.innerHTML =
+        '<span class="line-card-meta-left">' + tt("dashboard.lastSessionYesterday") + '</span>' +
+        '<span class="line-card-meta-right">—</span>';
+      card.appendChild(metaIdle);
       return card;
     }
 
