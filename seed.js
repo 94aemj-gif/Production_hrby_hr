@@ -48,9 +48,9 @@
 
   // --- Catalogs ---
   var LINES = [
-    { id: "L-01", label: "Ensamble" },
-    { id: "L-02", label: "Soldadura" },
-    { id: "L-03", label: "Pintura" }
+    { id: "L-60ML", label: "#1 60ml Neomed Syringe" },
+    { id: "L-35ML", label: "#2 35ml Neomed Syringe" },
+    { id: "L-10ML", label: "#3 10ml Neomed Syringe" }
   ];
   var SHIFTS = [
     { id: "S1", label: "Turno 1", startTime: "06:00", endTime: "14:00", days: [0,1,2,3,4,5,6], breaks: [{start:"10:00",end:"10:15"}] },
@@ -73,7 +73,7 @@
     audioEnabled: true,
     audioVolume: 0.6
   };
-  var DEVICE = { lineId: "L-02", operatorId: "12378" };
+  var DEVICE = { lineId: "L-60ML", operatorId: "12378" };
 
   var DOWNTIME_REASONS = [
     "Junta de producción", "Capacitación", "Cambio de material",
@@ -97,18 +97,16 @@
   var now = new Date();
   var hourlyTarget = CONFIG.hourlyTarget;
 
-  // Line behavior profiles (pace bias)
   var lineProfile = {
-    "L-01": { paceMean: 1.05, paceStd: 0.10, scrapRate: 0.012 },  // ahead
-    "L-02": { paceMean: 0.92, paceStd: 0.12, scrapRate: 0.018 },  // on-target
-    "L-03": { paceMean: 0.76, paceStd: 0.14, scrapRate: 0.035 }   // behind
+    "L-60ML": { paceMean: 0.95, paceStd: 0.10, scrapRate: 0.014 },
+    "L-35ML": { paceMean: 0.88, paceStd: 0.12, scrapRate: 0.020 },
+    "L-10ML": { paceMean: 0.76, paceStd: 0.14, scrapRate: 0.030 }
   };
 
-  // Operators by line
   var opsByLine = {
-    "L-01": ["12345", "13502", "14012"],
-    "L-02": ["12378", "13608", "14188"],
-    "L-03": ["12401", "13755"]
+    "L-60ML": ["12378", "13608", "14188"],
+    "L-35ML": ["12345", "13502", "14012"],
+    "L-10ML": ["12401", "13755"]
   };
 
   for (var dOffset = 13; dOffset >= 0; dOffset--) {
@@ -119,7 +117,7 @@
     // Skip Sundays for L-03 sometimes
     LINES.forEach(function (line) {
       SHIFTS.forEach(function (shift) {
-        if (dow === 0 && line.id === "L-03" && rand() < 0.6) return; // skip
+        if (dow === 0 && line.id === "L-10ML" && rand() < 0.6) return; // skip
         var ops = opsByLine[line.id] || ["12345"];
         var operatorId = ops[Math.floor(rand() * ops.length)];
 

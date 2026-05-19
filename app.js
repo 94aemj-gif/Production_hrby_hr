@@ -879,6 +879,7 @@
     const capBtn = $("btn-capture");
     if (!s) {
       setText("shift-label", device.lineId ? lineLabel(device.lineId) + " · " + tt("shift.noActive") : tt("shift.configDevice"));
+      setText("brand-sub", device.lineId ? lineLabel(device.lineId) + " · " + tt("shift.noActive") : tt("shift.configDevice"));
       setText("operator-label", device.operatorId ? operatorName(device.operatorId) : "—");
       animateCounter("—");
       setText("scrap-count", "—");
@@ -903,6 +904,7 @@
     const fresh = getSession();
     const otSuffix = isOvertimeDate(fresh.date) ? " · " + tt("shift.overtime") : "";
     setText("shift-label", lineLabel(fresh.lineId) + " · " + shiftLabel(fresh.shiftId) + otSuffix);
+    setText("brand-sub", lineLabel(fresh.lineId) + " · " + shiftLabel(fresh.shiftId));
     setText("operator-label", operatorName(fresh.operatorId));
     const totals = shiftTotals(fresh);
     animateCounter(totals.good);
@@ -2315,7 +2317,9 @@
     document.querySelectorAll("[data-view]").forEach((btn) => {
       btn.addEventListener("click", () => switchView(btn.dataset.view));
     });
-    const initialView = load("prod.ui.view", "capture");
+    // Initial view: URL hash wins (#charts → charts), otherwise default to capture.
+    // Stored ui.view persisted only for in-session navigation; reload always lands on Captura.
+    const initialView = (location.hash === "#charts") ? "charts" : "capture";
     switchView(initialView);
 
     _on("btn-history", "click", openHistory);
