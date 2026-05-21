@@ -1466,18 +1466,6 @@ button { font-family: inherit; cursor: pointer; }
   letter-spacing: -0.01em;
   margin: 4px 0 22px;
 }
-.admin .back-link {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--muted);
-  text-decoration: none;
-  padding: 6px 10px;
-  border-radius: 999px;
-  transition: background 0.12s ease, color 0.12s ease;
-}
-.admin .back-link:hover { background: var(--panel-2); color: var(--text); }
-
 /* Card rhythm */
 .admin .admin-card { margin-bottom: 18px; }
 .admin .admin-card h2 {
@@ -3246,15 +3234,6 @@ body.app-shell .bottab-ic {
     gap: 10px;
     align-items: center;
   }
-  .admin .back-link {
-    font-size: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    flex: 1;
-    min-width: 0;
-  }
   .admin .actions-inline {
     flex-wrap: nowrap;
     gap: 6px;
@@ -3553,24 +3532,6 @@ body.app-shell .page .counter-card .counter {
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
-  }
-  body.dashboard-body .dashboard-title {
-    font-size: 20px;
-    font-weight: 700;
-    flex: 0 0 auto;
-  }
-  body.dashboard-body .dashboard-back {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    background: var(--paper-3);
-    text-decoration: none;
-    color: var(--ink);
-    font-size: 18px;
   }
   body.dashboard-body #dashboard-date {
     flex: 1 1 100%;
