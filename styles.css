@@ -2557,9 +2557,7 @@ body.app-shell .with-sidebar { display: none; }
 
 @media (max-width: 1023px) {
   .capture-grid { grid-template-columns: 1fr; }
-  .brandbar { grid-template-columns: 1fr; gap: 14px; padding: 14px 18px; }
   .nav-pills { justify-self: start; }
-  .brandbar-right { justify-content: flex-start; }
   .page { padding: 18px 18px 40px; }
 }
 
@@ -2826,7 +2824,6 @@ body.app-shell .with-sidebar { display: none; }
    ===  RESPONSIVE v3 — Direction B (bottom tab bar)  =========
    Unified breakpoints: 480 / 768 / 1024 / 1280
    Type scale via clamp(). 44px+ tap targets. Container max 1320px.
-   Mobile/tablet: brandbar controls hide → kebab toggle slide-down.
    Mobile/tablet: bottom-tabbar fixed nav. Mobile: capture FAB.
    ============================================================ */
 
@@ -2838,10 +2835,6 @@ body.app-shell .capture-grid > *,
 body.app-shell .col > *,
 body.app-shell .metrics > *,
 body.app-shell .kpi-grid > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
-/* Nav pills MUST preserve content width — never shrink */
-body.app-shell .brandbar > .nav-pills { flex-shrink: 0; min-width: max-content; }
-body.app-shell .brandbar > .brand { min-width: 0; }
-body.app-shell .brandbar > .brandbar-right { min-width: 0; }
 body.app-shell .page,
 body.app-shell .page > section,
 body.app-shell .page > div,
@@ -2858,7 +2851,6 @@ body.app-shell .page canvas { max-width: 100%; height: auto; }
 
 /* --- Container + grid --- */
 body.app-shell .page { max-width: 1320px; padding: clamp(14px, 2vw, 24px) clamp(14px, 3vw, 32px) clamp(32px, 4vw, 56px); }
-body.app-shell .brandbar { padding: 14px clamp(14px, 3vw, 32px); }
 body.app-shell .brand-text { min-width: 0; flex: 1 1 auto; overflow: hidden; }
 body.app-shell .brand-text b,
 body.app-shell .brand-text span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
@@ -2954,62 +2946,9 @@ body.app-shell .bottab-ic {
 
 /* ============================================================
    BREAKPOINT: <= 1024px (tablet + mobile)
-   - Hide all brandbar-right controls + nav-pills
    - Show kebab button + bottom tab bar
-   - Brandbar collapses to: brand + kebab
    ============================================================ */
 @media (max-width: 1023px) {
-  body.app-shell .brandbar {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto;
-    gap: 12px;
-    position: relative;
-  }
-  body.app-shell .brandbar > .brand { grid-column: 1; grid-row: 1; min-width: 0; }
-  body.app-shell .brandbar > .kebab-btn { grid-column: 2; grid-row: 1; }
-  body.app-shell .brandbar .nav-pills { display: none; }
-  body.app-shell .brandbar .brandbar-right {
-    display: none;
-    position: absolute;
-    top: calc(100% - 4px);
-    right: 12px;
-    left: 12px;
-    background: var(--paper);
-    border-radius: 14px;
-    box-shadow: 0 0 0 1px var(--line), 0 24px 56px -20px rgba(15,15,20,0.25);
-    padding: 12px;
-    gap: 8px;
-    flex-direction: column;
-    align-items: stretch;
-    z-index: 70;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right {
-    display: flex;
-    animation: kebabIn 220ms var(--ease-spring);
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right > * {
-    width: 100%;
-    justify-content: flex-start;
-    min-height: 44px;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .shift-info {
-    background: var(--paper-3);
-    padding: 10px 14px;
-    border-radius: 10px;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .status-select {
-    padding: 6px 6px 6px 14px;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .next-alert {
-    padding: 12px 14px;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .admin-link,
-  body.app-shell .brandbar.menu-open .brandbar-right .sync-status,
-  body.app-shell .brandbar.menu-open .brandbar-right .lang-toggle {
-    height: 44px;
-    display: inline-flex;
-    align-items: center;
-  }
   body.app-shell .kebab-btn { display: inline-flex; align-items: center; justify-content: center; }
 
   body.app-shell .bottom-tabbar { display: flex; }
@@ -3027,11 +2966,6 @@ body.app-shell .bottab-ic {
   body.app-shell .page .clock-block { align-items: flex-end; }
 }
 
-@keyframes kebabIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 /* ============================================================
    BREAKPOINT: <= 768px (mobile)
    - Counter-card capture button → fixed FAB above bottom tab bar
@@ -3039,7 +2973,6 @@ body.app-shell .bottab-ic {
    ============================================================ */
 @media (max-width: 767px) {
   body.app-shell .page { padding: 14px 14px calc(86px + env(safe-area-inset-bottom)); gap: 14px; }
-  body.app-shell .brandbar { padding: 12px 14px; }
   body.app-shell .brand-mark { width: 40px; height: 40px; font-size: 13px; border-radius: 11px; }
   body.app-shell .brand-text b { font-size: 14px; }
   body.app-shell .brand-text span { font-size: 11px; }
@@ -3103,58 +3036,11 @@ body.app-shell .bottab-ic {
 }
 
 /* ============================================================
-   DESKTOP (>=1025px) — clean single-row brandbar
+   DESKTOP (>=1024px) — hide mobile-only nav affordances
    ============================================================ */
 @media (min-width: 1024px) {
   body.app-shell .bottom-tabbar { display: none !important; }
   body.app-shell .kebab-btn { display: none !important; }
-  body.app-shell .brandbar {
-    grid-template-columns: minmax(0, max-content) 1fr minmax(0, max-content);
-    align-items: center;
-    flex-wrap: nowrap;
-  }
-  body.app-shell .brandbar > .brand {
-    grid-column: 1;
-    flex-shrink: 0;
-    max-width: clamp(180px, 22vw, 320px);
-  }
-  body.app-shell .brandbar > .nav-pills {
-    grid-column: 2;
-    justify-self: center;
-  }
-  body.app-shell .brandbar > .brandbar-right {
-    grid-column: 3;
-    position: static;
-    display: flex !important;
-    background: transparent;
-    box-shadow: none;
-    padding: 0;
-    border-radius: 0;
-    flex-direction: row;
-    gap: 8px;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
-    align-items: center;
-    z-index: auto;
-    min-width: 0;
-    overflow: hidden;
-  }
-  body.app-shell .brandbar > .brandbar-right > * { flex-shrink: 0; }
-  /* Long shift name truncates so it never pushes other controls */
-  body.app-shell .brandbar > .brandbar-right > .shift-info { min-width: 0; flex-shrink: 1; }
-  body.app-shell .brandbar > .brandbar-right > .shift-info > #shift-label {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: clamp(120px, 14vw, 220px);
-    display: inline-block;
-  }
-}
-
-/* Below 1280: drop the next-alert label, then Tablero text, then EN — graceful degradation */
-@media (min-width: 1024px) and (max-width: 1199px) {
-  body.app-shell .brandbar > .brandbar-right > .next-alert > .next-alert-sub { display: none; }
-  body.app-shell .brandbar > .brandbar-right > .status-select > span { display: none; }
 }
 
 /* ============================================================
@@ -3163,8 +3049,7 @@ body.app-shell .bottab-ic {
       removed #btn-capture from render. Use display:contents instead
       so child position:fixed works.
    2. Clock smaller at mobile so it doesn't dwarf the title.
-   3. Drawer (kebab-open brandbar-right): label each row.
-   4. Admin page: truncate back link, horizontal-scroll admin-tabs.
+   3. Admin page: horizontal-scroll admin-tabs.
    ============================================================ */
 
 /* (1) FAB rescue — counter-actions display:contents + show child */
@@ -3188,46 +3073,7 @@ body.app-shell .bottab-ic {
   }
 }
 
-/* (3) Drawer — give next-alert + status-select clean row labels */
-@media (max-width: 1023px) {
-  body.app-shell .brandbar.menu-open .brandbar-right .next-alert {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .next-alert > span:first-child {
-    flex: 1 0 auto;
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 600;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .next-alert #next-alert-time {
-    color: var(--ink);
-    font-weight: 700;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .status-select {
-    justify-content: space-between;
-    width: 100%;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .status-select select {
-    flex: 1;
-    text-align: right;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .sync-status,
-  body.app-shell .brandbar.menu-open .brandbar-right .lang-toggle {
-    width: 100%;
-    justify-content: flex-start;
-    padding: 12px 14px;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .sync-status::before { content: "Sync "; opacity: 0.6; font-weight: 500; }
-  body.app-shell .brandbar.menu-open .brandbar-right .lang-toggle::before { content: "Idioma "; opacity: 0.6; font-weight: 500; }
-}
-
-/* (4) Admin page — mobile polish (admin.html has its own .admin shell) */
+/* (3) Admin page — mobile polish (admin.html has its own .admin shell) */
 @media (max-width: 767px) {
   .admin .actions-row-between {
     flex-wrap: wrap;
@@ -3363,163 +3209,7 @@ body.app-shell .page .counter-card .counter {
   margin-right: auto;
 }
 
-/* (3 + 4) Drawer rows — clean labeled layout */
-@media (max-width: 1023px) {
-  /* Reset earlier ::before that mashed text */
-  body.app-shell .brandbar.menu-open .brandbar-right .sync-status::before,
-  body.app-shell .brandbar.menu-open .brandbar-right .lang-toggle::before {
-    content: none !important;
-  }
-
-  /* Sync button — full-width row with explicit label */
-  body.app-shell .brandbar.menu-open .brandbar-right #sync-status {
-    position: relative;
-    width: 100%;
-    text-align: left;
-    padding: 14px 16px 14px 110px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right #sync-status::before {
-    content: "Sincronización" !important;
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    opacity: 1 !important;
-  }
-
-  /* Language toggle — same pattern */
-  body.app-shell .brandbar.menu-open .brandbar-right #lang-toggle {
-    position: relative;
-    width: 100%;
-    text-align: left;
-    padding: 14px 16px 14px 110px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right #lang-toggle::before {
-    content: "Idioma" !important;
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    opacity: 1 !important;
-  }
-
-  /* Status select — full-width row with explicit label */
-  body.app-shell .brandbar.menu-open .brandbar-right .status-select {
-    position: relative;
-    width: 100%;
-    padding: 0 0 0 110px;
-    background: var(--paper-3);
-    border-radius: 10px;
-    min-height: 48px;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .status-select > span {
-    display: none;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .status-select::before {
-    content: "Estado";
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .status-select select {
-    width: 100%;
-    height: 48px;
-    padding: 0 16px;
-    font-size: 13px;
-    background: transparent;
-    text-align: right;
-    appearance: none;
-  }
-
-  /* Next-alert — labeled row with time + countdown stacked */
-  body.app-shell .brandbar.menu-open .brandbar-right .next-alert {
-    position: relative;
-    width: 100%;
-    padding: 14px 16px 14px 110px;
-    background: var(--paper-3);
-    border-radius: 10px;
-    box-shadow: none;
-    display: flex;
-    justify-content: flex-end;
-    align-items: baseline;
-    gap: 8px;
-    min-height: 48px;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .next-alert > span:first-child {
-    display: none;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .next-alert::before {
-    content: "Próxima alerta";
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right #next-alert-time {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--ink);
-    font-weight: 700;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right .next-alert-sub {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  /* Shift-info chip — clear label + truncate */
-  body.app-shell .brandbar.menu-open .brandbar-right .shift-info {
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--paper-3);
-    border-radius: 10px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  body.app-shell .brandbar.menu-open .brandbar-right #shift-label {
-    flex: 1;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-  }
-}
-
-/* (5) Tablero (dashboard.html) — mobile header polish */
+/* (4) Tablero (dashboard.html) — mobile header polish */
 @media (max-width: 767px) {
   body.dashboard-body .topbar {
     flex-direction: column;
@@ -4230,10 +3920,9 @@ body.app-shell:has(#admin-lock:not(.hidden)) .bottom-tabbar { display: none !imp
   .weekstrip-nav { flex-shrink: 0; }
 }
 
-/* Hide redundant brandbar OEE donut on desktop (bento has bigger one) */
+/* Hide redundant topbar OEE donut on desktop (bento has bigger one) */
 @media (min-width: 1024px) {
-  body.app-shell #view-capture ~ * .oee-donut,
-  body.app-shell .brandbar .shift-info .oee-donut {
+  body.app-shell #view-capture ~ * .oee-donut {
     display: none;
   }
 }
@@ -4422,9 +4111,6 @@ body.app-shell:has(#admin-lock:not(.hidden)) .bottom-tabbar { display: none !imp
    ===  EDITORIAL v4 — TABLERO STRUCTURAL (mockup parity)
    ============================================================ */
 
-/* Brandbar on dashboard: keep static (no need to be sticky here) */
-body.dashboard-body .brandbar { position: static; }
-
 /* Hide legacy .topbar rules in dashboard context — element removed */
 body.dashboard-body .topbar { display: none !important; }
 
@@ -4514,19 +4200,3 @@ body.dashboard-body .topbar { display: none !important; }
 }
 .line-card-meta-right { font-weight: 700; color: var(--ink); }
 
-/* Brandbar adjustments for Tablero shift-pill */
-body.dashboard-body .brandbar #shift-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 12px;
-  background: var(--paper-2);
-  border: 1px solid var(--line);
-  color: var(--ink);
-  text-transform: none;
-  letter-spacing: 0;
-}
-body.dashboard-body .brandbar #shift-pill .live-dot { margin: 0; }
