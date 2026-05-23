@@ -163,7 +163,13 @@
   --sidenav-width:  260px;
   --touch-min:      44px;
 
-  /* ---------- Breakpoints (reference; declare via @media) ---------- */
-  /* --bp-md: 768px  -- phone/tablet boundary */
-  /* --bp-lg: 1024px -- tablet/desktop boundary */
+  /* ---------- Breakpoints (reference; CSS vars cannot resolve inside @media) ----------
+   * Canonical media-query values — every @media in styles.css MUST use one:
+   *   PHONE-SMALL   max-width: 479px  / min-width: 480px
+   *   MOBILE        max-width: 767px  / min-width: 768px
+   *   TABLET        max-width: 1023px / min-width: 1024px
+   *   DESKTOP-XL    min-width: 1400px
+   * No other widths permitted. If a design needs an in-between value,
+   * promote the rule to the nearest canonical and adjust the value.
+   */
 }
