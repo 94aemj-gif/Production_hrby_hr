@@ -49,6 +49,41 @@
   --info-ink:     #1e40af;
   --info-soft:    #dbeafe;
 
+  /* ---------- Semantic fills (low-opacity washes for tags, banners, status pills) ---------- */
+  --success-fill-sm: color-mix(in srgb, var(--success) 8%,  transparent);
+  --success-fill:    color-mix(in srgb, var(--success) 14%, transparent);
+  --success-fill-lg: color-mix(in srgb, var(--success) 18%, transparent);
+  --success-edge:    color-mix(in srgb, var(--success) 35%, transparent);
+  --success-edge-lg: color-mix(in srgb, var(--success) 40%, transparent);
+
+  --accent-fill-sm:  color-mix(in srgb, var(--accent) 8%,  transparent);
+  --accent-fill:     color-mix(in srgb, var(--accent) 14%, transparent);
+  --accent-fill-lg:  color-mix(in srgb, var(--accent) 18%, transparent);
+  --accent-edge:     color-mix(in srgb, var(--accent) 35%, transparent);
+  --accent-edge-lg:  color-mix(in srgb, var(--accent) 40%, transparent);
+
+  --warning-fill-sm: color-mix(in srgb, var(--warning) 8%,  transparent);
+  --warning-fill:    color-mix(in srgb, var(--warning) 14%, transparent);
+  --warning-fill-lg: color-mix(in srgb, var(--warning) 18%, transparent);
+  --warning-edge:    color-mix(in srgb, var(--warning) 35%, transparent);
+  --warning-edge-lg: color-mix(in srgb, var(--warning) 40%, transparent);
+
+  --danger-fill-sm:  color-mix(in srgb, var(--danger) 8%,  transparent);
+  --danger-fill:     color-mix(in srgb, var(--danger) 14%, transparent);
+  --danger-fill-lg:  color-mix(in srgb, var(--danger) 18%, transparent);
+  --danger-edge:     color-mix(in srgb, var(--danger) 35%, transparent);
+  --danger-edge-lg:  color-mix(in srgb, var(--danger) 40%, transparent);
+
+  /* Focus-ring opacity stops (used in 3px ring shadows) */
+  --accent-ring: color-mix(in srgb, var(--accent) 15%, transparent);
+  --danger-ring: color-mix(in srgb, var(--danger) 15%, transparent);
+
+  /* Heatmap intensity ramp (success hue, 4 levels) */
+  --heat-1: color-mix(in srgb, var(--success) 18%, transparent);
+  --heat-2: color-mix(in srgb, var(--success) 38%, transparent);
+  --heat-3: color-mix(in srgb, var(--success) 62%, transparent);
+  --heat-4: color-mix(in srgb, var(--success) 92%, transparent);
+
   /* ---------- Aliases (back-compat for legacy CSS + inline shells) ---------- */
   --ink:      var(--ink-950);        /* inline shells reference plain --ink */
   --ink-2:    var(--ink-900);
