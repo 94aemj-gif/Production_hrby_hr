@@ -435,6 +435,11 @@
       "brand.plantaSuffix": "líneas",
       "aria.syncStatus": "Estado de sincronización",
       "aria.monthPicker": "Elegir mes",
+      "aria.equipStatus": "Estado del equipo",
+      "aria.chart.hourly": "Gráfica: tendencia de producción por hora",
+      "aria.chart.hourlyVsTarget": "Gráfica: producción por hora vs meta",
+      "aria.chart.cumulative": "Gráfica: acumulado del turno vs meta",
+      "aria.chart.scrap": "Gráfica: rechazos por hora",
     },
 
     en: {
@@ -840,6 +845,11 @@
       "brand.plantaSuffix": "lines",
       "aria.syncStatus": "Sync status",
       "aria.monthPicker": "Pick month",
+      "aria.equipStatus": "Equipment status",
+      "aria.chart.hourly": "Chart: hourly production trend",
+      "aria.chart.hourlyVsTarget": "Chart: hourly production vs target",
+      "aria.chart.cumulative": "Chart: shift cumulative vs target",
+      "aria.chart.scrap": "Chart: scrap by hour",
     },
   };
 

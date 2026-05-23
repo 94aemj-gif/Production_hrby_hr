@@ -2375,8 +2375,11 @@
 
   // ---- PWA ----
   function registerSW() {
-    // Disabled during dev to avoid stale caches. Re-enable for production.
-    return;
+    if (!("serviceWorker" in navigator)) return;
+    if (location.protocol === "file:") return;
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
   }
 
   // ---- Weekstrip date picker (admin history + charts view) ----

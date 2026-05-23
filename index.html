@@ -250,7 +250,7 @@
         <div id="oee-pct" class="oee-donut-text">—</div>
       </div>
       <div class="status-select hidden">
-        <select id="equip-status">
+        <select id="equip-status" data-i18n-aria-label="aria.equipStatus" aria-label="Estado del equipo">
           <option value="Running" data-i18n="top.statusOpt.running">En operación</option>
           <option value="Idle" data-i18n="top.statusOpt.idle">Inactivo</option>
           <option value="Maintenance" data-i18n="top.statusOpt.maintenance">Mantenimiento</option>
@@ -317,7 +317,7 @@
 
       <section class="tile tile-chart bento-tile bento-chart" id="chart-section" data-collapsed="false">
         <div class="tile-label bento-label"><span data-i18n="chart.hourlyTrend">Tendencia por hora</span></div>
-        <canvas id="hour-chart" width="600" height="160"></canvas>
+        <canvas id="hour-chart" width="600" height="160" role="img" data-i18n-aria-label="aria.chart.hourly" aria-label="Gráfica: tendencia de producción por hora"></canvas>
       </section>
 
       <section class="tile tile-scrap bento-tile bento-scrap">
@@ -404,15 +404,15 @@
     <div class="charts-grid">
       <section class="chart-card">
         <div class="chart-head"><span class="chart-title" data-i18n="charts.hourlyVsTarget">Producción por hora vs meta</span></div>
-        <canvas id="chart-hourly" width="600" height="240"></canvas>
+        <canvas id="chart-hourly" width="600" height="240" role="img" data-i18n-aria-label="aria.chart.hourlyVsTarget" aria-label="Gráfica: producción por hora vs meta"></canvas>
       </section>
       <section class="chart-card">
         <div class="chart-head"><span class="chart-title" data-i18n="charts.cumulativeVsTarget">Acumulado del turno vs meta</span></div>
-        <canvas id="chart-cumulative" width="600" height="240"></canvas>
+        <canvas id="chart-cumulative" width="600" height="240" role="img" data-i18n-aria-label="aria.chart.cumulative" aria-label="Gráfica: acumulado del turno vs meta"></canvas>
       </section>
       <section class="chart-card">
         <div class="chart-head"><span class="chart-title" data-i18n="charts.scrapByHour">Rechazos por hora</span></div>
-        <canvas id="chart-scrap" width="600" height="240"></canvas>
+        <canvas id="chart-scrap" width="600" height="240" role="img" data-i18n-aria-label="aria.chart.scrap" aria-label="Gráfica: rechazos por hora"></canvas>
       </section>
       <section class="chart-card heatmap-card" id="heatmap-card">
         <div class="chart-head">
