@@ -121,6 +121,21 @@
     return "pace-behind";
   }
 
+  function paceLabel(pct) {
+    if (pct == null) return tt("dashboard.pace.na");
+    if (pct >= 100) return tt("dashboard.pace.ahead");
+    if (pct >= 90)  return tt("dashboard.pace.ok");
+    if (pct >= 70)  return tt("dashboard.pace.warn");
+    return tt("dashboard.pace.behind");
+  }
+  function pacePillClass(pct) {
+    if (pct == null) return "pill-na";
+    if (pct >= 100) return "pill-ahead";
+    if (pct >= 90)  return "pill-ok";
+    if (pct >= 70)  return "pill-warn";
+    return "pill-behind";
+  }
+
   function pickSessionForLine(allTodaySessions, lineId) {
     const match = allTodaySessions.filter(s => s.lineId === lineId);
     if (!match.length) return null;
@@ -186,84 +201,128 @@
 
   function buildLineCard(line, session, ctx) {
     const card = document.createElement("article");
-    card.className = "line-card";
-    if (!session) card.classList.add("line-card-idle-card");
+    card.className = "card line-card";
+    if (!session) {
+      card.classList.add("line-card-idle-card");
+      card.style.opacity = "0.7";
+    }
 
-    const head = document.createElement("div");
-    head.className = "line-card-head";
-    const name = document.createElement("div");
-    name.className = "line-card-name";
-    const dot = document.createElement("span");
     const status = session ? (session.currentStatus || "Running") : "Idle";
-    dot.className = "status-dot-inline" + statusDotClass(status);
+    const shift = session ? (ctx.shifts || []).find(s => s.id === session.shiftId) : null;
+    const pct = session ? pacePct(session, shift, ctx.hourlyTarget) : null;
+
+    // .card-head ─ left block (name + meta) + right pill
+    const head = document.createElement("div");
+    head.className = "card-head line-card-head";
+    const headLeft = document.createElement("div");
+    const name = document.createElement("div");
+    name.className = "card-name line-card-name";
+    const dot = document.createElement("span");
+    dot.className = "status-dot" + statusDotClass(status);
     dot.setAttribute("aria-hidden", "true");
     name.appendChild(dot);
-    name.appendChild(document.createTextNode(" " + (line.label || line.id)));
-    head.appendChild(name);
-
-    const pill = document.createElement("span");
+    name.appendChild(document.createTextNode(line.label || line.id));
+    headLeft.appendChild(name);
+    const subtitle = document.createElement("div");
+    subtitle.className = "card-meta line-card-subtitle";
     if (session) {
-      pill.className = "status-pill " + statusPillClass(status);
-      pill.textContent = statusLabel(status);
+      const opName = operatorName(ctx.operators, session.operatorId);
+      subtitle.textContent = "Operador: " + (session.operatorId || "—") + " · " + (shift ? shift.label : session.shiftId);
+      subtitle.title = opName;
     } else {
-      pill.className = "status-pill status-paused";
-      pill.textContent = tt("dashboard.noActivity");
+      subtitle.textContent = tt("dashboard.noActivityHint");
     }
+    headLeft.appendChild(subtitle);
+    head.appendChild(headLeft);
+    const pill = document.createElement("span");
+    pill.className = "card-pill " + (session ? pacePillClass(pct) : "pill-na");
+    pill.textContent = session ? paceLabel(pct) : tt("dashboard.pace.inactive");
     head.appendChild(pill);
     card.appendChild(head);
 
-    if (!session) {
-      const empty = document.createElement("div");
-      empty.className = "line-card-empty muted";
-      empty.textContent = tt("dashboard.noActivityHint");
-      card.appendChild(empty);
-      return card;
-    }
-
-    const shift = (ctx.shifts || []).find(s => s.id === session.shiftId);
-    const subtitle = document.createElement("div");
-    subtitle.className = "line-card-subtitle muted";
-    subtitle.textContent = (shift ? shift.label : session.shiftId) +
-                          " · " + operatorName(ctx.operators, session.operatorId);
-    card.appendChild(subtitle);
-
-    const t = totals(session);
-    const pct = pacePct(session, shift, ctx.hourlyTarget);
-
+    // .card-big-row ─ count + target hint
     const big = document.createElement("div");
-    big.className = "line-card-big";
-    const count = document.createElement("div");
-    count.className = "line-card-count " + paceClass(pct);
-    count.textContent = t.good.toLocaleString();
+    big.className = "card-big-row line-card-big";
+    const count = document.createElement("span");
+    count.className = "card-count line-card-count " + (session ? paceClass(pct) : "pace-na");
+    if (session) {
+      const t = totals(session);
+      count.textContent = t.good.toLocaleString();
+    } else {
+      count.textContent = "0";
+      count.style.color = "var(--muted)";
+    }
     big.appendChild(count);
     const target = document.createElement("span");
-    target.className = "line-card-target muted";
-    target.textContent = tt("dashboard.lineCardTarget", { n: ctx.hourlyTarget.toLocaleString() });
+    target.className = "card-target line-card-target";
+    target.textContent = session
+      ? tt("dashboard.lineCardTarget", { n: ctx.hourlyTarget.toLocaleString() })
+      : tt("dashboard.lineCardTargetIdle");
     big.appendChild(target);
     card.appendChild(big);
 
-    const spark = document.createElement("canvas");
-    spark.className = "line-card-spark";
-    card.appendChild(spark);
-    requestAnimationFrame(() => drawSparkline(spark, session));
+    // .card-spark ─ inline SVG (mockup style)
+    const sparkWrap = document.createElement("div");
+    sparkWrap.className = "card-spark line-card-spark";
+    sparkWrap.innerHTML = renderSparkSVG(session, pct);
+    card.appendChild(sparkWrap);
 
+    // .card-meta-row ─ Última + OEE
     const meta = document.createElement("div");
-    meta.className = "line-card-meta";
-    const last = lastCapture(session);
+    meta.className = "card-meta-row line-card-meta";
     let leftText = "—";
-    if (last) {
-      const lastTs = new Date(last.ts);
-      const timeStr = lastTs.toLocaleTimeString(getLocale(), { hour: "numeric", minute: "2-digit" });
-      leftText = tt("dashboard.lineCardLast", { time: timeStr });
+    if (session) {
+      const last = lastCapture(session);
+      if (last) {
+        const lastTs = new Date(last.ts);
+        const timeStr = lastTs.toLocaleTimeString(getLocale(), { hour: "2-digit", minute: "2-digit", hour12: false });
+        leftText = tt("dashboard.lineCardLast", { time: timeStr });
+      }
+    } else {
+      leftText = tt("dashboard.lastSessionYesterday");
     }
-    const oee = lineOee(session, shift, ctx.hourlyTarget);
-    const oeeText = oee == null ? "OEE —" : tt("dashboard.lineCardOee", { pct: oee });
+    const oee = session ? lineOee(session, shift, ctx.hourlyTarget) : null;
+    const oeeText = oee == null ? "—" : tt("dashboard.lineCardOee", { pct: oee });
     meta.innerHTML =
       '<span class="line-card-meta-left">' + leftText + '</span>' +
       '<span class="line-card-meta-right">' + oeeText + '</span>';
     card.appendChild(meta);
 
     return card;
+  }
+
+  function renderSparkSVG(session, pct) {
+    const color = pct == null
+      ? "#c6d3dc"
+      : pct >= 100 ? "#059669"
+      : pct >= 90  ? "#0d9488"
+      : pct >= 70  ? "#ea580c"
+      : "#be123c";
+    const fill = "rgba(" +
+      (pct == null ? "198,211,220"
+        : pct >= 100 ? "5,150,105"
+        : pct >= 90  ? "13,148,136"
+        : pct >= 70  ? "234,88,12"
+        : "190,18,60") + ",0.15)";
+    if (!session) {
+      return '<svg viewBox="0 0 100 32" preserveAspectRatio="none"><line x1="0" x2="100" y1="16" y2="16" stroke="#c6d3dc" stroke-dasharray="3 3" stroke-width="1"/></svg>';
+    }
+    const hours = session.hourly || {};
+    const keys = Object.keys(hours).sort();
+    const values = keys.map(k => hours[k] || 0);
+    if (values.length < 2) values.push(values[0] || 0);
+    const max = Math.max(1, ...values);
+    const w = 100, h = 32;
+    const pts = values.map((v, i) => {
+      const x = (i / (values.length - 1)) * w;
+      const y = h - (v / max) * (h - 4) - 2;
+      return x + " " + y;
+    });
+    const path = "M" + pts.map((p, i) => (i === 0 ? p : "L" + p)).join(" ");
+    const area = path + " L" + w + " " + h + " L0 " + h + " Z";
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+           '<path d="' + path + '" fill="none" stroke="' + color + '" stroke-width="2"/>' +
+           '<path d="' + area + '" fill="' + fill + '"/></svg>';
   }
 
   function statusPillClass(status) {

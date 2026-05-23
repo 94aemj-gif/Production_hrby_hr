@@ -879,6 +879,7 @@
     const capBtn = $("btn-capture");
     if (!s) {
       setText("shift-label", device.lineId ? lineLabel(device.lineId) + " · " + tt("shift.noActive") : tt("shift.configDevice"));
+      setText("brand-sub", device.lineId ? lineLabel(device.lineId) + " · " + tt("shift.noActive") : tt("shift.configDevice"));
       setText("operator-label", device.operatorId ? operatorName(device.operatorId) : "—");
       animateCounter("—");
       setText("scrap-count", "—");
@@ -903,6 +904,7 @@
     const fresh = getSession();
     const otSuffix = isOvertimeDate(fresh.date) ? " · " + tt("shift.overtime") : "";
     setText("shift-label", lineLabel(fresh.lineId) + " · " + shiftLabel(fresh.shiftId) + otSuffix);
+    setText("brand-sub", lineLabel(fresh.lineId) + " · " + shiftLabel(fresh.shiftId));
     setText("operator-label", operatorName(fresh.operatorId));
     const totals = shiftTotals(fresh);
     animateCounter(totals.good);
@@ -912,18 +914,9 @@
     const lastHour = getLastCompletedHour(fresh);
     setText("metric-hour", lastHour.value.toLocaleString());
     setText("metric-hour-range", lastHour.label);
-    const hourEl = $("metric-hour");
-    if (hourEl && config.hourlyTarget > 0 && lastHour.value > 0) {
-      const pct = (lastHour.value / config.hourlyTarget) * 100;
-      hourEl.style.color = pct >= 90 ? "var(--green)" : pct >= 60 ? "var(--blue)" : "var(--red)";
-    } else if (hourEl) {
-      hourEl.style.color = "var(--muted)";
-    }
 
     const shiftEff = computeShiftEfficiency(fresh);
     setText("metric-efficiency", shiftEff.pct + "%");
-    const effEl = $("metric-efficiency");
-    if (effEl) effEl.style.color = shiftEff.pct >= 90 ? "var(--green)" : shiftEff.pct >= 60 ? "var(--blue)" : "var(--accent)";
     setText("metric-efficiency-sub", tt(shiftEff.completedHours === 1 ? "metric.hrComplete" : "metric.hrsComplete", { n: shiftEff.completedHours }));
 
     const oeePct = computeOEE(fresh);
@@ -2301,7 +2294,7 @@
 
     // Sidebar nav
     function switchView(view) {
-      document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
+      document.querySelectorAll("[data-view]").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
       const cap = $("view-capture");
       const ch = $("view-charts");
       if (cap) cap.hidden = view !== "capture";
@@ -2312,10 +2305,12 @@
         renderAll();
       }
     }
-    document.querySelectorAll(".nav-item").forEach((btn) => {
+    document.querySelectorAll("[data-view]").forEach((btn) => {
       btn.addEventListener("click", () => switchView(btn.dataset.view));
     });
-    const initialView = load("prod.ui.view", "capture");
+    // Initial view: URL hash wins (#charts → charts), otherwise default to capture.
+    // Stored ui.view persisted only for in-session navigation; reload always lands on Captura.
+    const initialView = (location.hash === "#charts") ? "charts" : "capture";
     switchView(initialView);
 
     _on("btn-history", "click", openHistory);
@@ -2380,8 +2375,11 @@
 
   // ---- PWA ----
   function registerSW() {
-    // Disabled during dev to avoid stale caches. Re-enable for production.
-    return;
+    if (!("serviceWorker" in navigator)) return;
+    if (location.protocol === "file:") return;
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
   }
 
   // ---- Weekstrip date picker (admin history + charts view) ----

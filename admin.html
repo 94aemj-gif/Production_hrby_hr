@@ -1,13 +1,161 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title data-i18n="page.title.admin">Configuración Admin</title>
-  <link rel="stylesheet" href="styles.css?v=79" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title data-i18n="page.title.admin">Configuración Admin</title>
+<meta name="theme-color" content="#f0f5f7" />
+<link rel="manifest" href="manifest.json" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-25..200" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css?v=105" />
+<link rel="stylesheet" href="tokens.css?v=105" />
+<style>
+  /* === Admin shell. Tokens come from tokens.css :root. === */
+  body.shell-admin, body.shell-admin * { box-sizing: border-box; }
+  body.shell-admin { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  body.shell-admin .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; vertical-align: middle; }
+
+  body.shell-admin .topbar { height: 56px; padding: 0 32px; background: var(--paper); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 24px; position: sticky; top: 0; z-index: 60; }
+  body.shell-admin .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; min-width: 0; }
+  body.shell-admin .brand-dot { width: 28px; height: 28px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; color: var(--paper); }
+  body.shell-admin .brand-name { font-size: 16px; white-space: nowrap; }
+  body.shell-admin .brand-sub { color: var(--muted); font-size: 12px; font-weight: 500; font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 22ch; }
+  body.shell-admin .nav-pills { display: flex; gap: 4px; margin-left: 12px; flex-shrink: 0; }
+  body.shell-admin .nav-pill { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; text-decoration: none; line-height: 1; background: transparent; border: none; font-family: inherit; }
+  body.shell-admin .nav-pill:hover { color: var(--ink); }
+  body.shell-admin .nav-pill.active { background: var(--ink); color: var(--paper); }
+  body.shell-admin .topbar-actions { display: flex; gap: 12px; align-items: center; }
+  body.shell-admin .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: var(--muted); cursor: pointer; background: transparent; border: none; }
+  body.shell-admin .icon-btn:hover { background: var(--paper-3); color: var(--ink); }
+  body.shell-admin .brand-text { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
+  body.shell-admin .shift-pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-family: var(--mono); color: var(--ink); white-space: nowrap; }
+  body.shell-admin .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px rgba(5,150,105,0.18); display: inline-block; flex-shrink: 0; position: relative; }
+  body.shell-admin .live-dot::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; background: var(--success); opacity: 0.4; animation: livedot-pulse 2.2s ease-out infinite; pointer-events: none; }
+  @keyframes livedot-pulse { 0% { transform: scale(0.7); opacity: 0.5; } 70% { transform: scale(2.2); opacity: 0; } 100% { transform: scale(2.2); opacity: 0; } }
+  body.shell-admin .sync-status { width: 36px; height: 36px; border-radius: 10px; background: transparent; border: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; font-size: 11px; font-family: var(--mono); font-weight: 600; }
+  body.shell-admin .sync-status:hover { background: var(--paper-3); color: var(--ink); }
+  body.shell-admin .sync-status.sync-ok { color: var(--success); }
+  body.shell-admin .sync-status.sync-err { color: var(--danger); }
+  body.shell-admin .sync-status.sync-pending { color: var(--warning); }
+  body.shell-admin .lang-toggle { width: 36px; height: 36px; border-radius: 10px; background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 12px; font-family: var(--mono); font-weight: 700; }
+  body.shell-admin .lang-toggle:hover { background: var(--paper-3); color: var(--ink); }
+
+  body.shell-admin .layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100dvh - 56px); }
+  body.shell-admin .sidenav { background: var(--paper); border-right: 1px solid var(--line); padding: 16px 12px; position: sticky; top: 56px; height: calc(100dvh - 56px); overflow-y: auto; }
+  body.shell-admin .sn-section { font-family: var(--mono); color: var(--muted); font-size: 12px; font-weight: 600; padding: 8px 12px; margin-top: 16px; }
+  body.shell-admin .sn-section:first-child { margin-top: 0; }
+  body.shell-admin .sn-link { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 13px; color: var(--ink); cursor: pointer; font-weight: 500; background: transparent; border: none; width: 100%; text-align: left; font-family: inherit; text-decoration: none; }
+  body.shell-admin .sn-link:hover { background: var(--paper-3); }
+  body.shell-admin .sn-link.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+  body.shell-admin .sn-link .material-symbols-outlined { color: inherit; font-size: 18px; }
+
+  body.shell-admin .page { padding: 20px 32px 90px; max-width: 1200px; margin: 0 auto; }
+  body.shell-admin .page-head { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; gap: 24px; text-align: left; }
+  body.shell-admin .page-head > div:first-child { flex: 1 1 auto; min-width: 0; }
+  body.shell-admin .page-title { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; margin: 0; }
+  body.shell-admin .page-subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  body.shell-admin .actions { display: flex; gap: 10px; }
+  body.shell-admin .btn { padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-family: inherit; min-height: 44px; }
+  body.shell-admin .btn:hover { background: var(--paper-3); }
+  body.shell-admin .btn:active { transform: translateY(1px); }
+  body.shell-admin .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+  body.shell-admin .btn-primary:hover { filter: brightness(0.93); }
+  body.shell-admin .btn-ghost { background: transparent; }
+  body.shell-admin .btn-danger { color: var(--danger-ink); border-color: var(--line); }
+  body.shell-admin .btn-warn { background: var(--warning); border-color: var(--warning); color: var(--paper); }
+  body.shell-admin .btn-small { padding: 6px 12px; font-size: 12px; min-height: 32px; }
+
+  body.shell-admin .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  body.shell-admin .full { grid-column: 1 / -1; }
+
+  body.shell-admin .card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  body.shell-admin .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  body.shell-admin .card-title { font-family: var(--mono); font-size: 13px; color: var(--ink); font-weight: 600; }
+  body.shell-admin .card-pill { font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 700; font-family: var(--mono); background: var(--paper-3); color: var(--muted); }
+  body.shell-admin .card-pill.success { background: rgba(5,150,105,0.12); color: var(--success-ink); }
+
+  body.shell-admin .field { display: flex; flex-direction: column; gap: 6px; }
+  body.shell-admin .field-label { font-family: var(--mono); color: var(--muted); font-size: 12px; font-weight: 600; }
+  body.shell-admin .field-helper { color: var(--muted); font-size: 12px; }
+  body.shell-admin .input, body.shell-admin .field input, body.shell-admin .field select { background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; font-size: 14px; font-family: inherit; color: var(--ink); width: 100%; min-height: 44px; }
+  body.shell-admin .field input:focus, body.shell-admin .field select:focus, body.shell-admin .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  body.shell-admin .fields-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  body.shell-admin table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  body.shell-admin thead th { text-align: left; padding: 10px 12px; font-family: var(--mono); font-size: 12px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); }
+  body.shell-admin tbody td { padding: 10px 12px; border-bottom: 1px solid var(--paper-3); }
+  body.shell-admin tbody tr:hover { background: var(--paper-2); }
+  body.shell-admin .row-action { display: inline-flex; gap: 6px; }
+  body.shell-admin .row-action .btn { padding: 6px 12px; font-size: 12px; min-height: 32px; }
+  body.shell-admin .entity-add { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+  body.shell-admin .entity-add-shift { grid-template-columns: repeat(5, 1fr) auto; }
+
+  body.shell-admin .reason-list { list-style: none; padding: 0; margin: 0 0 12px; }
+  body.shell-admin .reason-list .reason-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--paper-3); }
+
+  body.shell-admin .save-bar { position: fixed; left: 260px; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); padding: 14px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -8px 20px -16px rgba(15,23,42,0.1); z-index: 40; }
+  body.shell-admin .save-status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+  body.shell-admin .save-actions { display: flex; gap: 10px; }
+
+  body.shell-admin .admin-panel { display: none; }
+  body.shell-admin .admin-panel.active { display: block; }
+  body.shell-admin .saved-flash { font-family: var(--mono); font-size: 12px; color: var(--success-ink); opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
+  body.shell-admin .saved-flash.show { opacity: 1; }
+  body.shell-admin .hidden { display: none !important; }
+  body.shell-admin .text-helper { color: var(--muted); font-size: 12px; margin: -6px 0 12px; }
+  body.shell-admin .admin-card-chevron { display: none; }
+  body.shell-admin .log-chip { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-family: var(--mono); background: var(--paper-3); color: var(--muted); border: none; cursor: pointer; }
+  body.shell-admin .log-chip.active { background: var(--ink); color: var(--paper); }
+
+  body.shell-admin .kebab-btn { display: none; background: transparent; border: none; color: var(--muted); width: 36px; height: 36px; border-radius: 10px; cursor: pointer; }
+
+  @media (max-width: 1023px) {
+    body.shell-admin .topbar { padding: 0 16px; gap: 12px; flex-wrap: wrap; }
+    body.shell-admin .nav-pills { display: none; }
+    body.shell-admin .topbar-actions { display: none; }
+    body.shell-admin .topbar.menu-open .topbar-actions { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; padding: 12px 0; border-top: 1px solid var(--line); }
+    body.shell-admin .kebab-btn { display: grid; place-items: center; }
+    body.shell-admin .layout { grid-template-columns: 1fr; }
+    body.shell-admin .sidenav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 12px 16px; display: flex; overflow-x: auto; gap: 4px; }
+    body.shell-admin .sn-section { display: none; }
+    body.shell-admin .sn-link { flex-shrink: 0; padding: 8px 14px; white-space: nowrap; }
+    body.shell-admin .page { padding: 20px 16px 120px; }
+    body.shell-admin .save-bar { left: 0; padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+    body.shell-admin .grid-2 { grid-template-columns: 1fr; }
+    body.shell-admin .fields-row { grid-template-columns: 1fr; }
+    body.shell-admin .entity-add { grid-template-columns: 1fr; }
+    body.shell-admin .entity-add-shift { grid-template-columns: 1fr; }
+  }
+
+  /* === Polish layer === */
+  body.shell-admin :is(.nav-pill, .icon-btn, .btn, .sn-link, .lang-toggle, .log-chip, .weekstrip-icon, .kebab-btn):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+  body.shell-admin :is(input, select, textarea):focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  body.shell-admin .card { transition: transform 240ms cubic-bezier(0.16,1,0.3,1), box-shadow 240ms cubic-bezier(0.16,1,0.3,1); }
+  body.shell-admin .card:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -22px rgba(13,70,80,0.16); }
+  @keyframes stagger-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  body.shell-admin .admin-panel.active .card { animation: stagger-rise 460ms cubic-bezier(0.16,1,0.3,1) backwards; }
+  body.shell-admin .admin-panel.active .card:nth-child(1) { animation-delay: 40ms; }
+  body.shell-admin .admin-panel.active .card:nth-child(2) { animation-delay: 90ms; }
+  body.shell-admin .admin-panel.active .card:nth-child(3) { animation-delay: 140ms; }
+  body.shell-admin .admin-panel.active .grid-2 > *:nth-child(1) { animation: stagger-rise 460ms cubic-bezier(0.16,1,0.3,1) 40ms backwards; }
+  body.shell-admin .admin-panel.active .grid-2 > *:nth-child(2) { animation: stagger-rise 460ms cubic-bezier(0.16,1,0.3,1) 90ms backwards; }
+  body.shell-admin .admin-panel.active .grid-2 > *:nth-child(3) { animation: stagger-rise 460ms cubic-bezier(0.16,1,0.3,1) 140ms backwards; }
+  body.shell-admin .admin-panel.active .grid-2 > *:nth-child(4) { animation: stagger-rise 460ms cubic-bezier(0.16,1,0.3,1) 190ms backwards; }
+  body.shell-admin .admin-panel.active .grid-2 > *:nth-child(5) { animation: stagger-rise 460ms cubic-bezier(0.16,1,0.3,1) 240ms backwards; }
+  body.shell-admin .sn-link { transition: background-color 180ms ease, color 180ms ease; }
+  body.shell-admin tbody tr { transition: background-color 140ms ease; }
+  @media (prefers-reduced-motion: reduce) {
+    body.shell-admin .admin-panel.active .card,
+    body.shell-admin .admin-panel.active .grid-2 > * { animation: none; }
+    body.shell-admin .card { transition: none; }
+  }
+</style>
 </head>
-<body class="app-shell">
-  <!-- Lock screen -->
+<body class="shell-admin app-shell admin-shell">
+
   <div id="admin-lock" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-login">
       <h2 class="popup-title-left" data-i18n="admin.lock.title">Acceso Admin</h2>
@@ -20,231 +168,299 @@
         <div id="lock-error" class="form-error hidden" data-i18n="gate.wrong">Contraseña incorrecta.</div>
         <div class="form-actions-row">
           <a class="btn btn-ghost btn-block btn-link" href="index.html" data-i18n="btn.cancel">Cancelar</a>
-          <button type="submit" class="btn btn-success btn-block" data-i18n="btn.enter">Entrar</button>
+          <button type="submit" class="btn btn-primary btn-block" data-i18n="btn.enter">Entrar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <main class="admin" id="admin-main">
-    <div class="actions-row-between">
-      <a class="back-btn" href="index.html" aria-label="Volver a Captura">&larr;</a>
-      <div class="actions-inline">
-        <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
-        <button type="button" id="btn-admin-lock" class="btn btn-ghost btn-small" data-i18n="admin.lock">Cerrar Admin</button>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-dot"><span class="material-symbols-outlined" style="font-size: 18px;">precision_manufacturing</span></div>
+      <div class="brand-text">
+        <div class="brand-name">Producción</div>
+        <div class="brand-sub" id="brand-sub" data-i18n="admin.deviceSub">Configuración Admin</div>
+      </div>
+      <div class="nav-pills">
+        <a class="nav-pill" href="index.html" data-i18n="nav.capture">Captura</a>
+        <a class="nav-pill" href="index.html#charts" data-i18n="nav.charts">Gráficas</a>
+        <a class="nav-pill" href="dashboard.html" data-i18n="nav.dashboard">Tablero</a>
+        <a class="nav-pill active" href="admin.html" data-i18n="top.admin">Admin</a>
       </div>
     </div>
-    <h1 data-i18n="admin.title">Configuración Admin</h1>
+    <div class="topbar-actions">
+      <div class="shift-pill"><span class="live-dot"></span><span id="shift-pill-text">admin</span></div>
+      <button type="button" id="sync-status" class="sync-status sync-off" data-i18n-aria-label="aria.syncStatus" aria-label="Estado de sincronización"><span class="material-symbols-outlined" style="font-size:18px;">sync</span></button>
+      <button type="button" id="lang-toggle" class="lang-toggle" title="English">EN</button>
+    </div>
+    <button type="button" id="kebab-btn" class="kebab-btn" data-i18n-aria-label="menu.more" aria-label="Más opciones" aria-expanded="false"><span class="material-symbols-outlined">more_horiz</span></button>
+  </header>
 
-    <nav class="admin-tabs" role="tablist" aria-label="Categorías">
-      <button type="button" class="admin-tab" data-tab="resumen"   role="tab" aria-selected="false"><span data-i18n="admin.tab.resumen">Resumen</span></button>
-      <button type="button" class="admin-tab" data-tab="catalogos" role="tab" aria-selected="false"><span data-i18n="admin.tab.catalogos">Catálogos</span></button>
-      <button type="button" class="admin-tab" data-tab="config"    role="tab" aria-selected="false"><span data-i18n="admin.tab.config">Configuración</span></button>
-      <button type="button" class="admin-tab" data-tab="datos"     role="tab" aria-selected="false"><span data-i18n="admin.tab.datos">Datos</span></button>
-    </nav>
+  <div class="layout">
+    <aside class="sidenav" role="tablist" aria-label="Admin sections">
+      <div class="sn-section" data-i18n="admin.sn.general">General</div>
+      <button type="button" id="tab-config" class="sn-link admin-tab" data-tab="config" role="tab" aria-controls="panel-config" aria-selected="false"><span class="material-symbols-outlined">tune</span><span data-i18n="admin.tab.config">Configuración</span></button>
+      <button type="button" id="tab-catalogos" class="sn-link admin-tab" data-tab="catalogos" role="tab" aria-controls="panel-catalogos" aria-selected="false"><span class="material-symbols-outlined">factory</span><span data-i18n="admin.tab.catalogos">Catálogos</span></button>
+      <button type="button" id="tab-resumen" class="sn-link admin-tab" data-tab="resumen" role="tab" aria-controls="panel-resumen" aria-selected="false"><span class="material-symbols-outlined">summarize</span><span data-i18n="admin.tab.resumen">Resumen</span></button>
+      <button type="button" id="tab-datos" class="sn-link admin-tab" data-tab="datos" role="tab" aria-controls="panel-datos" aria-selected="false"><span class="material-symbols-outlined">database</span><span data-i18n="admin.tab.datos">Datos</span></button>
+    </aside>
 
-    <div class="admin-panel" data-panel="config" role="tabpanel">
-    <section class="admin-card">
-      <h2 data-i18n="admin.security">Seguridad</h2>
-      <div class="admin-grid">
-        <label class="field">
-          <span class="field-label" data-i18n="admin.newPwd">Nueva Contraseña Admin</span>
-          <input type="password" id="new-admin-pwd" class="numpad-input" autocomplete="off" readonly />
-        </label>
-      </div>
-      <div class="admin-actions">
-        <button type="button" id="btn-change-pwd" class="btn btn-primary" data-i18n="admin.changePwd">Cambiar Contraseña</button>
-        <span id="pwd-flash" class="saved-flash" data-i18n="admin.changed">Cambiada.</span>
-      </div>
-    </section>
+    <main class="page" id="admin-main">
 
-    <section class="admin-card">
-      <h2 data-i18n="admin.device">Dispositivo</h2>
-      <p class="text-helper" data-i18n="admin.device.note">Línea y operador asignados a este dispositivo. El turno se detecta automáticamente por la hora.</p>
-      <div class="admin-grid">
-        <label class="field">
-          <span class="field-label" data-i18n="admin.device.line">Línea Predeterminada</span>
-          <select id="device-line"></select>
-        </label>
-        <label class="field">
-          <span class="field-label" data-i18n="admin.device.op">Operador Predeterminado</span>
-          <select id="device-operator"></select>
-        </label>
-      </div>
-      <div class="admin-actions">
-        <button type="button" id="btn-device-save" class="btn btn-success" data-i18n="admin.device.save">Guardar Dispositivo</button>
-        <span id="device-flash" class="saved-flash" data-i18n="admin.device.saved">Guardado.</span>
-      </div>
-    </section>
-
-    <form id="admin-form" autocomplete="off">
-      <section class="admin-card">
-        <h2 data-i18n="admin.params">Parámetros de Producción</h2>
-        <p class="text-helper" data-i18n="admin.params.note">Las alertas se disparan cada hora dentro del rango del turno automáticamente.</p>
-        <div class="admin-grid">
-          <label class="field">
-            <span class="field-label" data-i18n="admin.snoozeDur">Duración de Posponer (minutos)</span>
-            <input type="number" name="snoozeMinutes" min="1" max="60" inputmode="numeric" pattern="[0-9]*" />
-          </label>
-          <label class="field">
-            <span class="field-label" data-i18n="admin.hourlyTarget">Meta por Hora (piezas)</span>
-            <input type="number" name="hourlyTarget" min="0" inputmode="numeric" pattern="[0-9]*" />
-          </label>
+      <!-- Panel: Configuración -->
+      <section id="panel-config" class="admin-panel" data-panel="config" role="tabpanel" aria-labelledby="tab-config">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title" data-i18n="admin.config.title">Configuración</h1>
+            <div class="page-subtitle" data-i18n="admin.config.subtitle">Parámetros, dispositivo, audio y seguridad.</div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn" id="btn-reset"><span class="material-symbols-outlined" style="font-size:18px;">refresh</span><span data-i18n="admin.btn.reset">Restablecer</span></button>
+          </div>
         </div>
-      </section>
 
-      <section class="admin-card">
-        <h2 data-i18n="admin.audio">Alerta de Audio</h2>
-        <div class="admin-grid">
-          <label class="field">
-            <span class="field-label" data-i18n="admin.audio.enable">Habilitar Audio</span>
-            <select name="audioEnabled">
-              <option value="true" data-i18n="admin.audio.on">Habilitado</option>
-              <option value="false" data-i18n="admin.audio.off">Deshabilitado</option>
-            </select>
-          </label>
-          <label class="field">
-            <span class="field-label" data-i18n="admin.audio.vol">Volumen (0.0 – 1.0)</span>
-            <input type="number" name="audioVolume" min="0" max="1" step="0.1" inputmode="decimal" />
-          </label>
-        </div>
-        <div class="admin-actions">
-          <button type="submit" class="btn btn-success" data-i18n="admin.btn.saveCfg">Guardar Configuración</button>
-          <button type="button" id="btn-reset" class="btn btn-ghost" data-i18n="admin.btn.reset">Restablecer Valores</button>
-          <span id="saved-flash" class="saved-flash" data-i18n="admin.btn.saved">Guardado.</span>
-        </div>
-      </section>
-    </form>
-    </div><!-- /config panel -->
-
-    <div class="admin-panel" data-panel="catalogos" role="tabpanel">
-    <section class="admin-card">
-      <h2 data-i18n="admin.lines">Líneas de Producción</h2>
-      <table class="entity-table">
-        <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.label">Etiqueta</th><th></th></tr></thead>
-        <tbody id="lines-tbody"></tbody>
-      </table>
-      <div class="entity-add">
-        <input type="text" id="new-line-id" data-i18n-placeholder="admin.ph.lineId" placeholder="ID (ej. L-04)" />
-        <input type="text" id="new-line-label" data-i18n-placeholder="admin.ph.lineLabel" placeholder="Etiqueta" />
-        <button type="button" id="btn-add-line" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
-      </div>
-    </section>
-
-    <section class="admin-card" data-wide="1">
-      <h2 data-i18n="admin.shifts">Turnos</h2>
-      <p class="text-helper" data-i18n="admin.shifts.note">El sistema genera alertas cada hora dentro del rango del turno. Hora fin menor que hora inicio = cruza medianoche.</p>
-      <table class="entity-table">
-        <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.label">Etiqueta</th><th data-i18n="admin.col.start">Inicio</th><th data-i18n="admin.col.end">Fin</th><th data-i18n="admin.col.days">Días</th><th data-i18n="admin.col.breaks">Recesos</th><th></th></tr></thead>
-        <tbody id="shifts-tbody"></tbody>
-      </table>
-      <div class="entity-add entity-add-shift">
-        <input type="text" id="new-shift-id" data-i18n-placeholder="admin.ph.shiftId" placeholder="ID (ej. S3)" />
-        <input type="text" id="new-shift-label" data-i18n-placeholder="admin.ph.shiftLabel" placeholder="Etiqueta" />
-        <input type="time" id="new-shift-start" placeholder="06:00" />
-        <input type="time" id="new-shift-end" placeholder="18:00" />
-        <input type="text" id="new-shift-days" data-i18n-placeholder="admin.ph.shiftDays" placeholder="Días (ej. 1,2,3,4)" />
-        <button type="button" id="btn-add-shift" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
-      </div>
-      <p class="text-helper-tight spacer-top-2" data-i18n="admin.shifts.daysLegend">Días: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb</p>
-    </section>
-
-    <section class="admin-card">
-      <h2 data-i18n="admin.operators">Operadores</h2>
-      <table class="entity-table">
-        <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.name">Nombre</th><th></th></tr></thead>
-        <tbody id="operators-tbody"></tbody>
-      </table>
-      <div class="entity-add">
-        <input type="text" id="new-op-id" data-i18n-placeholder="admin.ph.opId" placeholder="ID (ej. OP-1001)" />
-        <input type="text" id="new-op-name" data-i18n-placeholder="admin.ph.opName" placeholder="Nombre" />
-        <button type="button" id="btn-add-op" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
-      </div>
-    </section>
-
-    <section class="admin-card">
-      <h2 data-i18n="admin.downtimeReasons">Motivos de Tiempo Muerto</h2>
-      <p class="text-helper" data-i18n="admin.downtimeReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
-      <ul id="downtime-reasons-list" class="reason-list"></ul>
-      <div class="entity-add">
-        <input type="text" id="new-downtime-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo (ej. Junta producción)" />
-        <button type="button" id="btn-add-downtime-reason" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
-      </div>
-    </section>
-
-    <section class="admin-card">
-      <h2 data-i18n="admin.scrapReasons">Motivos de Rechazo</h2>
-      <p class="text-helper" data-i18n="admin.scrapReasons.note">Lista de motivos disponibles en el formulario de captura.</p>
-      <ul id="scrap-reasons-list" class="reason-list"></ul>
-      <div class="entity-add">
-        <input type="text" id="new-scrap-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo (ej. Pistón roto)" />
-        <button type="button" id="btn-add-scrap-reason" class="btn btn-primary" data-i18n="admin.btn.add">Agregar</button>
-      </div>
-    </section>
-    </div><!-- /catalogos panel -->
-
-    <div class="admin-panel" data-panel="resumen" role="tabpanel">
-    <section class="admin-card" data-wide="1">
-      <h2 data-i18n="admin.history">Historial de Sesiones</h2>
-      <div class="history-filter">
-        <div class="weekstrip" id="weekstrip" role="group" aria-label="Selector de fecha">
-          <div class="weekstrip-head">
-            <button type="button" class="weekstrip-month" id="weekstrip-month">—</button>
-            <div class="weekstrip-nav">
-              <button type="button" class="weekstrip-icon" id="weekstrip-today" title="Hoy" aria-label="Hoy">
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-              </button>
-              <button type="button" class="weekstrip-icon" id="weekstrip-prev" aria-label="Semana anterior">‹</button>
-              <button type="button" class="weekstrip-icon" id="weekstrip-next" aria-label="Semana siguiente">›</button>
+        <div class="grid-2">
+          <div class="card admin-card">
+            <div class="card-head">
+              <span class="card-title" data-i18n="admin.device">Dispositivo</span>
+              <span class="card-pill success saved-flash" id="device-flash" data-i18n="admin.device.saved">guardado</span>
+            </div>
+            <div class="fields-row">
+              <label class="field">
+                <span class="field-label" data-i18n="admin.device.line">Línea predeterminada</span>
+                <select class="input" id="device-line"></select>
+              </label>
+              <label class="field">
+                <span class="field-label" data-i18n="admin.device.op">Operador predeterminado</span>
+                <select class="input" id="device-operator"></select>
+              </label>
+            </div>
+            <div class="actions" style="margin-top:14px;">
+              <button type="button" id="btn-device-save" class="btn btn-primary btn-small"><span class="material-symbols-outlined" style="font-size:16px;">save</span><span data-i18n="admin.device.save">Guardar dispositivo</span></button>
             </div>
           </div>
-          <div class="weekstrip-dows" id="weekstrip-dows"></div>
-          <div class="weekstrip-days" id="weekstrip-days"></div>
-        </div>
-        <input type="hidden" id="history-date" />
-        <div class="history-filter-actions">
-          <button id="btn-history-export" class="btn btn-primary" type="button" data-i18n="admin.history.exportDay">Exportar Día</button>
-          <button id="btn-history-export-all" class="btn btn-ghost" type="button" data-i18n="admin.history.exportAll">Exportar Todo</button>
-        </div>
-      </div>
-      <div id="history-list" class="history-list"></div>
-    </section>
 
-    <section class="admin-card" data-wide="1">
-      <h2 data-i18n="admin.movLog">Bitácora de Movimientos</h2>
-      <div class="log-filters">
-        <input id="log-search" type="search" data-i18n-placeholder="admin.search" placeholder="Buscar..." class="log-search" />
-        <div id="log-type-filters" class="log-type-filters">
-          <button type="button" class="log-chip active" data-type="all" data-i18n="admin.filter.all">Todos</button>
-          <button type="button" class="log-chip" data-type="capture" data-i18n="admin.filter.capture">Captura</button>
-          <button type="button" class="log-chip" data-type="scrap" data-i18n="admin.filter.scrap">Rechazo</button>
-          <button type="button" class="log-chip" data-type="alert" data-i18n="admin.filter.alert">Alerta</button>
-          <button type="button" class="log-chip" data-type="submit" data-i18n="admin.filter.submit">Envío</button>
-          <button type="button" class="log-chip" data-type="downtime" data-i18n="admin.filter.downtime">Paro</button>
-          <button type="button" class="log-chip" data-type="status" data-i18n="admin.filter.status">Estado</button>
-          <button type="button" class="log-chip" data-type="session" data-i18n="admin.filter.session">Sesión</button>
+          <form id="admin-form" autocomplete="off" class="card admin-card">
+            <div class="card-head">
+              <span class="card-title" data-i18n="admin.params">Parámetros de producción</span>
+            </div>
+            <div class="fields-row">
+              <label class="field">
+                <span class="field-label" data-i18n="admin.hourlyTarget">Meta por hora (piezas)</span>
+                <input class="input" type="number" name="hourlyTarget" min="0" inputmode="numeric" pattern="[0-9]*" />
+              </label>
+              <label class="field">
+                <span class="field-label" data-i18n="admin.snoozeDur">Duración posponer (min)</span>
+                <input class="input" type="number" name="snoozeMinutes" min="1" max="60" inputmode="numeric" pattern="[0-9]*" />
+              </label>
+            </div>
+            <div class="fields-row" style="margin-top:14px;">
+              <label class="field">
+                <span class="field-label" data-i18n="admin.audio.enable">Habilitar audio</span>
+                <select class="input" name="audioEnabled">
+                  <option value="true" data-i18n="admin.audio.on">Habilitado</option>
+                  <option value="false" data-i18n="admin.audio.off">Deshabilitado</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="field-label" data-i18n="admin.audio.vol">Volumen (0 – 1)</span>
+                <input class="input" type="number" name="audioVolume" min="0" max="1" step="0.1" inputmode="decimal" />
+              </label>
+            </div>
+            <div class="actions" style="margin-top:14px;">
+              <button type="submit" class="btn btn-primary btn-small"><span class="material-symbols-outlined" style="font-size:16px;">save</span><span data-i18n="admin.btn.saveCfg">Guardar configuración</span></button>
+              <span class="saved-flash" id="saved-flash" data-i18n="admin.btn.saved">Guardado.</span>
+            </div>
+          </form>
+
+          <div class="card admin-card">
+            <div class="card-head">
+              <span class="card-title" data-i18n="admin.security">Seguridad</span>
+            </div>
+            <label class="field">
+              <span class="field-label" data-i18n="admin.newPwd">Nueva contraseña admin</span>
+              <input class="input numpad-input" type="password" id="new-admin-pwd" autocomplete="off" readonly placeholder="••••••" />
+              <span class="field-helper" data-i18n="admin.newPwd.helper">Mínimo 4 dígitos. Se aplica en este dispositivo.</span>
+            </label>
+            <div class="actions" style="margin-top:14px;">
+              <button type="button" id="btn-change-pwd" class="btn btn-primary btn-small"><span class="material-symbols-outlined" style="font-size:16px;">password</span><span data-i18n="admin.changePwd">Cambiar contraseña</span></button>
+              <span class="saved-flash" id="pwd-flash" data-i18n="admin.changed">Cambiada.</span>
+            </div>
+          </div>
         </div>
-      </div>
-      <ul id="log-list" class="log-list"></ul>
-      <div class="admin-actions spacer-top-2">
-        <button id="btn-log-clear" class="btn btn-ghost btn-small" type="button" data-i18n="admin.clearLog">Limpiar Bitácora</button>
-      </div>
-    </section>
-    </div><!-- /resumen panel -->
+      </section>
 
-    <div class="admin-panel" data-panel="datos" role="tabpanel">
-    <section class="admin-card">
-      <h2 data-i18n="admin.data">Datos</h2>
-      <div class="admin-actions">
-        <button type="button" id="btn-reset-today-cloud" class="btn btn-warn" data-i18n="admin.resetTodayCloud">Reset Día Actual (Supabase + local)</button>
-        <button type="button" id="btn-clear-data" class="btn btn-ghost" data-i18n="admin.clearToday">Limpiar Envíos y Alertas de Hoy</button>
-        <button type="button" id="btn-clear-sessions" class="btn btn-ghost" data-i18n="admin.clearSessions">Borrar Todas las Sesiones</button>
-      </div>
-    </section>
-    </div><!-- /datos panel -->
-  </main>
+      <!-- Panel: Catálogos -->
+      <section id="panel-catalogos" class="admin-panel" data-panel="catalogos" role="tabpanel" aria-labelledby="tab-catalogos">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title" data-i18n="admin.catalogs.title">Catálogos</h1>
+            <div class="page-subtitle" data-i18n="admin.catalogs.subtitle">Líneas, turnos, operadores y motivos.</div>
+          </div>
+        </div>
 
-  <!-- Numeric keypad overlay (shared with app.js wireNumpad) -->
+        <div class="grid-2">
+          <div class="card admin-card full">
+            <div class="card-head">
+              <span class="card-title" data-i18n="admin.lines">Líneas de producción</span>
+            </div>
+            <table>
+              <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.label">Etiqueta</th><th></th></tr></thead>
+              <tbody id="lines-tbody"></tbody>
+            </table>
+            <div class="entity-add">
+              <input class="input" type="text" id="new-line-id" data-i18n-placeholder="admin.ph.lineId" placeholder="ID (ej. L-04)" />
+              <input class="input" type="text" id="new-line-label" data-i18n-placeholder="admin.ph.lineLabel" placeholder="Etiqueta" />
+              <button type="button" id="btn-add-line" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:16px;">add</span><span data-i18n="admin.btn.add">Agregar</span></button>
+            </div>
+          </div>
+
+          <div class="card admin-card full">
+            <div class="card-head">
+              <span class="card-title" data-i18n="admin.shifts">Turnos</span>
+            </div>
+            <table>
+              <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.label">Etiqueta</th><th data-i18n="admin.col.start">Inicio</th><th data-i18n="admin.col.end">Fin</th><th data-i18n="admin.col.days">Días</th><th data-i18n="admin.col.breaks">Recesos</th><th></th></tr></thead>
+              <tbody id="shifts-tbody"></tbody>
+            </table>
+            <div class="entity-add entity-add-shift">
+              <input class="input" type="text" id="new-shift-id" data-i18n-placeholder="admin.ph.shiftId" placeholder="ID" />
+              <input class="input" type="text" id="new-shift-label" data-i18n-placeholder="admin.ph.shiftLabel" placeholder="Etiqueta" />
+              <input class="input" type="time" id="new-shift-start" />
+              <input class="input" type="time" id="new-shift-end" />
+              <input class="input" type="text" id="new-shift-days" data-i18n-placeholder="admin.ph.shiftDays" placeholder="0,1,2,3,4" />
+              <button type="button" id="btn-add-shift" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:16px;">add</span></button>
+            </div>
+          </div>
+
+          <div class="card admin-card">
+            <div class="card-head">
+              <span class="card-title" data-i18n="admin.operators">Operadores</span>
+            </div>
+            <table>
+              <thead><tr><th data-i18n="admin.col.id">ID</th><th data-i18n="admin.col.name">Nombre</th><th></th></tr></thead>
+              <tbody id="operators-tbody"></tbody>
+            </table>
+            <div class="entity-add">
+              <input class="input" type="text" id="new-op-id" data-i18n-placeholder="admin.ph.opId" placeholder="ID" />
+              <input class="input" type="text" id="new-op-name" data-i18n-placeholder="admin.ph.opName" placeholder="Nombre" />
+              <button type="button" id="btn-add-op" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:16px;">add</span></button>
+            </div>
+          </div>
+
+          <div class="card admin-card">
+            <div class="card-head">
+              <span class="card-title" data-i18n="admin.downtimeReasons">Motivos de tiempo muerto</span>
+            </div>
+            <ul id="downtime-reasons-list" class="reason-list"></ul>
+            <div class="entity-add" style="grid-template-columns: 1fr auto;">
+              <input class="input" type="text" id="new-downtime-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo" />
+              <button type="button" id="btn-add-downtime-reason" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:16px;">add</span></button>
+            </div>
+          </div>
+
+          <div class="card admin-card">
+            <div class="card-head">
+              <span class="card-title" data-i18n="admin.scrapReasons">Motivos de rechazo</span>
+            </div>
+            <ul id="scrap-reasons-list" class="reason-list"></ul>
+            <div class="entity-add" style="grid-template-columns: 1fr auto;">
+              <input class="input" type="text" id="new-scrap-reason" data-i18n-placeholder="admin.ph.reason" placeholder="Motivo" />
+              <button type="button" id="btn-add-scrap-reason" class="btn btn-primary"><span class="material-symbols-outlined" style="font-size:16px;">add</span></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel: Resumen -->
+      <section id="panel-resumen" class="admin-panel" data-panel="resumen" role="tabpanel" aria-labelledby="tab-resumen">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title" data-i18n="admin.resumen.title">Resumen</h1>
+            <div class="page-subtitle" data-i18n="admin.resumen.subtitle">Historial de sesiones y bitácora.</div>
+          </div>
+          <div class="actions">
+            <button id="btn-history-export" class="btn" type="button"><span class="material-symbols-outlined" style="font-size:18px;">file_download</span><span data-i18n="admin.history.exportDay">Exportar día</span></button>
+            <button id="btn-history-export-all" class="btn btn-primary" type="button"><span class="material-symbols-outlined" style="font-size:18px;">file_download</span><span data-i18n="admin.history.exportAll">Exportar todo</span></button>
+          </div>
+        </div>
+
+        <div class="card admin-card full">
+          <div class="card-head">
+            <span class="card-title" data-i18n="admin.history">Historial de sesiones</span>
+          </div>
+          <div class="weekstrip" id="weekstrip" role="group" aria-label="Selector de fecha">
+            <button type="button" class="weekstrip-month" id="weekstrip-month">—</button>
+            <div class="weekstrip-dows" id="weekstrip-dows"></div>
+            <div class="weekstrip-days" id="weekstrip-days"></div>
+            <div class="weekstrip-nav">
+              <button type="button" class="weekstrip-icon" id="weekstrip-today" title="Hoy" aria-label="Hoy"><span class="material-symbols-outlined">today</span></button>
+              <button type="button" class="weekstrip-icon" id="weekstrip-prev" aria-label="Anterior"><span class="material-symbols-outlined">chevron_left</span></button>
+              <button type="button" class="weekstrip-icon" id="weekstrip-next" aria-label="Siguiente"><span class="material-symbols-outlined">chevron_right</span></button>
+            </div>
+          </div>
+          <input type="hidden" id="history-date" />
+          <div id="history-list" class="history-list" style="margin-top:16px;"></div>
+        </div>
+
+        <div class="card admin-card full" style="margin-top:16px;">
+          <div class="card-head">
+            <span class="card-title" data-i18n="admin.movLog">Bitácora de movimientos</span>
+            <button id="btn-log-clear" class="btn btn-ghost btn-small" type="button" data-i18n="admin.clearLog">Limpiar</button>
+          </div>
+          <div class="log-filters" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+            <input id="log-search" type="search" data-i18n-placeholder="admin.search" placeholder="Buscar..." class="input" style="flex:1;min-width:200px;" />
+            <div id="log-type-filters" style="display:flex;gap:4px;flex-wrap:wrap;">
+              <button type="button" class="log-chip active" data-type="all" data-i18n="admin.filter.all">Todos</button>
+              <button type="button" class="log-chip" data-type="capture" data-i18n="admin.filter.capture">Captura</button>
+              <button type="button" class="log-chip" data-type="scrap" data-i18n="admin.filter.scrap">Rechazo</button>
+              <button type="button" class="log-chip" data-type="alert" data-i18n="admin.filter.alert">Alerta</button>
+              <button type="button" class="log-chip" data-type="submit" data-i18n="admin.filter.submit">Envío</button>
+              <button type="button" class="log-chip" data-type="downtime" data-i18n="admin.filter.downtime">Paro</button>
+              <button type="button" class="log-chip" data-type="status" data-i18n="admin.filter.status">Estado</button>
+              <button type="button" class="log-chip" data-type="session" data-i18n="admin.filter.session">Sesión</button>
+            </div>
+          </div>
+          <ul id="log-list" class="log-list"></ul>
+        </div>
+      </section>
+
+      <!-- Panel: Datos -->
+      <section id="panel-datos" class="admin-panel" data-panel="datos" role="tabpanel" aria-labelledby="tab-datos">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title" data-i18n="admin.datos.title">Datos</h1>
+            <div class="page-subtitle" data-i18n="admin.datos.subtitle">Sincronización y mantenimiento de datos locales.</div>
+          </div>
+        </div>
+
+        <div class="card admin-card">
+          <div class="card-head">
+            <span class="card-title" data-i18n="admin.data">Mantenimiento</span>
+          </div>
+          <p class="text-helper" data-i18n="admin.data.note">Operaciones destructivas. Úselas con cuidado.</p>
+          <div class="actions" style="flex-wrap:wrap;">
+            <button type="button" id="btn-reset-today-cloud" class="btn btn-warn"><span class="material-symbols-outlined" style="font-size:16px;">restart_alt</span><span data-i18n="admin.resetTodayCloud">Reset día actual</span></button>
+            <button type="button" id="btn-clear-data" class="btn btn-ghost"><span class="material-symbols-outlined" style="font-size:16px;">delete_sweep</span><span data-i18n="admin.clearToday">Limpiar envíos de hoy</span></button>
+            <button type="button" id="btn-clear-sessions" class="btn btn-danger"><span class="material-symbols-outlined" style="font-size:16px;">delete_forever</span><span data-i18n="admin.clearSessions">Borrar todas las sesiones</span></button>
+          </div>
+        </div>
+
+        <div class="card admin-card" style="margin-top:16px;">
+          <div class="card-head">
+            <span class="card-title" data-i18n="admin.demo.title">Datos demo</span>
+          </div>
+          <p class="text-helper" data-i18n="admin.demo.note">14 días de datos simulados.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="?seed=1"><span class="material-symbols-outlined" style="font-size:16px;">science</span><span data-i18n="admin.demo.load">Cargar datos demo</span></a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Numpad overlay -->
   <div id="numpad-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-numpad" role="dialog" aria-labelledby="numpad-title">
       <h2 id="numpad-title" class="popup-title-left">—</h2>
@@ -261,53 +477,53 @@
         <button type="button" class="numkey" data-key="9">9</button>
         <button type="button" class="numkey numkey-secondary" data-key="clear">C</button>
         <button type="button" class="numkey" data-key="0">0</button>
-        <button type="button" class="numkey numkey-secondary" data-key="back" data-i18n-aria-label="numpad.backAria" aria-label="Retroceso">⌫</button>
+        <button type="button" class="numkey numkey-secondary" data-key="back" aria-label="Retroceso">⌫</button>
       </div>
       <div class="form-actions-row">
         <button type="button" id="btn-numpad-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
-        <button type="button" id="btn-numpad-ok" class="btn btn-success btn-block" data-i18n="btn.done">Listo</button>
+        <button type="button" id="btn-numpad-ok" class="btn btn-primary btn-block" data-i18n="btn.done">Listo</button>
       </div>
     </div>
   </div>
 
-  <!-- Breaks editor modal -->
   <div id="breaks-overlay" class="overlay hidden" aria-hidden="true">
     <div class="popup popup-form">
-      <h2 class="popup-title-left" data-i18n="breaks.title">Recesos del Turno</h2>
+      <h2 class="popup-title-left" data-i18n="breaks.title">Recesos del turno</h2>
       <p class="popup-subtle" id="breaks-shift-label">—</p>
       <div id="breaks-list" class="breaks-list"></div>
-      <button type="button" id="btn-break-add" class="btn btn-ghost btn-block spacer-top-2" data-i18n="breaks.add">+ Agregar Receso</button>
+      <button type="button" id="btn-break-add" class="btn btn-ghost btn-block spacer-top-2" data-i18n="breaks.add">+ Agregar receso</button>
       <div class="form-actions-row spacer-top-3">
         <button type="button" id="btn-breaks-cancel" class="btn btn-ghost btn-block" data-i18n="btn.cancel">Cancelar</button>
-        <button type="button" id="btn-breaks-save" class="btn btn-success btn-block" data-i18n="btn.save">Guardar</button>
+        <button type="button" id="btn-breaks-save" class="btn btn-primary btn-block" data-i18n="btn.save">Guardar</button>
       </div>
     </div>
   </div>
 
-  <!-- Mobile/tablet bottom tab bar (CSS-shown <=1024px) -->
-  <nav class="bottom-tabbar" id="bottom-tabbar" aria-label="Navegación principal">
-    <a class="nav-item bottab-item" href="index.html">
-      <span class="bottab-ic" aria-hidden="true">⊕</span>
-      <span class="bottab-label" data-i18n="nav.capture">Captura</span>
-    </a>
-    <a class="nav-item bottab-item" href="index.html#charts">
-      <span class="bottab-ic" aria-hidden="true">▤</span>
-      <span class="bottab-label" data-i18n="nav.charts">Gráficas</span>
-    </a>
-    <a class="nav-item bottab-item" href="dashboard.html">
-      <span class="bottab-ic" aria-hidden="true">▦</span>
-      <span class="bottab-label" data-i18n="nav.dashboard">Tablero</span>
-    </a>
-    <a class="nav-item bottab-item active" href="admin.html" aria-current="page">
-      <span class="bottab-ic" aria-hidden="true">⚙</span>
-      <span class="bottab-label" data-i18n="top.admin">Admin</span>
-    </a>
-  </nav>
+  <button type="button" id="btn-admin-lock" class="hidden"></button>
 
-  <script src="i18n.js?v=79"></script>
-  <script src="supabase-config.js?v=79"></script>
-  <script src="sync.js?v=79"></script>
-  <script src="app.js?v=79"></script>
-  <script src="admin.js?v=79"></script>
+  <script>
+    (function(){
+      var k = document.getElementById('kebab-btn');
+      var bb = document.querySelector('.topbar');
+      if(!k || !bb) return;
+      k.addEventListener('click', function(){
+        var open = bb.classList.toggle('menu-open');
+        k.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      document.addEventListener('click', function(e){
+        if(!bb.classList.contains('menu-open')) return;
+        if(bb.contains(e.target)) return;
+        bb.classList.remove('menu-open');
+        k.setAttribute('aria-expanded', 'false');
+      });
+    })();
+  </script>
+
+  <script src="seed.js?v=105"></script>
+  <script src="i18n.js?v=105"></script>
+  <script src="supabase-config.js?v=105"></script>
+  <script src="sync.js?v=105"></script>
+  <script src="app.js?v=105"></script>
+  <script src="admin.js?v=105"></script>
 </body>
 </html>

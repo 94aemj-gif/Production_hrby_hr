@@ -25,6 +25,12 @@
     const lock = document.getElementById("admin-lock");
     const main = document.getElementById("admin-main");
     if (!lock || !main) return;
+
+    // Gate disabled for testing phase — admin loads unconditionally.
+    // Helpers + lock-form listener preserved so the gate can be restored
+    // by flipping ADMIN_GATE_ENABLED to true.
+    const ADMIN_GATE_ENABLED = false;
+
     const showLock = () => {
       lock.classList.remove("hidden");
       lock.setAttribute("aria-hidden", "false");
@@ -36,7 +42,18 @@
       lock.setAttribute("aria-hidden", "true");
       main.style.display = "";
     };
-    if (!isUnlocked()) showLock(); else showMain();
+
+    if (!ADMIN_GATE_ENABLED) {
+      setUnlocked(true);
+      showMain();
+      const lockBtn = document.getElementById("btn-admin-lock");
+      if (lockBtn) lockBtn.style.display = "none";
+    } else if (!isUnlocked()) {
+      showLock();
+    } else {
+      showMain();
+    }
+
     document.getElementById("lock-form").addEventListener("submit", (e) => {
       e.preventDefault();
       const val = document.getElementById("lock-pwd").value;
@@ -50,6 +67,7 @@
       }
     });
     document.getElementById("btn-admin-lock").addEventListener("click", () => {
+      if (!ADMIN_GATE_ENABLED) return;
       setUnlocked(false);
       showLock();
     });
@@ -696,4 +714,8 @@
   window.addEventListener("languagechange", () => {
     renderEntities();
   });
+
+  if (window.i18n && window.i18n.bindToggle) {
+    window.i18n.bindToggle(document.getElementById("lang-toggle"));
+  }
 })();
